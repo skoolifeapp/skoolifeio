@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 const Planning = () => {
+  const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(0);
 
   const generatePlanning = () => {
@@ -66,8 +68,9 @@ const Planning = () => {
           {planningData.map((day, index) => (
             <Card
               key={index}
-              className="p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300 animate-slide-up"
+              className="p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300 animate-slide-up cursor-pointer"
               style={{ animationDelay: `${index * 50}ms` }}
+              onClick={() => navigate(`/planning/day/${Date.now() + index * 86400000}`)}
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-[80px]">
