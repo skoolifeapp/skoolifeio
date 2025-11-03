@@ -1,11 +1,9 @@
-import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { HomeCarousel } from "@/components/home/HomeCarousel";
 
 const Index = () => {
   return (
     <div className="min-h-screen pb-20">
-      <HeroSection />
-      <FeaturesSection />
+      <HomeCarousel />
     </div>
   );
 };
