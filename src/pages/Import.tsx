@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, CheckCircle2, FileText } from "lucide-react";
 import { toast } from "sonner";
+import ICAL from "ical.js";
 
 const Import = () => {
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -44,10 +47,34 @@ const Import = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (file) {
+  const handleSubmit = async () => {
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const jcalData = ICAL.parse(text);
+      const comp = new ICAL.Component(jcalData);
+      const vevents = comp.getAllSubcomponents('vevent');
+
+      const events = vevents.map((vevent: any) => {
+        const event = new ICAL.Event(vevent);
+        return {
+          summary: event.summary,
+          startDate: event.startDate.toJSDate(),
+          endDate: event.endDate.toJSDate(),
+          location: event.location || '',
+          description: event.description || '',
+        };
+      });
+
+      // Store events in localStorage
+      localStorage.setItem('importedEvents', JSON.stringify(events));
+      
       toast.success("Emploi du temps enregistré !");
-      // TODO: Implement actual file processing
+      navigate('/planning');
+    } catch (error) {
+      console.error('Error parsing ICS file:', error);
+      toast.error("Erreur lors de l'import du fichier");
     }
   };
 

@@ -1,13 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { startOfWeek, addDays, format, addWeeks, isSameDay } from "date-fns";
+import { fr } from "date-fns/locale";
+
+interface ImportedEvent {
+  summary: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  description: string;
+}
 
 const Planning = () => {
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
+
+  useEffect(() => {
+    const storedEvents = localStorage.getItem('importedEvents');
+    if (storedEvents) {
+      setImportedEvents(JSON.parse(storedEvents));
+    }
+  }, []);
 
   const generatePlanning = () => {
     toast.success("Planning généré par l'IA !", {
@@ -15,16 +33,36 @@ const Planning = () => {
     });
   };
 
-  // Mock planning data
-  const planningData = [
-    { day: "Lundi", tasks: ["Mathématiques (2h)", "Physique (1h)"] },
-    { day: "Mardi", tasks: ["Anglais (1h30)", "Histoire (1h)"] },
-    { day: "Mercredi", tasks: ["Mathématiques (1h)", "Chimie (2h)"] },
-    { day: "Jeudi", tasks: ["Repos"] },
-    { day: "Vendredi", tasks: ["Physique (2h)", "Anglais (1h)"] },
-    { day: "Samedi", tasks: ["Révision générale (3h)"] },
-    { day: "Dimanche", tasks: ["Repos"] },
-  ];
+  // Get the current week's dates
+  const getWeekDates = () => {
+    const today = new Date();
+    const weekStart = startOfWeek(addWeeks(today, currentWeek), { weekStartsOn: 1 });
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  };
+
+  const weekDates = getWeekDates();
+
+  // Group events by day
+  const planningData = weekDates.map(date => {
+    const dayEvents = importedEvents.filter(event => 
+      isSameDay(new Date(event.startDate), date)
+    );
+
+    const tasks = dayEvents.length > 0
+      ? dayEvents.map(event => {
+          const start = new Date(event.startDate);
+          const end = new Date(event.endDate);
+          const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
+          return `${event.summary} (${duration}h)${event.location ? ` - ${event.location}` : ''}`;
+        })
+      : ["Repos"];
+
+    return {
+      day: format(date, 'EEEE', { locale: fr }),
+      date: date,
+      tasks,
+    };
+  });
 
   return (
     <div className="min-h-screen pb-20 px-6 pt-6">
@@ -70,16 +108,13 @@ const Planning = () => {
               key={index}
               className="p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300 animate-slide-up cursor-pointer"
               style={{ animationDelay: `${index * 50}ms` }}
-              onClick={() => navigate(`/planning/day/${Date.now() + index * 86400000}`)}
+              onClick={() => navigate(`/planning/day/${day.date.getTime()}`)}
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-[80px]">
-                  <p className="font-semibold text-primary">{day.day}</p>
+                  <p className="font-semibold text-primary capitalize">{day.day}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(Date.now() + index * 86400000).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
+                    {format(day.date, 'd MMM', { locale: fr })}
                   </p>
                 </div>
                 <div className="flex-1 space-y-1">
