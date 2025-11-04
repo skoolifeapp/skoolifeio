@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import Index from "./pages/Index";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
+import AddExamOrConstraint from "./pages/AddExamOrConstraint";
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import DayDetail from "./pages/DayDetail";
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/import" element={<Import />} />
             <Route path="/exams" element={<Exams />} />
+            <Route path="/exams/add" element={<AddExamOrConstraint />} />
             <Route path="/planning" element={<Planning />} />
             <Route path="/planning/day/:day" element={<DayDetail />} />
             <Route path="/profile" element={<Profile />} />
