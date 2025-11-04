@@ -40,158 +40,139 @@ const AddExamOrConstraint = () => {
   };
 
   return (
-    <div className="min-h-screen p-6">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/exams", { state: location.state })}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour
-      </Button>
-
-      <div className="max-w-2xl mx-auto">
-        {mode === "select" && (
-          <div>
-            <h1 className="text-4xl font-bold mb-8 text-center">Que veux-tu ajouter ?</h1>
-            <div className="grid gap-4">
-              <Card
-                className="cursor-pointer hover:border-primary transition-colors"
-                onClick={() => setMode("exam")}
-              >
-                <CardHeader>
-                  <CardTitle>Ajouter un examen</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Enregistre un nouvel examen à venir
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:border-primary transition-colors"
-                onClick={() => setMode("constraint")}
-              >
-                <CardHeader>
-                  <CardTitle>Ajouter une contrainte</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Définis tes disponibilités et contraintes
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {mode === "exam" && (
-          <div>
-            <Button
-              variant="ghost"
-              onClick={() => setMode("select")}
-              className="mb-6"
+    <div className="min-h-screen p-4 pb-24">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/exams", { state: location.state })}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold ml-2">
+          {mode === "select" ? "Ajouter" : mode === "exam" ? "Nouvel examen" : "Nouvelle contrainte"}
+        </h1>
+      </div>
+      {mode === "select" && (
+        <div>
+          <div className="space-y-3">
+            <Card
+              className="cursor-pointer hover:border-primary transition-colors"
+              onClick={() => setMode("exam")}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
-            </Button>
-            <Card>
               <CardHeader>
                 <CardTitle>Ajouter un examen</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="subject">Matière</Label>
-                  <Input
-                    id="subject"
-                    placeholder="Ex: Mathématiques"
-                    value={newExam.subject}
-                    onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="date">Date de l'examen</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={newExam.date}
-                    onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="priority">Priorité</Label>
-                  <Select
-                    value={newExam.priority}
-                    onValueChange={(value) => setNewExam({ ...newExam, priority: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Faible</SelectItem>
-                      <SelectItem value="medium">Moyenne</SelectItem>
-                      <SelectItem value="high">Haute</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleAddExam} className="w-full">
-                  Ajouter l'examen
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Enregistre un nouvel examen à venir
+                </p>
               </CardContent>
             </Card>
-          </div>
-        )}
 
-        {mode === "constraint" && (
-          <div>
-            <Button
-              variant="ghost"
-              onClick={() => setMode("select")}
-              className="mb-6"
+            <Card
+              className="cursor-pointer hover:border-primary transition-colors"
+              onClick={() => setMode("constraint")}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
-            </Button>
-            <Card>
               <CardHeader>
                 <CardTitle>Ajouter une contrainte</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Type de contrainte</Label>
-                  <div className="grid gap-2 mt-2">
-                    <Button
-                      variant={constraintType === "alternance" ? "default" : "outline"}
-                      onClick={() => setConstraintType("alternance")}
-                      className="w-full"
-                    >
-                      Alternance
-                    </Button>
-                    <Button
-                      variant={constraintType === "sport" ? "default" : "outline"}
-                      onClick={() => setConstraintType("sport")}
-                      className="w-full"
-                    >
-                      Sport
-                    </Button>
-                    <Button
-                      variant={constraintType === "job" ? "default" : "outline"}
-                      onClick={() => setConstraintType("job")}
-                      className="w-full"
-                    >
-                      Job étudiant
-                    </Button>
-                  </div>
-                </div>
-                <Button onClick={handleAddConstraint} className="w-full" disabled={!constraintType}>
-                  Ajouter la contrainte
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Définis tes disponibilités et contraintes
+                </p>
               </CardContent>
             </Card>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {mode === "exam" && (
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations de l'examen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="subject">Matière</Label>
+                <Input
+                  id="subject"
+                  placeholder="Ex: Mathématiques"
+                  value={newExam.subject}
+                  onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Date de l'examen</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newExam.date}
+                  onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select
+                  value={newExam.priority}
+                  onValueChange={(value) => setNewExam({ ...newExam, priority: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Faible</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAddExam} className="w-full">
+                Ajouter l'examen
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {mode === "constraint" && (
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Type de contrainte</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Button
+                  variant={constraintType === "alternance" ? "default" : "outline"}
+                  onClick={() => setConstraintType("alternance")}
+                  className="w-full"
+                >
+                  Alternance
+                </Button>
+                <Button
+                  variant={constraintType === "sport" ? "default" : "outline"}
+                  onClick={() => setConstraintType("sport")}
+                  className="w-full"
+                >
+                  Sport
+                </Button>
+                <Button
+                  variant={constraintType === "job" ? "default" : "outline"}
+                  onClick={() => setConstraintType("job")}
+                  className="w-full"
+                >
+                  Job étudiant
+                </Button>
+              </div>
+              <Button onClick={handleAddConstraint} className="w-full" disabled={!constraintType}>
+                Ajouter la contrainte
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
