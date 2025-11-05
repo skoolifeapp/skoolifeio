@@ -32,6 +32,18 @@ const Exams = () => {
   const [constraints, setConstraints] = useState<Constraint[]>([]);
 
   useEffect(() => {
+    // Load from localStorage first
+    const storedExams = localStorage.getItem('exams');
+    const storedConstraints = localStorage.getItem('constraints');
+    
+    if (storedExams) {
+      setExams(JSON.parse(storedExams));
+    }
+    if (storedConstraints) {
+      setConstraints(JSON.parse(storedConstraints));
+    }
+
+    // Then update from navigation state if available
     if (location.state?.exams) {
       setExams(location.state.exams);
     }
@@ -39,6 +51,15 @@ const Exams = () => {
       setConstraints(location.state.constraints);
     }
   }, [location.state]);
+
+  // Save to localStorage whenever exams or constraints change
+  useEffect(() => {
+    localStorage.setItem('exams', JSON.stringify(exams));
+  }, [exams]);
+
+  useEffect(() => {
+    localStorage.setItem('constraints', JSON.stringify(constraints));
+  }, [constraints]);
 
   const removeExam = (id: string) => {
     setExams(exams.filter(exam => exam.id !== id));

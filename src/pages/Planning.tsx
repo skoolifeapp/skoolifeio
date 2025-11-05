@@ -29,8 +29,48 @@ const Planning = () => {
   }, []);
 
   const generatePlanning = () => {
+    // Get exams from localStorage
+    const storedExams = localStorage.getItem('exams');
+    if (!storedExams) {
+      toast.error("Aucun examen trouvé", {
+        description: "Ajoute d'abord des examens dans l'onglet Examens.",
+      });
+      return;
+    }
+
+    const exams = JSON.parse(storedExams);
+    const existingEvents = [...importedEvents];
+
+    // Convert exams to all-day events
+    exams.forEach((exam: { id: string; subject: string; date: string; priority: string }) => {
+      const examDate = new Date(exam.date);
+      examDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(examDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      // Check if exam event already exists
+      const alreadyExists = existingEvents.some(
+        event => event.summary === `📚 ${exam.subject}` && 
+        new Date(event.startDate).toDateString() === examDate.toDateString()
+      );
+
+      if (!alreadyExists) {
+        existingEvents.push({
+          summary: `📚 ${exam.subject}`,
+          startDate: examDate.toISOString(),
+          endDate: endDate.toISOString(),
+          location: '',
+          description: `Examen - Priorité: ${exam.priority}`,
+        });
+      }
+    });
+
+    setImportedEvents(existingEvents);
+    localStorage.setItem('importedEvents', JSON.stringify(existingEvents));
+
     toast.success("Planning généré par l'IA !", {
-      description: "Ton planning de révisions a été créé avec succès.",
+      description: "Tes examens ont été ajoutés au planning.",
     });
   };
 
