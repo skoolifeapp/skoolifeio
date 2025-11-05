@@ -1,11 +1,20 @@
-import { HomeCarousel } from "@/components/home/HomeCarousel";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Dashboard from "./Dashboard";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen pb-20">
-      <HomeCarousel />
-    </div>
-  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user has seen the welcome page
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    
+    if (!hasSeenWelcome) {
+      navigate('/welcome');
+    }
+  }, [navigate]);
+
+  return <Dashboard />;
 };
 
 export default Index;

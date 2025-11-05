@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-illustration.png";
 
 export const HeroSection = () => {
@@ -26,12 +25,18 @@ export const HeroSection = () => {
         Import ton emploi du temps, ajoute tes examens et contraintes. L'IA crée ton planning de révisions optimal.
       </p>
       
-      <Link to="/import">
-        <Button variant="hero" size="lg" className="group">
-          Commencer maintenant
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </Link>
+      <Button 
+        variant="hero" 
+        size="lg" 
+        className="group"
+        onClick={() => {
+          localStorage.setItem('hasSeenWelcome', 'true');
+          window.location.href = '/';
+        }}
+      >
+        Commencer maintenant
+        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+      </Button>
     </section>
   );
 };
