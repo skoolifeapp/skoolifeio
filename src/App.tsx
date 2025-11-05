@@ -12,6 +12,7 @@ import AddExamOrConstraint from "./pages/AddExamOrConstraint";
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import DayDetail from "./pages/DayDetail";
+import NativeFeatures from "./pages/NativeFeatures";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/planning" element={<Planning />} />
             <Route path="/planning/day/:day" element={<DayDetail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/native" element={<NativeFeatures />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileNav />
