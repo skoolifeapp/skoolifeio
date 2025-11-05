@@ -79,12 +79,17 @@ const Import = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 px-6 pt-6">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Import .ics</h1>
-        <p className="text-muted-foreground mb-8">
-          Importe ton emploi du temps universitaire
-        </p>
+    <div className="min-h-screen flex flex-col">
+      <div className="safe-area-top" />
+      <div 
+        className="flex-1 container-responsive py-6"
+        style={{ paddingBottom: `calc(5rem + env(safe-area-inset-bottom))` }}
+      >
+        <div className="max-w-md mx-auto">
+          <h1 className="text-fluid-2xl font-bold mb-2">Import .ics</h1>
+          <p className="text-fluid-base text-muted-foreground mb-8">
+            Importe ton emploi du temps universitaire
+          </p>
 
         <Card
           className={`border-2 border-dashed rounded-2xl p-8 transition-all duration-300 ${
@@ -152,11 +157,12 @@ const Import = () => {
           </Button>
         )}
 
-        <div className="mt-8 p-4 bg-muted rounded-xl">
-          <h3 className="font-semibold mb-2 text-sm">💡 Astuce</h3>
-          <p className="text-xs text-muted-foreground">
-            Tu peux télécharger ton emploi du temps .ics depuis ton ENT universitaire (Celcat, ADE, etc.)
-          </p>
+          <div className="mt-8 p-4 bg-muted rounded-xl">
+            <h3 className="font-semibold mb-2 text-sm">💡 Astuce</h3>
+            <p className="text-xs text-muted-foreground">
+              Tu peux télécharger ton emploi du temps .ics depuis ton ENT universitaire (Celcat, ADE, etc.)
+            </p>
+          </div>
         </div>
       </div>
     </div>
