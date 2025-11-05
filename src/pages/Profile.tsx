@@ -11,31 +11,26 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="safe-area-top" />
-      <div 
-        className="flex-1 container-responsive py-6"
-        style={{ paddingBottom: `calc(5rem + env(safe-area-inset-bottom))` }}
-      >
-        <div className="max-w-md mx-auto">
-          <h1 className="text-fluid-2xl font-bold mb-2">Profil</h1>
-          <p className="text-fluid-base text-muted-foreground mb-8">
-            Gère tes informations personnelles
-          </p>
+    <div className="min-h-screen pb-20 px-6 pt-6">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Profil</h1>
+        <p className="text-muted-foreground mb-8">
+          Gère tes informations personnelles
+        </p>
 
-          {/* Profile Avatar */}
-          <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-[var(--shadow-medium)]">
-              <User className="h-12 w-12 text-primary-foreground" />
-            </div>
+        {/* Profile Avatar */}
+        <div className="flex justify-center mb-8">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-[var(--shadow-medium)]">
+            <User className="h-12 w-12 text-primary-foreground" />
           </div>
+        </div>
 
-          {/* Profile Information */}
-          <Card className="p-6 mb-6 shadow-[var(--shadow-soft)]">
-            <h2 className="text-fluid-xl font-semibold mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-primary" />
-              Informations
-            </h2>
+        {/* Profile Information */}
+        <Card className="p-6 mb-6 shadow-[var(--shadow-soft)]">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Settings className="h-5 w-5 text-primary" />
+            Informations
+          </h2>
           
           <div className="space-y-4">
             <div>
@@ -85,39 +80,38 @@ const Profile = () => {
             </div>
           </div>
 
-            <Button
-              variant="default"
-              className="w-full mt-6 min-h-[48px]"
-              onClick={handleSave}
-            >
-              Sauvegarder
-            </Button>
-          </Card>
+          <Button
+            variant="default"
+            className="w-full mt-6"
+            onClick={handleSave}
+          >
+            Sauvegarder
+          </Button>
+        </Card>
 
-          {/* Statistics Card */}
-          <Card className="p-6 shadow-[var(--shadow-soft)]">
-            <h2 className="text-fluid-xl font-semibold mb-4">Statistiques</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-secondary rounded-xl">
-                <p className="text-3xl font-bold text-primary">12</p>
-                <p className="text-xs text-muted-foreground mt-1">Examens</p>
-              </div>
-              <div className="text-center p-4 bg-secondary rounded-xl">
-                <p className="text-3xl font-bold text-primary">45h</p>
-                <p className="text-xs text-muted-foreground mt-1">Révisions</p>
-              </div>
-              <div className="text-center p-4 bg-secondary rounded-xl">
-                <p className="text-3xl font-bold text-primary">8</p>
-                <p className="text-xs text-muted-foreground mt-1">Semaines</p>
-              </div>
-              <div className="text-center p-4 bg-secondary rounded-xl">
-                <p className="text-3xl font-bold text-primary">95%</p>
-                <p className="text-xs text-muted-foreground mt-1">Assiduité</p>
-              </div>
+        {/* Statistics Card */}
+        <Card className="p-6 shadow-[var(--shadow-soft)]">
+          <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-secondary rounded-xl">
+              <p className="text-3xl font-bold text-primary">12</p>
+              <p className="text-xs text-muted-foreground mt-1">Examens</p>
             </div>
-          </Card>
-        </div>
+            <div className="text-center p-4 bg-secondary rounded-xl">
+              <p className="text-3xl font-bold text-primary">45h</p>
+              <p className="text-xs text-muted-foreground mt-1">Révisions</p>
+            </div>
+            <div className="text-center p-4 bg-secondary rounded-xl">
+              <p className="text-3xl font-bold text-primary">8</p>
+              <p className="text-xs text-muted-foreground mt-1">Semaines</p>
+            </div>
+            <div className="text-center p-4 bg-secondary rounded-xl">
+              <p className="text-3xl font-bold text-primary">95%</p>
+              <p className="text-xs text-muted-foreground mt-1">Assiduité</p>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

@@ -1,18 +1,20 @@
-import { HomeCarousel } from "@/components/home/HomeCarousel";
-import { HeaderStreak } from "@/components/layout/HeaderStreak";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Dashboard from "./Dashboard";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <HeaderStreak />
-      <div 
-        className="flex-1 flex items-center justify-center"
-        style={{ paddingBottom: `calc(5rem + env(safe-area-inset-bottom))` }}
-      >
-        <HomeCarousel />
-      </div>
-    </div>
-  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user has seen the welcome page
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    
+    if (!hasSeenWelcome) {
+      navigate('/welcome');
+    }
+  }, [navigate]);
+
+  return <Dashboard />;
 };
 
 export default Index;

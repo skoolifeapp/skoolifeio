@@ -77,20 +77,15 @@ const Planning = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="safe-area-top" />
-      <div 
-        className="flex-1 container-responsive py-4"
-        style={{ paddingBottom: `calc(5rem + env(safe-area-inset-bottom))` }}
-      >
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-fluid-2xl font-bold">Planning</h1>
-            <Button variant="hero" size="sm" onClick={generatePlanning}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Générer
-            </Button>
-          </div>
+    <div className="min-h-screen pb-20 px-4 pt-4">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Planning IA</h1>
+          <Button variant="hero" size="sm" onClick={generatePlanning}>
+            <Sparkles className="h-4 w-4 mr-2" />
+            Générer
+          </Button>
+      </div>
 
       {/* Exams Header */}
       {dayExams.length > 0 && (
@@ -208,15 +203,14 @@ const Planning = () => {
         </div>
       </ScrollArea>
 
-        <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-          <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Conseils IA
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Ton planning est optimisé en fonction de tes examens et contraintes. N'oublie pas de prendre des pauses régulières !
-          </p>
-        </div>
+      <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+        <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Conseils IA
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Ton planning est optimisé en fonction de tes examens et contraintes. N'oublie pas de prendre des pauses régulières !
+        </p>
       </div>
     </div>
   );

@@ -74,48 +74,35 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col">
-      <div className="safe-area-top" />
+    <div className="relative w-full h-[calc(100vh-80px)]">
       <Button
         onClick={handleAddClick}
         size="icon"
-        className="fixed z-20 rounded-full shadow-lg"
-        style={{
-          top: `calc(1rem + env(safe-area-inset-top))`,
-          right: `calc(1rem + env(safe-area-inset-right))`
-        }}
+        className="fixed top-20 right-6 z-20 rounded-full"
       >
         <Plus className="h-6 w-6" />
       </Button>
 
-      <div 
-        className="flex-1"
-        style={{ paddingBottom: `calc(5rem + env(safe-area-inset-bottom))` }}
+      <Carousel 
+        className="w-full h-full"
+        opts={{
+          align: "start",
+          loop: false,
+        }}
       >
-        <Carousel 
-          className="w-full h-full"
-          opts={{
-            align: "start",
-            loop: false,
-          }}
-        >
-          <CarouselContent className="h-full">
-            <CarouselItem className="h-full">
-              <ExamsList exams={exams} removeExam={removeExam} />
-            </CarouselItem>
-            <CarouselItem className="h-full">
-              <ConstraintsList constraints={constraints} removeConstraint={removeConstraint} />
-            </CarouselItem>
-          </CarouselContent>
-          <div 
-            className="absolute left-1/2 -translate-x-1/2 flex gap-2 z-10"
-            style={{ bottom: `calc(6rem + env(safe-area-inset-bottom))` }}
-          >
-            <CarouselPrevious className="relative left-0 translate-y-0" />
-            <CarouselNext className="relative right-0 translate-y-0" />
-          </div>
-        </Carousel>
-      </div>
+        <CarouselContent className="h-full">
+          <CarouselItem className="h-full">
+            <ExamsList exams={exams} removeExam={removeExam} />
+          </CarouselItem>
+          <CarouselItem className="h-full">
+            <ConstraintsList constraints={constraints} removeConstraint={removeConstraint} />
+          </CarouselItem>
+        </CarouselContent>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <CarouselPrevious className="relative left-0 translate-y-0" />
+          <CarouselNext className="relative right-0 translate-y-0" />
+        </div>
+      </Carousel>
     </div>
   );
 };
