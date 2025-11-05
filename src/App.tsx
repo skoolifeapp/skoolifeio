@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MobileNav } from "@/components/layout/MobileNav";
 import Index from "./pages/Index";
-import Welcome from "./pages/Welcome";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
 import AddExamOrConstraint from "./pages/AddExamOrConstraint";
@@ -25,7 +24,6 @@ const App = () => (
         <div className="relative">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<Welcome />} />
             <Route path="/import" element={<Import />} />
             <Route path="/exams" element={<Exams />} />
             <Route path="/exams/add" element={<AddExamOrConstraint />} />
