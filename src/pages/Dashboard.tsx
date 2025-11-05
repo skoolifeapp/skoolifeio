@@ -1,4 +1,4 @@
-import { Calendar, BookOpen, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { Calendar, BookOpen, Clock, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -51,23 +51,13 @@ const Dashboard = () => {
     return eventDate >= today && eventDate <= weekFromNow;
   }).length;
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Bonjour";
-    if (hour < 18) return "Bon après-midi";
-    return "Bonsoir";
-  };
-
   return (
     <div className="min-h-screen pb-20 px-4 pt-6 bg-gradient-to-br from-background via-background to-accent/5">
       {/* Header avec animation */}
       <div className="mb-8 animate-fade-in">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            {greeting()}
-          </h1>
-        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Tableau de bord
+        </h1>
         <p className="text-muted-foreground">
           {format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}
         </p>
