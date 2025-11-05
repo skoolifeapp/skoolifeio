@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, BookOpen, Clock, TrendingUp } from "lucide-react";
+import { Calendar, BookOpen, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import { PomodoroTimer } from "@/components/dashboard/PomodoroTimer";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { UpcomingExams } from "@/components/dashboard/UpcomingExams";
 
 interface Exam {
   id: string;
@@ -49,117 +51,76 @@ const Dashboard = () => {
     return eventDate >= today && eventDate <= weekFromNow;
   }).length;
 
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bonjour";
+    if (hour < 18) return "Bon après-midi";
+    return "Bonsoir";
+  };
+
   return (
-    <div className="min-h-screen pb-20 px-4 pt-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
+    <div className="min-h-screen pb-20 px-4 pt-6 bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Header avec animation */}
+      <div className="mb-8 animate-fade-in">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            {greeting()}
+          </h1>
+        </div>
         <p className="text-muted-foreground">
           {format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              Prochain examen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {nextExam ? (
-              <>
-                <div className="text-2xl font-bold">{daysUntilNextExam}j</div>
-                <p className="text-xs text-muted-foreground truncate">{nextExam.subject}</p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Aucun examen</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              Examens totaux
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{exams.length}</div>
-            <p className="text-xs text-muted-foreground">enregistrés</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-destructive" />
-              Priorité haute
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{highPriorityCount}</div>
-            <p className="text-xs text-muted-foreground">à prioriser</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              Cette semaine
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{eventsThisWeek}</div>
-            <p className="text-xs text-muted-foreground">événements</p>
-          </CardContent>
-        </Card>
+      {/* Pomodoro Timer - Featured */}
+      <div className="mb-6 animate-scale-in">
+        <PomodoroTimer />
       </div>
 
-      {/* Upcoming exams list */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Examens à venir</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {exams.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4 text-sm">
-              Aucun examen enregistré. Commence par ajouter tes examens !
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {exams
-                .filter(exam => new Date(exam.date) >= new Date())
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                .slice(0, 5)
-                .map((exam) => (
-                  <div
-                    key={exam.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{exam.subject}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(exam.date), "d MMMM yyyy", { locale: fr })}
-                      </p>
-                    </div>
-                    <div className={`text-xs font-medium px-2 py-1 rounded ${
-                      exam.priority === 'Haute' 
-                        ? 'bg-destructive/10 text-destructive' 
-                        : exam.priority === 'Moyenne'
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {exam.priority}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <StatCard
+          title="Prochain examen"
+          value={nextExam ? `${daysUntilNextExam}j` : '—'}
+          subtitle={nextExam?.subject}
+          icon={Calendar}
+          gradient="from-primary/10 via-primary/5 to-transparent"
+          iconColor="text-primary"
+        />
+        
+        <StatCard
+          title="Examens totaux"
+          value={exams.length}
+          subtitle="enregistrés"
+          icon={BookOpen}
+          gradient="from-accent/10 via-accent/5 to-transparent"
+          iconColor="text-accent"
+        />
+        
+        <StatCard
+          title="Priorité haute"
+          value={highPriorityCount}
+          subtitle="à prioriser"
+          icon={TrendingUp}
+          gradient="from-destructive/10 via-destructive/5 to-transparent"
+          iconColor="text-destructive"
+        />
+        
+        <StatCard
+          title="Cette semaine"
+          value={eventsThisWeek}
+          subtitle="événements"
+          icon={Clock}
+          gradient="from-blue-500/10 via-blue-500/5 to-transparent"
+          iconColor="text-blue-500"
+        />
+      </div>
+
+      {/* Upcoming Exams */}
+      <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+        <UpcomingExams exams={exams} />
+      </div>
     </div>
   );
 };
