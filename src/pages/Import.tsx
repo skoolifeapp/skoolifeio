@@ -99,7 +99,7 @@ const Import = () => {
           onDrop={handleDrop}
         >
           {file ? (
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center animate-fade-in">
               <CheckCircle2 className="h-16 w-16 text-primary mb-4" />
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-5 w-5 text-muted-foreground" />

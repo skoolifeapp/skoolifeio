@@ -5,14 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MobileNav } from "@/components/layout/MobileNav";
 import Index from "./pages/Index";
-import Welcome from "./pages/Welcome";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
 import AddExamOrConstraint from "./pages/AddExamOrConstraint";
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import DayDetail from "./pages/DayDetail";
-import NativeFeatures from "./pages/NativeFeatures";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,14 +24,12 @@ const App = () => (
         <div className="relative">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<Welcome />} />
             <Route path="/import" element={<Import />} />
             <Route path="/exams" element={<Exams />} />
             <Route path="/exams/add" element={<AddExamOrConstraint />} />
             <Route path="/planning" element={<Planning />} />
             <Route path="/planning/day/:day" element={<DayDetail />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/native" element={<NativeFeatures />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileNav />
