@@ -65,8 +65,7 @@ const DayDetail = () => {
           {dayData.sessions.map((session, index) => (
             <Card
               key={session.id}
-              className="p-5 shadow-[var(--shadow-soft)] animate-slide-up"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="p-5 shadow-[var(--shadow-soft)]"
             >
               <div className="space-y-3">
                 {/* Session Header */}

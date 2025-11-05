@@ -1,4 +1,4 @@
-import { Calendar, BookOpen, Clock, TrendingUp } from "lucide-react";
+import { Calendar, BookOpen, Clock, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -15,6 +15,11 @@ interface Exam {
 const Dashboard = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [importedEvents, setImportedEvents] = useState([]);
+  
+  const mockConstraints = [
+    { id: 1, type: "Sport", day: "Lundi", time: "18:00-20:00" },
+    { id: 2, type: "Association", day: "Mercredi", time: "19:00-21:00" },
+  ];
 
   useEffect(() => {
     const storedExams = localStorage.getItem('exams');
@@ -52,8 +57,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen pb-20 px-4 pt-6 bg-gradient-to-br from-background via-background to-accent/5">
-      {/* Header avec animation */}
-      <div className="mb-8 animate-fade-in">
+      {/* Header */}
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
           Tableau de bord
         </h1>
@@ -63,7 +68,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard
           title="Prochain examen"
           value={nextExam ? `${daysUntilNextExam}j` : '—'}
@@ -74,21 +79,21 @@ const Dashboard = () => {
         />
         
         <StatCard
-          title="Examens totaux"
+          title="Total examens"
           value={exams.length}
-          subtitle="enregistrés"
+          subtitle="à préparer"
           icon={BookOpen}
-          gradient="from-accent/10 via-accent/5 to-transparent"
-          iconColor="text-accent"
+          gradient="from-green-500/10 via-green-500/5 to-transparent"
+          iconColor="text-green-500"
         />
         
         <StatCard
-          title="Priorité haute"
-          value={highPriorityCount}
-          subtitle="à prioriser"
-          icon={TrendingUp}
-          gradient="from-destructive/10 via-destructive/5 to-transparent"
-          iconColor="text-destructive"
+          title="Contraintes"
+          value={mockConstraints.length}
+          subtitle="actives"
+          icon={AlertCircle}
+          gradient="from-orange-500/10 via-orange-500/5 to-transparent"
+          iconColor="text-orange-500"
         />
         
         <StatCard
@@ -102,7 +107,7 @@ const Dashboard = () => {
       </div>
 
       {/* Pomodoro Timer */}
-      <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+      <div>
         <PomodoroTimer />
       </div>
     </div>
