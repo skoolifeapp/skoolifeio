@@ -29,50 +29,17 @@ const Planning = () => {
   }, []);
 
   const generatePlanning = () => {
-    // Get exams from localStorage
-    const storedExams = localStorage.getItem('exams');
-    if (!storedExams) {
-      toast.error("Aucun examen trouvé", {
-        description: "Ajoute d'abord des examens dans l'onglet Examens.",
-      });
-      return;
-    }
-
-    const exams = JSON.parse(storedExams);
-    const existingEvents = [...importedEvents];
-
-    // Convert exams to all-day events
-    exams.forEach((exam: { id: string; subject: string; date: string; priority: string }) => {
-      const examDate = new Date(exam.date);
-      examDate.setHours(0, 0, 0, 0);
-      
-      const endDate = new Date(examDate);
-      endDate.setHours(23, 59, 59, 999);
-
-      // Check if exam event already exists
-      const alreadyExists = existingEvents.some(
-        event => event.summary === `📚 ${exam.subject}` && 
-        new Date(event.startDate).toDateString() === examDate.toDateString()
-      );
-
-      if (!alreadyExists) {
-        existingEvents.push({
-          summary: `📚 ${exam.subject}`,
-          startDate: examDate.toISOString(),
-          endDate: endDate.toISOString(),
-          location: '',
-          description: `Examen - Priorité: ${exam.priority}`,
-        });
-      }
-    });
-
-    setImportedEvents(existingEvents);
-    localStorage.setItem('importedEvents', JSON.stringify(existingEvents));
-
     toast.success("Planning généré par l'IA !", {
-      description: "Tes examens ont été ajoutés au planning.",
+      description: "Tes examens sont maintenant visibles dans le planning.",
     });
   };
+
+  // Get exams for selected day
+  const storedExams = localStorage.getItem('exams');
+  const allExams = storedExams ? JSON.parse(storedExams) : [];
+  const dayExams = allExams.filter((exam: { date: string }) => 
+    isSameDay(new Date(exam.date), selectedDate)
+  );
 
   // Get events for selected day
   const dayEvents = importedEvents.filter(event => 
@@ -118,7 +85,29 @@ const Planning = () => {
             <Sparkles className="h-4 w-4 mr-2" />
             Générer
           </Button>
+      </div>
+
+      {/* Exams Header */}
+      {dayExams.length > 0 && (
+        <div className="mb-4 space-y-2">
+          {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
+            <div
+              key={exam.id}
+              className="bg-primary/10 border border-primary/20 rounded-lg p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📚</span>
+                  <div>
+                    <h3 className="font-semibold">{exam.subject}</h3>
+                    <p className="text-xs text-muted-foreground">Priorité: {exam.priority}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+      )}
 
         {/* Date Navigation */}
         <div className="flex items-center justify-between gap-2 mb-4">
