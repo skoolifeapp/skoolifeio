@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
-import { startOfWeek, addDays, format, addWeeks, isSameDay } from "date-fns";
+import { format, isSameDay, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ImportedEvent {
   summary: string;
@@ -16,8 +18,7 @@ interface ImportedEvent {
 }
 
 const Planning = () => {
-  const navigate = useNavigate();
-  const [currentWeek, setCurrentWeek] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
 
   useEffect(() => {
@@ -33,118 +34,154 @@ const Planning = () => {
     });
   };
 
-  // Get the current week's dates
-  const getWeekDates = () => {
-    const today = new Date();
-    const weekStart = startOfWeek(addWeeks(today, currentWeek), { weekStartsOn: 1 });
-    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Get events for selected day
+  const dayEvents = importedEvents.filter(event => 
+    isSameDay(new Date(event.startDate), selectedDate)
+  );
+
+  // Generate hours (0-23)
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // Helper to get event position and height
+  const getEventStyle = (event: ImportedEvent) => {
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const startHour = start.getHours();
+    const startMinute = start.getMinutes();
+    const endHour = end.getHours();
+    const endMinute = end.getMinutes();
+    
+    const topPercent = ((startHour + startMinute / 60) / 24) * 100;
+    const durationHours = (endHour + endMinute / 60) - (startHour + startMinute / 60);
+    const heightPercent = (durationHours / 24) * 100;
+    
+    return {
+      top: `${topPercent}%`,
+      height: `${heightPercent}%`,
+    };
   };
 
-  const weekDates = getWeekDates();
+  const goToPreviousDay = () => {
+    setSelectedDate(prev => addDays(prev, -1));
+  };
 
-  // Group events by day
-  const planningData = weekDates.map(date => {
-    const dayEvents = importedEvents.filter(event => 
-      isSameDay(new Date(event.startDate), date)
-    );
-
-    const tasks = dayEvents.length > 0
-      ? dayEvents.map(event => {
-          const start = new Date(event.startDate);
-          const end = new Date(event.endDate);
-          const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
-          return `${event.summary} (${duration}h)${event.location ? ` - ${event.location}` : ''}`;
-        })
-      : ["Repos"];
-
-    return {
-      day: format(date, 'EEEE', { locale: fr }),
-      date: date,
-      tasks,
-    };
-  });
+  const goToNextDay = () => {
+    setSelectedDate(prev => addDays(prev, 1));
+  };
 
   return (
-    <div className="min-h-screen pb-20 px-6 pt-6">
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Planning IA</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Semaine du {new Date().toLocaleDateString('fr-FR')}
-            </p>
-          </div>
+    <div className="min-h-screen pb-20 px-4 pt-4">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Planning IA</h1>
           <Button variant="hero" size="sm" onClick={generatePlanning}>
             <Sparkles className="h-4 w-4 mr-2" />
             Générer
           </Button>
         </div>
 
-        {/* Week Navigation */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Date Navigation */}
+        <div className="flex items-center justify-between gap-2 mb-4">
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentWeek(currentWeek - 1)}
+            onClick={goToPreviousDay}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="font-medium">
-            Semaine {currentWeek === 0 ? "actuelle" : currentWeek > 0 ? `+${currentWeek}` : currentWeek}
-          </span>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex-1 justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentWeek(currentWeek + 1)}
+            onClick={goToNextDay}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+      </div>
 
-        {/* Planning Grid */}
-        <div className="space-y-3">
-          {planningData.map((day, index) => (
-            <Card
-              key={index}
-              className="p-4 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300 animate-slide-up cursor-pointer"
-              style={{ animationDelay: `${index * 50}ms` }}
-              onClick={() => navigate(`/planning/day/${day.date.getTime()}`)}
-            >
-              <div className="flex items-start gap-3">
-                <div className="min-w-[80px]">
-                  <p className="font-semibold text-primary capitalize">{day.day}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(day.date, 'd MMM', { locale: fr })}
-                  </p>
+      {/* Day View with Time Grid */}
+      <ScrollArea className="h-[calc(100vh-200px)]">
+        <div className="relative">
+          {/* Time Grid */}
+          <div className="flex">
+            {/* Hours Column */}
+            <div className="w-16 flex-shrink-0 pr-2">
+              {hours.map(hour => (
+                <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
+                  {hour.toString().padStart(2, '0')}:00
                 </div>
-                <div className="flex-1 space-y-1">
-                  {day.tasks.map((task, taskIndex) => (
-                    <div
-                      key={taskIndex}
-                      className={`text-sm p-2 rounded-lg ${
-                        task === "Repos"
-                          ? "bg-muted text-muted-foreground italic"
-                          : "bg-secondary text-foreground"
-                      }`}
-                    >
-                      {task}
-                    </div>
-                  ))}
-                </div>
+              ))}
+            </div>
+
+            {/* Events Column */}
+            <div className="flex-1 relative border-l border-border">
+              {/* Hour Lines */}
+              {hours.map(hour => (
+                <div key={hour} className="h-16 border-t border-border first:border-t-0" />
+              ))}
+
+              {/* Events */}
+              <div className="absolute inset-0 px-2">
+                {dayEvents.length > 0 ? (
+                  dayEvents.map((event, index) => {
+                    const style = getEventStyle(event);
+                    const start = new Date(event.startDate);
+                    const end = new Date(event.endDate);
+                    const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
+
+                    return (
+                      <div
+                        key={index}
+                        className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
+                        style={style}
+                      >
+                        <div className="text-xs font-semibold truncate">{event.summary}</div>
+                        <div className="text-xs opacity-90">
+                          {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
+                        </div>
+                        {event.location && (
+                          <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-muted-foreground text-sm italic">Aucun événement</p>
+                  </div>
+                )}
               </div>
-            </Card>
-          ))}
+            </div>
+          </div>
         </div>
+      </ScrollArea>
 
-        <div className="mt-8 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-          <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Conseils IA
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Ton planning est optimisé en fonction de tes examens et contraintes. N'oublie pas de prendre des pauses régulières !
-          </p>
-        </div>
+      <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+        <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Conseils IA
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Ton planning est optimisé en fonction de tes examens et contraintes. N'oublie pas de prendre des pauses régulières !
+        </p>
       </div>
     </div>
   );
