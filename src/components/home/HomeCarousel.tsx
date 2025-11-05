@@ -10,7 +10,7 @@ import { FeaturesSection } from "./FeaturesSection";
 
 export const HomeCarousel = () => {
   return (
-    <div className="relative w-full h-[calc(100vh-80px)]">
+    <div className="relative w-full min-h-[calc(100vh-80px)]">
       <Carousel 
         className="w-full h-full"
         opts={{
@@ -19,14 +19,14 @@ export const HomeCarousel = () => {
         }}
       >
         <CarouselContent className="h-full">
-          <CarouselItem className="h-full flex items-center">
+          <CarouselItem className="flex items-center justify-center py-8">
             <HeroSection />
           </CarouselItem>
-          <CarouselItem className="h-full flex items-start overflow-y-auto">
+          <CarouselItem className="flex items-start justify-center overflow-y-auto py-8">
             <FeaturesSection />
           </CarouselItem>
         </CarouselContent>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           <CarouselPrevious className="relative left-0 translate-y-0" />
           <CarouselNext className="relative right-0 translate-y-0" />
         </div>

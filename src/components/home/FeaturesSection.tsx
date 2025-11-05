@@ -22,12 +22,12 @@ const features = [
 
 export const FeaturesSection = () => {
   return (
-    <section className="px-6 py-8">
+    <section className="px-6 w-full max-w-lg mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-center">
         Comment ça marche ?
       </h2>
       
-      <div className="space-y-4">
+      <div className="space-y-4 pb-8">
         {features.map((feature, index) => (
           <div
             key={index}
