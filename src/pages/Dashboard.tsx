@@ -4,7 +4,6 @@ import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { PomodoroTimer } from "@/components/dashboard/PomodoroTimer";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { UpcomingExams } from "@/components/dashboard/UpcomingExams";
 
 interface Exam {
   id: string;
@@ -63,11 +62,6 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Pomodoro Timer - Featured */}
-      <div className="mb-6 animate-scale-in">
-        <PomodoroTimer />
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
         <StatCard
@@ -107,9 +101,9 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Upcoming Exams */}
+      {/* Pomodoro Timer */}
       <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <UpcomingExams exams={exams} />
+        <PomodoroTimer />
       </div>
     </div>
   );
