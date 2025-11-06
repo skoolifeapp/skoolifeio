@@ -350,25 +350,6 @@ const Planning = () => {
             >
               <Upload className="h-4 w-4" />
             </Button>
-            {isNative && (
-              <Button 
-                variant={notificationsEnabled ? "default" : "outline"} 
-                size="sm"
-                onClick={toggleNotifications}
-              >
-                {notificationsEnabled ? (
-                  <>
-                    <Bell className="h-4 w-4 mr-2" />
-                    Rappels ON
-                  </>
-                ) : (
-                  <>
-                    <BellOff className="h-4 w-4 mr-2" />
-                    Rappels OFF
-                  </>
-                )}
-              </Button>
-            )}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="hero" size="sm" disabled={isGenerating}>
