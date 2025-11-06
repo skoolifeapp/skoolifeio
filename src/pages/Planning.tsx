@@ -77,10 +77,10 @@ const Planning = () => {
   };
 
   return (
-    <div className="h-[100dvh] safe-area-inset-bottom px-safe pt-safe flex flex-col overflow-hidden">
-      <div className="mb-3 flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold">Planning IA</h1>
+    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Planning IA</h1>
           <Button variant="hero" size="sm" onClick={generatePlanning}>
             <Sparkles className="h-4 w-4 mr-2" />
             Générer
@@ -89,7 +89,7 @@ const Planning = () => {
 
       {/* Exams Header */}
       {dayExams.length > 0 && (
-        <div className="mb-3 space-y-2">
+        <div className="mb-4 space-y-2">
           {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
             <div
               key={exam.id}
@@ -110,7 +110,7 @@ const Planning = () => {
       )}
 
         {/* Date Navigation */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-4">
           <Button
             variant="outline"
             size="icon"
@@ -147,14 +147,14 @@ const Planning = () => {
       </div>
 
       {/* Day View with Time Grid */}
-      <ScrollArea className="flex-1 overflow-auto">
+      <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="relative">
           {/* Time Grid */}
           <div className="flex">
             {/* Hours Column */}
             <div className="w-16 flex-shrink-0 pr-2">
               {hours.map(hour => (
-                <div key={hour} className="h-20 flex items-start justify-end text-sm text-muted-foreground border-t border-border first:border-t-0">
+                <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
               ))}
@@ -164,7 +164,7 @@ const Planning = () => {
             <div className="flex-1 relative border-l border-border">
               {/* Hour Lines */}
               {hours.map(hour => (
-                <div key={hour} className="h-20 border-t border-border first:border-t-0" />
+                <div key={hour} className="h-16 border-t border-border first:border-t-0" />
               ))}
 
               {/* Events */}
@@ -179,22 +179,22 @@ const Planning = () => {
                     return (
                       <div
                         key={index}
-                        className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-xl p-3 overflow-hidden shadow-md touch-manipulation"
+                        className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
                         style={style}
                       >
-                        <div className="text-sm font-semibold truncate">{event.summary}</div>
-                        <div className="text-sm opacity-90">
+                        <div className="text-xs font-semibold truncate">{event.summary}</div>
+                        <div className="text-xs opacity-90">
                           {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
                         </div>
                         {event.location && (
-                          <div className="text-sm opacity-80 truncate mt-1">{event.location}</div>
+                          <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
                         )}
                       </div>
                     );
                   })
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-muted-foreground text-base italic">Aucun événement</p>
+                    <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
                 )}
               </div>

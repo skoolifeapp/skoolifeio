@@ -28,19 +28,19 @@ const getConstraintLabel = (type: string) => {
 
 export const ConstraintsList = ({ constraints, removeConstraint }: ConstraintsListProps) => {
   return (
-    <div className="h-full overflow-y-auto px-safe pt-safe pb-safe">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold mb-1">Mes contraintes</h1>
-        <p className="text-sm text-muted-foreground">Tes disponibilités et contraintes</p>
+    <div className="h-full overflow-y-auto p-4 pb-24">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Mes contraintes</h1>
+        <p className="text-muted-foreground text-sm">Tes disponibilités et contraintes</p>
       </div>
 
-      <Card className="shadow-md">
-        <CardHeader className="pb-3">
+      <Card>
+        <CardHeader>
           <CardTitle>Contraintes enregistrées</CardTitle>
         </CardHeader>
         <CardContent>
           {constraints.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-base">
+            <p className="text-center text-muted-foreground py-8">
               Aucune contrainte enregistrée. Ajoute ta première contrainte !
             </p>
           ) : (
@@ -48,18 +48,17 @@ export const ConstraintsList = ({ constraints, removeConstraint }: ConstraintsLi
               {constraints.map((constraint) => (
                 <div
                   key={constraint.id}
-                  className="flex items-center justify-between p-4 border-2 rounded-xl hover:bg-muted/50 transition-colors touch-manipulation"
+                  className="flex items-center justify-between p-3 border rounded-lg"
                 >
-                  <div className="flex-1 pr-3">
-                    <h3 className="font-semibold text-base">{getConstraintLabel(constraint.type)}</h3>
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{getConstraintLabel(constraint.type)}</h3>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeConstraint(constraint.id)}
-                    className="flex-shrink-0 min-h-[48px] min-w-[48px]"
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}

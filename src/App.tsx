@@ -7,28 +7,15 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ScrollReset } from "@/components/layout/ScrollReset";
-import { lazy, Suspense } from "react";
-
-// Lazy load pages for better performance
-const Index = lazy(() => import("./pages/Index"));
-const Import = lazy(() => import("./pages/Import"));
-const Exams = lazy(() => import("./pages/Exams"));
-const AddExamOrConstraint = lazy(() => import("./pages/AddExamOrConstraint"));
-const Planning = lazy(() => import("./pages/Planning"));
-const Profile = lazy(() => import("./pages/Profile"));
-const DayDetail = lazy(() => import("./pages/DayDetail"));
-const Auth = lazy(() => import("./pages/Auth"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-
-// Loading component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4 animate-fade-in">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      <p className="text-sm text-muted-foreground">Chargement...</p>
-    </div>
-  </div>
-);
+import Index from "./pages/Index";
+import Import from "./pages/Import";
+import Exams from "./pages/Exams";
+import AddExamOrConstraint from "./pages/AddExamOrConstraint";
+import Planning from "./pages/Planning";
+import Profile from "./pages/Profile";
+import DayDetail from "./pages/DayDetail";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -38,19 +25,17 @@ const AppContent = () => {
   return (
     <div className="relative">
       <ScrollReset />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
-          <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
-          <Route path="/exams/add" element={<ProtectedRoute><AddExamOrConstraint /></ProtectedRoute>} />
-          <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-          <Route path="/planning/day/:day" element={<ProtectedRoute><DayDetail /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
+        <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
+        <Route path="/exams/add" element={<ProtectedRoute><AddExamOrConstraint /></ProtectedRoute>} />
+        <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
+        <Route path="/planning/day/:day" element={<ProtectedRoute><DayDetail /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       {user && <MobileNav />}
     </div>
   );
