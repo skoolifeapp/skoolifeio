@@ -77,10 +77,10 @@ const Planning = () => {
   };
 
   return (
-    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Planning IA</h1>
+    <div className="h-[100dvh] safe-area-inset-bottom px-safe pt-safe flex flex-col overflow-hidden">
+      <div className="mb-3 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-bold">Planning IA</h1>
           <Button variant="hero" size="sm" onClick={generatePlanning}>
             <Sparkles className="h-4 w-4 mr-2" />
             Générer
@@ -89,7 +89,7 @@ const Planning = () => {
 
       {/* Exams Header */}
       {dayExams.length > 0 && (
-        <div className="mb-4 space-y-2">
+        <div className="mb-3 space-y-2">
           {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
             <div
               key={exam.id}
@@ -110,7 +110,7 @@ const Planning = () => {
       )}
 
         {/* Date Navigation */}
-        <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
           <Button
             variant="outline"
             size="icon"
@@ -147,7 +147,7 @@ const Planning = () => {
       </div>
 
       {/* Day View with Time Grid */}
-      <ScrollArea className="h-[calc(100vh-200px)]">
+      <ScrollArea className="flex-1 overflow-auto">
         <div className="relative">
           {/* Time Grid */}
           <div className="flex">

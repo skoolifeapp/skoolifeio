@@ -16,10 +16,10 @@ interface ExamsListProps {
 
 export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
   return (
-    <div className="h-full overflow-y-auto p-4 pb-24">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Mes examens</h1>
-        <p className="text-muted-foreground text-sm">Liste de tes examens à venir</p>
+    <div className="h-full overflow-y-auto px-safe pt-safe pb-safe">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold mb-1">Mes examens</h1>
+        <p className="text-sm text-muted-foreground">Liste de tes examens à venir</p>
       </div>
 
       <Card>

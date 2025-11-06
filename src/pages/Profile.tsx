@@ -17,24 +17,24 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
+    <div className="min-h-[100dvh] safe-area-inset-bottom px-safe pt-safe py-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Profil</h1>
-        <p className="text-muted-foreground mb-8">
+        <h1 className="text-2xl font-bold mb-1">Profil</h1>
+        <p className="text-sm text-muted-foreground mb-4">
           Gère tes informations personnelles
         </p>
 
         {/* Profile Avatar */}
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-[var(--shadow-medium)]">
-            <User className="h-12 w-12 text-primary-foreground" />
+        <div className="flex justify-center mb-4">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-[var(--shadow-medium)]">
+            <User className="h-10 w-10 text-primary-foreground" />
           </div>
         </div>
 
         {/* Profile Information */}
-        <Card className="p-6 mb-6 shadow-[var(--shadow-soft)]">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
+        <Card className="p-4 mb-4 shadow-[var(--shadow-soft)]">
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Settings className="h-4 w-4 text-primary" />
             Informations
           </h2>
           
@@ -89,7 +89,7 @@ const Profile = () => {
 
           <Button
             variant="default"
-            className="w-full mt-6"
+            className="w-full mt-4"
             onClick={handleSave}
           >
             Sauvegarder
@@ -99,7 +99,7 @@ const Profile = () => {
         {/* Logout Button */}
         <Button
           variant="outline"
-          className="w-full mb-6"
+          className="w-full mb-4"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4 mr-2" />
@@ -107,8 +107,8 @@ const Profile = () => {
         </Button>
 
         {/* Statistics Card */}
-        <Card className="p-6 shadow-[var(--shadow-soft)]">
-          <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
+        <Card className="p-4 shadow-[var(--shadow-soft)]">
+          <h2 className="text-lg font-semibold mb-3">Statistiques</h2>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-secondary rounded-xl">

@@ -28,10 +28,10 @@ const getConstraintLabel = (type: string) => {
 
 export const ConstraintsList = ({ constraints, removeConstraint }: ConstraintsListProps) => {
   return (
-    <div className="h-full overflow-y-auto p-4 pb-24">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Mes contraintes</h1>
-        <p className="text-muted-foreground text-sm">Tes disponibilités et contraintes</p>
+    <div className="h-full overflow-y-auto px-safe pt-safe pb-safe">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold mb-1">Mes contraintes</h1>
+        <p className="text-sm text-muted-foreground">Tes disponibilités et contraintes</p>
       </div>
 
       <Card>

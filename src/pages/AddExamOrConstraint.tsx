@@ -37,16 +37,16 @@ const AddExamOrConstraint = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 pb-24">
-      <div className="flex items-center mb-6">
+    <div className="min-h-[100dvh] px-safe pt-safe pb-safe">
+      <div className="flex items-center mb-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/exams", { state: location.state })}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold ml-2">
+        <h1 className="text-xl font-bold ml-2">
           {mode === "select" ? "Ajouter" : mode === "exam" ? "Nouvel examen" : "Nouvelle contrainte"}
         </h1>
       </div>

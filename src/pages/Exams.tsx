@@ -74,13 +74,13 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full h-screen pt-safe pb-safe">
+    <div className="relative w-full h-[100dvh] pt-safe pb-safe">
       <Button
         onClick={handleAddClick}
         size="icon"
-        className="fixed top-20 right-6 z-20 rounded-full"
+        className="fixed top-4 right-4 z-20 rounded-full shadow-lg"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-5 w-5" />
       </Button>
 
       <Carousel 

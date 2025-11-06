@@ -5,11 +5,11 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen safe-area-inset-bottom pt-safe px-6 py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
-          <p className="text-muted-foreground">Bienvenue sur Skoolife</p>
+    <div className="min-h-[100dvh] safe-area-inset-bottom pt-safe px-safe py-4">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">Tableau de bord</h1>
+          <p className="text-sm text-muted-foreground">Bienvenue sur Skoolife</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

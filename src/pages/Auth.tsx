@@ -114,20 +114,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 safe-area-inset">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 safe-area-inset">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
+        <CardHeader className="space-y-1 text-center pb-4">
           <div className="flex justify-center mb-2">
             <img 
               src={skoolifeLogo} 
               alt="Skoolife Logo" 
-              className="h-16 w-16"
+              className="h-14 w-14"
               loading="eager"
               fetchPriority="high"
             />
           </div>
-          <CardTitle className="text-2xl">Skoolife</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl">Skoolife</CardTitle>
+          <CardDescription className="text-sm">
             Gérez vos examens et optimisez votre planning de révisions
           </CardDescription>
         </CardHeader>

@@ -74,15 +74,15 @@ const Import = () => {
   };
 
   return (
-    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
+    <div className="min-h-[100dvh] safe-area-inset-bottom px-safe pt-safe py-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Import .ics</h1>
-        <p className="text-muted-foreground mb-8">
+        <h1 className="text-2xl font-bold mb-1">Import .ics</h1>
+        <p className="text-sm text-muted-foreground mb-4">
           Importe ton emploi du temps universitaire
         </p>
 
         <Card
-          className={`border-2 border-dashed rounded-2xl p-8 transition-all duration-300 ${
+          className={`border-2 border-dashed rounded-2xl p-6 transition-all duration-300 ${
             isDragging
               ? "border-primary bg-secondary scale-105"
               : file
@@ -95,12 +95,12 @@ const Import = () => {
         >
           {file ? (
             <div className="flex flex-col items-center text-center animate-fade-in">
-              <CheckCircle2 className="h-16 w-16 text-primary mb-4" />
+              <CheckCircle2 className="h-12 w-12 text-primary mb-3" />
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-5 w-5 text-muted-foreground" />
                 <p className="font-medium">{file.name}</p>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-4">
                 Fichier prêt à être importé
               </p>
               <Button
@@ -113,11 +113,11 @@ const Import = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center text-center">
-              <Upload className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium mb-2">
+              <Upload className="h-12 w-12 text-muted-foreground mb-3" />
+              <p className="text-base font-medium mb-2">
                 Dépose ton fichier .ics ici
               </p>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-4">
                 ou clique pour parcourir
               </p>
               <label htmlFor="file-upload">
@@ -140,14 +140,14 @@ const Import = () => {
           <Button
             variant="hero"
             size="lg"
-            className="w-full mt-6"
+            className="w-full mt-4"
             onClick={handleSubmit}
           >
             Valider l'import
           </Button>
         )}
 
-        <div className="mt-8 p-4 bg-muted rounded-xl">
+        <div className="mt-4 p-3 bg-muted rounded-xl">
           <h3 className="font-semibold mb-2 text-sm">💡 Astuce</h3>
           <p className="text-xs text-muted-foreground">
             Tu peux télécharger ton emploi du temps .ics depuis ton ENT universitaire (Celcat, ADE, etc.)
