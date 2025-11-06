@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { format, isSameDay, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
+import { notificationService } from "@/services/notificationService";
+import { Capacitor } from "@capacitor/core";
 
 interface ImportedEvent {
   summary: string;
@@ -42,10 +44,16 @@ const Planning = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intensity, setIntensity] = useState<IntensityLevel>('standard');
   const [examsCount, setExamsCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
+    // Check if running on native platform
+    setIsNative(Capacitor.isNativePlatform());
+    
     if (user) {
       loadCalendarEvents();
+      checkNotificationStatus();
     }
   }, [user]);
 
@@ -94,7 +102,44 @@ const Planning = () => {
       return;
     }
 
-    setRevisionSessions(data || []);
+    const sessions = data || [];
+    setRevisionSessions(sessions);
+    
+    // Schedule notifications for all upcoming sessions
+    if (isNative && notificationsEnabled) {
+      await notificationService.scheduleSessionReminders(sessions);
+    }
+  };
+
+  const checkNotificationStatus = async () => {
+    if (!isNative) return;
+    
+    const permission = await notificationService.checkPermissions();
+    setNotificationsEnabled(permission === 'granted');
+  };
+
+  const toggleNotifications = async () => {
+    if (!isNative) {
+      toast.error("Les notifications ne fonctionnent que sur l'app native");
+      return;
+    }
+
+    if (notificationsEnabled) {
+      // Disable notifications
+      await notificationService.cancelAllNotifications();
+      setNotificationsEnabled(false);
+      toast.error("Notifications désactivées");
+    } else {
+      // Enable notifications
+      const success = await notificationService.initialize();
+      if (success) {
+        await notificationService.scheduleSessionReminders(revisionSessions);
+        setNotificationsEnabled(true);
+        toast.error("Notifications activées - Tu seras rappelé 15 min avant chaque session");
+      } else {
+        toast.error("Impossible d'activer les notifications");
+      }
+    }
   };
 
   const loadExamsCount = async () => {
@@ -226,66 +271,88 @@ const Planning = () => {
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Planning IA</h1>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button variant="hero" size="sm" disabled={isGenerating}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Générer
+          <div className="flex gap-2">
+            {isNative && (
+              <Button 
+                variant={notificationsEnabled ? "default" : "outline"} 
+                size="sm"
+                onClick={toggleNotifications}
+              >
+                {notificationsEnabled ? (
+                  <>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Rappels ON
+                  </>
+                ) : (
+                  <>
+                    <BellOff className="h-4 w-4 mr-2" />
+                    Rappels OFF
+                  </>
+                )}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh]">
-              <SheetHeader>
-                <SheetTitle>Génération du planning IA</SheetTitle>
-                <SheetDescription>
-                  Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="mt-6 space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
-                  {examsCount === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <Label>Intensité de révision</Label>
-                  <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="leger" id="leger" />
-                      <Label htmlFor="leger" className="font-normal">
-                        Léger (1 session/jour, 45-60 min)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="standard" id="standard" />
-                      <Label htmlFor="standard" className="font-normal">
-                        Standard (2 sessions/jour, 60-90 min)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="intensif" id="intensif" />
-                      <Label htmlFor="intensif" className="font-normal">
-                        Intensif (3 sessions/jour, 75-120 min)
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <Button 
-                  onClick={handleGeneratePlanning} 
-                  className="w-full"
-                  disabled={isGenerating || examsCount === 0}
-                >
+            )}
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="hero" size="sm" disabled={isGenerating}>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  {isGenerating ? 'Génération...' : 'Lancer la génération'}
+                  Générer
                 </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[80vh]">
+                <SheetHeader>
+                  <SheetTitle>Génération du planning IA</SheetTitle>
+                  <SheetDescription>
+                    Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
+                    {examsCount === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Intensité de révision</Label>
+                    <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="leger" id="leger" />
+                        <Label htmlFor="leger" className="font-normal">
+                          Léger (1 session/jour, 45-60 min)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="standard" id="standard" />
+                        <Label htmlFor="standard" className="font-normal">
+                          Standard (2 sessions/jour, 60-90 min)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="intensif" id="intensif" />
+                        <Label htmlFor="intensif" className="font-normal">
+                          Intensif (3 sessions/jour, 75-120 min)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <Button 
+                    onClick={handleGeneratePlanning} 
+                    className="w-full"
+                    disabled={isGenerating || examsCount === 0}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {isGenerating ? 'Génération...' : 'Lancer la génération'}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
       </div>
 
       {/* Exams Header */}
@@ -310,41 +377,40 @@ const Planning = () => {
         </div>
       )}
 
-        {/* Date Navigation */}
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToPreviousDay}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex-1 justify-start text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+      {/* Date Navigation */}
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goToPreviousDay}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="flex-1 justify-start text-left font-normal">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToNextDay}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goToNextDay}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Day View with Time Grid */}
