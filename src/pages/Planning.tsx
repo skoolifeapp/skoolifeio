@@ -484,7 +484,7 @@ const Planning = () => {
           {/* Time Grid */}
           <div className="flex">
             {/* Hours Column */}
-            <div className="w-16 flex-shrink-0 pr-2">
+            <div className="w-14 flex-shrink-0 pr-1 pl-1">
               {hours.map(hour => (
                 <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
                   {hour.toString().padStart(2, '0')}:00
