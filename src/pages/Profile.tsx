@@ -99,36 +99,12 @@ const Profile = () => {
         {/* Logout Button */}
         <Button
           variant="outline"
-          className="w-full mb-6"
+          className="w-full"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Se déconnecter
         </Button>
-
-        {/* Statistics Card */}
-        <Card className="p-6 shadow-[var(--shadow-soft)]">
-          <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-secondary rounded-xl">
-              <p className="text-3xl font-bold text-primary">12</p>
-              <p className="text-xs text-muted-foreground mt-1">Examens</p>
-            </div>
-            <div className="text-center p-4 bg-secondary rounded-xl">
-              <p className="text-3xl font-bold text-primary">45h</p>
-              <p className="text-xs text-muted-foreground mt-1">Révisions</p>
-            </div>
-            <div className="text-center p-4 bg-secondary rounded-xl">
-              <p className="text-3xl font-bold text-primary">8</p>
-              <p className="text-xs text-muted-foreground mt-1">Semaines</p>
-            </div>
-            <div className="text-center p-4 bg-secondary rounded-xl">
-              <p className="text-3xl font-bold text-primary">95%</p>
-              <p className="text-xs text-muted-foreground mt-1">Assiduité</p>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );
