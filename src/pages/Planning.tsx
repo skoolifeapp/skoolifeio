@@ -202,16 +202,6 @@ const Planning = () => {
           </div>
         </div>
       </ScrollArea>
-
-      <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-        <h3 className="font-semibold mb-2 text-sm flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Conseils IA
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          Ton planning est optimisé en fonction de tes examens et contraintes. N'oublie pas de prendre des pauses régulières !
-        </p>
-      </div>
     </div>
   );
 };
