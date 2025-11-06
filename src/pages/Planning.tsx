@@ -330,7 +330,7 @@ const Planning = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-safe pt-safe">
+    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Planning IA</h1>

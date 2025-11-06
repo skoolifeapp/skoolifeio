@@ -17,7 +17,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-safe pt-safe">
+    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
       <div className="max-w-md mx-auto">
         <h1 className="text-3xl font-bold mb-2">Profil</h1>
         <p className="text-muted-foreground mb-8">

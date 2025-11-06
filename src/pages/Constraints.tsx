@@ -168,7 +168,7 @@ const Constraints = () => {
   const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 px-safe pt-safe">
+    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
       <div className="sticky top-0 z-10 bg-background border-b p-4">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold">Mes contraintes</h1>
