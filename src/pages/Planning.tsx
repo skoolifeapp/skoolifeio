@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff, Upload } from "lucide-react";
+import ICAL from "ical.js";
 import { toast } from "sonner";
 import { format, isSameDay, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -39,6 +40,7 @@ interface RevisionSession {
 const Planning = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
   const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
@@ -200,6 +202,66 @@ const Planning = () => {
     await loadRevisionSessions();
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const jcalData = ICAL.parse(text);
+        const comp = new ICAL.Component(jcalData);
+        const vevents = comp.getAllSubcomponents('vevent');
+
+        const events = vevents.map((vevent: any) => {
+          const event = new ICAL.Event(vevent);
+          return {
+            summary: event.summary,
+            startDate: event.startDate.toJSDate().toISOString(),
+            endDate: event.endDate.toJSDate().toISOString(),
+            location: event.location || '',
+            description: event.description || '',
+          };
+        });
+
+        // Delete existing calendar events
+        await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('user_id', user.id);
+
+        // Insert new events
+        const eventsToInsert = events.map(event => ({
+          user_id: user.id,
+          summary: event.summary,
+          start_date: event.startDate,
+          end_date: event.endDate,
+          location: event.location,
+          description: event.description,
+        }));
+
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(eventsToInsert);
+
+        if (error) throw error;
+
+        await loadCalendarEvents();
+        toast.success(`${events.length} événement(s) importé(s) avec succès`);
+      } catch (error) {
+        console.error('Error importing calendar:', error);
+        toast.error("Erreur lors de l'import du fichier");
+      }
+    };
+
+    reader.readAsText(file);
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   // Get exams for selected day from Supabase (not localStorage)
   const [dayExams, setDayExams] = useState<any[]>([]);
 
@@ -274,10 +336,18 @@ const Planning = () => {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Planning IA</h1>
           <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".ics"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
             <Button
               variant="outline"
               size="icon"
-              onClick={() => navigate('/import')}
+              onClick={() => fileInputRef.current?.click()}
+              title="Importer un fichier .ics"
             >
               <Upload className="h-4 w-4" />
             </Button>

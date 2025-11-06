@@ -9,7 +9,6 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { useMigrateLocalStorageToSupabase } from "@/hooks/useMigrateLocalStorageToSupabase";
 import Index from "./pages/Index";
-import Import from "./pages/Import";
 import Exams from "./pages/Exams";
 import AddExamOrConstraint from "./pages/AddExamOrConstraint";
 import Planning from "./pages/Planning";
@@ -33,7 +32,6 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-        <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
         <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
         <Route path="/exams/add" element={<ProtectedRoute><AddExamOrConstraint /></ProtectedRoute>} />
         <Route path="/constraints" element={<ProtectedRoute><Constraints /></ProtectedRoute>} />
