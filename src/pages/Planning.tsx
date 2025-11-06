@@ -337,8 +337,8 @@ const Planning = () => {
 
   return (
     <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe">
-      {/* Fixed Header Section */}
-      <div className="flex-shrink-0">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-10 bg-background pb-4">
         <div className="mb-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Planning IA</h1>
@@ -482,7 +482,7 @@ const Planning = () => {
       </div>
 
       {/* Scrollable Day View with Time Grid */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0">
         <ScrollArea className="h-full">
           <div className="relative">
             {/* Time Grid */}
