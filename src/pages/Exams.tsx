@@ -74,7 +74,7 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-80px)]">
+    <div className="relative w-full h-screen pt-safe pb-safe">
       <Button
         onClick={handleAddClick}
         size="icon"

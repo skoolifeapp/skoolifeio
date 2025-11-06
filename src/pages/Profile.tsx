@@ -11,7 +11,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 px-6 pt-6">
+    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
       <div className="max-w-md mx-auto">
         <h1 className="text-3xl font-bold mb-2">Profil</h1>
         <p className="text-muted-foreground mb-8">
