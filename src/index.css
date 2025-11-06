@@ -114,6 +114,16 @@ All colors MUST be HSL.
     padding-left: var(--safe-area-inset-left);
     overflow-x: hidden;
   }
+
+  /* Hide scrollbars globally */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
