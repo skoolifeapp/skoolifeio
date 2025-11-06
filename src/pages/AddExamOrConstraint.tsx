@@ -12,28 +12,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const AddExamOrConstraint = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [mode, setMode] = useState<"select" | "exam" | "constraint">("select");
   const [newExam, setNewExam] = useState({ subject: "", date: "", priority: "medium" });
   const [constraintType, setConstraintType] = useState("");
 
-  const handleAddExam = () => {
-    if (newExam.subject && newExam.date) {
-      const currentExams = location.state?.exams || [];
-      const updatedExams = [...currentExams, { ...newExam, id: Date.now().toString() }];
-      navigate("/exams", { state: { exams: updatedExams, constraints: location.state?.constraints || [] } });
+  const handleAddExam = async () => {
+    if (!user || !newExam.subject || !newExam.date) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
     }
+
+    const { error } = await supabase
+      .from('exams')
+      .insert({
+        user_id: user.id,
+        subject: newExam.subject,
+        date: newExam.date,
+        priority: newExam.priority,
+      });
+
+    if (error) {
+      console.error('Error adding exam:', error);
+      toast.error("Erreur lors de l'ajout de l'examen");
+      return;
+    }
+
+    toast.success("Examen ajouté avec succès");
+    navigate("/exams");
   };
 
-  const handleAddConstraint = () => {
-    if (constraintType) {
-      const currentConstraints = location.state?.constraints || [];
-      const updatedConstraints = [...currentConstraints, { id: Date.now().toString(), type: constraintType, days: [] }];
-      navigate("/exams", { state: { exams: location.state?.exams || [], constraints: updatedConstraints } });
+  const handleAddConstraint = async () => {
+    if (!user || !constraintType) {
+      toast.error("Veuillez sélectionner un type de contrainte");
+      return;
     }
+
+    const { error } = await supabase
+      .from('constraints')
+      .insert({
+        user_id: user.id,
+        type: constraintType,
+        days: [],
+      });
+
+    if (error) {
+      console.error('Error adding constraint:', error);
+      toast.error("Erreur lors de l'ajout de la contrainte");
+      return;
+    }
+
+    toast.success("Contrainte ajoutée avec succès");
+    navigate("/exams");
   };
 
   return (

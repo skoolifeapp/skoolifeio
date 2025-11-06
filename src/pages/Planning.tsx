@@ -133,12 +133,33 @@ const Planning = () => {
     await loadRevisionSessions();
   };
 
-  // Get exams for selected day
-  const storedExams = localStorage.getItem('exams');
-  const allExams = storedExams ? JSON.parse(storedExams) : [];
-  const dayExams = allExams.filter((exam: { date: string }) => 
-    isSameDay(new Date(exam.date), selectedDate)
-  );
+  // Get exams for selected day from Supabase (not localStorage)
+  const [dayExams, setDayExams] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      loadDayExams();
+    }
+  }, [user, selectedDate]);
+
+  const loadDayExams = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading exams:', error);
+      return;
+    }
+
+    const filtered = (data || []).filter((exam: { date: string }) => 
+      isSameDay(new Date(exam.date), selectedDate)
+    );
+    setDayExams(filtered);
+  };
 
   // Get events for selected day
   const dayEvents = importedEvents.filter(event => 

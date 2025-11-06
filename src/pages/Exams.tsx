@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/carousel";
 import { ExamsList } from "@/components/exams/ExamsList";
 import { ConstraintsList } from "@/components/exams/ConstraintsList";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface Exam {
   id: string;
@@ -28,22 +31,17 @@ interface Constraint {
 const Exams = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
 
   useEffect(() => {
-    // Load from localStorage first
-    const storedExams = localStorage.getItem('exams');
-    const storedConstraints = localStorage.getItem('constraints');
-    
-    if (storedExams) {
-      setExams(JSON.parse(storedExams));
+    if (user) {
+      loadData();
     }
-    if (storedConstraints) {
-      setConstraints(JSON.parse(storedConstraints));
-    }
+  }, [user]);
 
-    // Then update from navigation state if available
+  useEffect(() => {
     if (location.state?.exams) {
       setExams(location.state.exams);
     }
@@ -52,21 +50,65 @@ const Exams = () => {
     }
   }, [location.state]);
 
-  // Save to localStorage whenever exams or constraints change
-  useEffect(() => {
-    localStorage.setItem('exams', JSON.stringify(exams));
-  }, [exams]);
+  const loadData = async () => {
+    if (!user) return;
 
-  useEffect(() => {
-    localStorage.setItem('constraints', JSON.stringify(constraints));
-  }, [constraints]);
+    // Load exams
+    const { data: examsData, error: examsError } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: true });
 
-  const removeExam = (id: string) => {
-    setExams(exams.filter(exam => exam.id !== id));
+    if (examsError) {
+      console.error('Error loading exams:', examsError);
+      toast.error("Erreur lors du chargement des examens");
+    } else {
+      setExams(examsData || []);
+    }
+
+    // Load constraints
+    const { data: constraintsData, error: constraintsError } = await supabase
+      .from('constraints')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (constraintsError) {
+      console.error('Error loading constraints:', constraintsError);
+      toast.error("Erreur lors du chargement des contraintes");
+    } else {
+      setConstraints(constraintsData || []);
+    }
   };
 
-  const removeConstraint = (id: string) => {
+  const removeExam = async (id: string) => {
+    const { error } = await supabase
+      .from('exams')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
+    setExams(exams.filter(exam => exam.id !== id));
+    toast.success("Examen supprimé");
+  };
+
+  const removeConstraint = async (id: string) => {
+    const { error } = await supabase
+      .from('constraints')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+      return;
+    }
+
     setConstraints(constraints.filter((c) => c.id !== id));
+    toast.success("Contrainte supprimée");
   };
 
   const handleAddClick = () => {
