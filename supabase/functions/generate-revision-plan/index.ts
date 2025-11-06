@@ -74,8 +74,18 @@ RÈGLES STRICTES :
 3. Pas de sessions entre 22h00 et 8h00
 4. Éviter tout chevauchement avec les événements existants
 5. Respecter les contraintes utilisateur
-6. Prioriser les examens proches et difficiles
-7. Augmenter progressivement l'intensité à l'approche des examens
+6. IMPÉRATIF : Tu DOIS créer des sessions de révision pour TOUS les examens listés, pas juste un seul
+7. Répartir équitablement les sessions entre toutes les matières selon leur priorité et date
+8. Prioriser les examens proches et difficiles (haute priorité)
+9. Augmenter progressivement l'intensité à l'approche de chaque examen
+10. Assurer une couverture complète : chaque examen doit avoir plusieurs sessions de révision
+
+STRATÉGIE DE RÉPARTITION :
+- Pour chaque examen, calculer le nombre de jours jusqu'à la date d'examen
+- Allouer plus de sessions aux examens avec priorité "high"
+- Alterner entre les matières pour éviter la monotonie
+- Concentrer les révisions dans les 2 semaines avant chaque examen
+- Si plusieurs examens sont proches, prioriser celui avec la date la plus proche
 
 RETOURNE UNIQUEMENT un JSON valide avec ce format exact :
 {
@@ -86,23 +96,34 @@ RETOURNE UNIQUEMENT un JSON valide avec ce format exact :
       "start_time": "ISO 8601 timestamp",
       "end_time": "ISO 8601 timestamp",
       "difficulty": "facile|moyen|difficile",
-      "weight": nombre entre 0 et 1
+      "weight": nombre entre 0 et 1 (plus proche de 1 = plus important)
     }
   ]
 }`;
 
     const userPrompt = `Génère un planning de révision du ${now} au ${lastExamDate}.
 
-EXAMENS :
-${exams.map(e => `- ${e.subject} le ${e.date}, priorité: ${e.priority}, id: ${e.id}`).join('\n')}
+IMPORTANT : Il y a ${exams.length} examen(s) différent(s). Tu DOIS créer des sessions pour CHACUN d'entre eux.
+
+EXAMENS À RÉVISER (TOUS obligatoires) :
+${exams.map((e, idx) => {
+  const daysUntilExam = Math.ceil((new Date(e.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  return `${idx + 1}. ${e.subject} - Date: ${e.date} (dans ${daysUntilExam} jours), Priorité: ${e.priority}, ID: ${e.id}`;
+}).join('\n')}
 
 ÉVÉNEMENTS (créneaux occupés) :
-${events.map(e => `- ${e.summary} : ${e.start_date} → ${e.end_date}`).join('\n')}
+${events.length > 0 ? events.map(e => `- ${e.summary} : ${e.start_date} → ${e.end_date}`).join('\n') : 'Aucun événement'}
 
 CONTRAINTES :
-${constraints.map(c => `- Type: ${c.type}, Jours: ${c.days.join(', ')}`).join('\n')}
+${constraints.length > 0 ? constraints.map(c => `- Type: ${c.type}, Jours: ${c.days.join(', ')}`).join('\n') : 'Aucune contrainte'}
 
-Génère le planning optimal.`;
+INSTRUCTIONS SPÉCIFIQUES :
+- Génère un minimum de ${Math.max(5, exams.length * 3)} sessions au total
+- Chaque examen doit avoir au moins ${Math.max(2, Math.ceil(5 / exams.length))} sessions de révision
+- Varie les horaires (matin, après-midi, soir) pour un meilleur apprentissage
+- Privilégie des sessions plus courtes et fréquentes aux sessions longues et rares
+
+Génère maintenant le planning optimal pour réviser TOUS ces examens.`;
 
     console.log('Calling Lovable AI...');
 
