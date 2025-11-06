@@ -7,7 +7,6 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ScrollReset } from "@/components/layout/ScrollReset";
-import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
@@ -27,9 +26,8 @@ const AppContent = () => {
     <div className="relative">
       <ScrollReset />
       <Routes>
-        <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/home" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
         <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
         <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
         <Route path="/exams/add" element={<ProtectedRoute><AddExamOrConstraint /></ProtectedRoute>} />
