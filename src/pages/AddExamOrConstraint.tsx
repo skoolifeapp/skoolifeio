@@ -23,6 +23,7 @@ const AddExamOrConstraint = () => {
   const [mode, setMode] = useState<"select" | "exam" | "constraint">("select");
   const [newExam, setNewExam] = useState({ subject: "", date: "", priority: "medium" });
   const [constraintType, setConstraintType] = useState("");
+  const [commuteTime, setCommuteTime] = useState<number>(0);
 
   const handleAddExam = async () => {
     if (!user || !newExam.subject || !newExam.date) {
@@ -60,6 +61,7 @@ const AddExamOrConstraint = () => {
         user_id: user.id,
         type: constraintType,
         days: [],
+        commute_time: commuteTime,
       });
 
     if (error) {
@@ -68,6 +70,7 @@ const AddExamOrConstraint = () => {
       return;
     }
 
+    toast.success("Contrainte ajoutée avec succès");
     navigate("/exams");
   };
 
@@ -198,6 +201,22 @@ const AddExamOrConstraint = () => {
                   Job étudiant
                 </Button>
               </div>
+              
+              <div>
+                <Label htmlFor="commute-time">Temps de trajet (aller simple, en minutes)</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Cette info aide l'IA à mieux organiser ton planning
+                </p>
+                <Input
+                  id="commute-time"
+                  type="number"
+                  min="0"
+                  placeholder="Ex: 30"
+                  value={commuteTime === 0 ? "" : commuteTime}
+                  onChange={(e) => setCommuteTime(parseInt(e.target.value) || 0)}
+                />
+              </div>
+
               <Button onClick={handleAddConstraint} className="w-full" disabled={!constraintType}>
                 Ajouter la contrainte
               </Button>

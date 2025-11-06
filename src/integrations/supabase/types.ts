@@ -52,6 +52,7 @@ export type Database = {
       }
       constraints: {
         Row: {
+          commute_time: number | null
           created_at: string
           days: string[]
           id: string
@@ -60,6 +61,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          commute_time?: number | null
           created_at?: string
           days?: string[]
           id?: string
@@ -68,6 +70,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          commute_time?: number | null
           created_at?: string
           days?: string[]
           id?: string
