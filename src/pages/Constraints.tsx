@@ -168,22 +168,26 @@ const Constraints = () => {
   const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
   return (
-    <div className="min-h-screen p-4 pb-24">
+    <div className="min-h-screen p-6 pb-24 bg-gradient-to-b from-background to-secondary/20">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Mes contraintes</h1>
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold bg-gradient-to-br from-primary to-primary-glow bg-clip-text text-transparent mb-2">Mes contraintes</h1>
+          <p className="text-muted-foreground">Définis tes disponibilités et préférences</p>
         </div>
 
         <div className="space-y-6">
           {/* Statut & rythme de vie */}
-          <Card>
+          <Card className="border-border/50 animate-slide-up">
             <CardHeader>
-              <CardTitle>📊 Statut & rythme de vie</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl">📊</span>
+                <span>Statut & rythme de vie</span>
+              </CardTitle>
               <CardDescription>Définis ton profil étudiant</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="alternant">Alternant ?</Label>
+              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-secondary/50 transition-colors">
+                <Label htmlFor="alternant" className="cursor-pointer">Alternant ?</Label>
                 <Switch
                   id="alternant"
                   checked={profile.is_alternant}
@@ -192,8 +196,8 @@ const Constraints = () => {
                   }
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="job">Job étudiant ?</Label>
+              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-secondary/50 transition-colors">
+                <Label htmlFor="job" className="cursor-pointer">Job étudiant ?</Label>
                 <Switch
                   id="job"
                   checked={profile.has_student_job}
@@ -206,17 +210,20 @@ const Constraints = () => {
           </Card>
 
           {/* Contraintes fixes */}
-          <Card>
+          <Card className="border-border/50 animate-slide-up" style={{ animationDelay: '100ms' }}>
             <CardHeader>
-              <CardTitle>🚫 Contraintes fixes (bloquées au planning)</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl">🚫</span>
+                <span>Contraintes fixes</span>
+              </CardTitle>
               <CardDescription>
                 Ces créneaux seront affichés comme bloqués dans ton planning
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {constraintEvents.map((event, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-3">
-                  <div className="flex justify-between items-center">
+                <div key={index} className="p-5 border-2 border-border/50 rounded-2xl space-y-3 hover:border-primary/30 transition-all hover:shadow-[var(--shadow-soft)]">
+                  <div className="flex justify-between items-center gap-2">
                     <Select
                       value={event.type}
                       onValueChange={(value: any) =>
@@ -238,6 +245,7 @@ const Constraints = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeConstraintEvent(index)}
+                      className="hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -249,9 +257,9 @@ const Constraints = () => {
                       updateConstraintEvent(index, 'title', e.target.value)
                     }
                   />
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Début</Label>
+                      <Label className="text-xs text-muted-foreground">Début</Label>
                       <Input
                         type="datetime-local"
                         value={event.start_time.slice(0, 16)}
@@ -262,10 +270,11 @@ const Constraints = () => {
                             new Date(e.target.value).toISOString()
                           )
                         }
+                        className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label>Fin</Label>
+                      <Label className="text-xs text-muted-foreground">Fin</Label>
                       <Input
                         type="datetime-local"
                         value={event.end_time.slice(0, 16)}
@@ -276,6 +285,7 @@ const Constraints = () => {
                             new Date(e.target.value).toISOString()
                           )
                         }
+                        className="mt-1"
                       />
                     </div>
                   </div>
@@ -510,10 +520,12 @@ const Constraints = () => {
             </CardContent>
           </Card>
 
-          <Button onClick={handleSave} disabled={loading} className="w-full" size="lg">
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? "Enregistrement..." : "Enregistrer mes contraintes"}
-          </Button>
+          <div className="sticky bottom-20 pt-4 pb-2">
+            <Button onClick={handleSave} disabled={loading} className="w-full h-14 text-base shadow-[var(--shadow-strong)] hover:shadow-[var(--shadow-glow)]" size="lg">
+              <Save className="h-5 w-5 mr-2" />
+              {loading ? "Enregistrement..." : "Sauvegarder mes contraintes"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -103,11 +103,11 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full h-screen pt-safe pb-safe">
+    <div className="relative w-full h-screen pt-safe pb-safe bg-gradient-to-b from-background to-secondary/20">
       <Button
         onClick={() => setIsDialogOpen(true)}
         size="icon"
-        className="fixed top-20 right-6 z-20 rounded-full"
+        className="fixed top-20 right-6 z-20 rounded-full shadow-[var(--shadow-glow)] hover:rotate-90 transition-all duration-300"
       >
         <Plus className="h-6 w-6" />
       </Button>
@@ -117,9 +117,9 @@ const Exams = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-3xl border-border/50">
           <DialogHeader>
-            <DialogTitle>Nouvel examen</DialogTitle>
+            <DialogTitle className="text-2xl bg-gradient-to-br from-primary to-primary-glow bg-clip-text text-transparent">Nouvel examen</DialogTitle>
           </DialogHeader>
           <Card className="border-0 shadow-none">
             <CardContent className="space-y-4 p-0 pt-4">
