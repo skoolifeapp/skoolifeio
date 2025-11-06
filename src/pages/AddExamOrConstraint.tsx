@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 
 const AddExamOrConstraint = () => {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ const AddExamOrConstraint = () => {
     if (newExam.subject && newExam.date) {
       const currentExams = location.state?.exams || [];
       const updatedExams = [...currentExams, { ...newExam, id: Date.now().toString() }];
-      toast.success("Examen ajouté !");
       navigate("/exams", { state: { exams: updatedExams, constraints: location.state?.constraints || [] } });
     }
   };
@@ -34,7 +32,6 @@ const AddExamOrConstraint = () => {
     if (constraintType) {
       const currentConstraints = location.state?.constraints || [];
       const updatedConstraints = [...currentConstraints, { id: Date.now().toString(), type: constraintType, days: [] }];
-      toast.success("Contrainte ajoutée !");
       navigate("/exams", { state: { exams: location.state?.exams || [], constraints: updatedConstraints } });
     }
   };

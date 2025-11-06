@@ -3,19 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, GraduationCap, Settings, LogOut } from "lucide-react";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
   const { signOut, user } = useAuth();
   
   const handleSave = () => {
-    toast.success("Profil sauvegardé !");
+    console.log('Profile saved');
   };
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Déconnexion réussie");
   };
 
   return (

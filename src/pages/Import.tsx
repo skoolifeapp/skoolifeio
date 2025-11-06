@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, CheckCircle2, FileText } from "lucide-react";
-import { toast } from "sonner";
 import ICAL from "ical.js";
 
 const Import = () => {
@@ -16,9 +15,8 @@ const Import = () => {
       const selectedFile = e.target.files[0];
       if (selectedFile.name.endsWith('.ics')) {
         setFile(selectedFile);
-        toast.success("Fichier .ics importé avec succès !");
       } else {
-        toast.error("Veuillez sélectionner un fichier .ics");
+        console.error('Invalid file format');
       }
     }
   };
@@ -40,9 +38,8 @@ const Import = () => {
       const droppedFile = e.dataTransfer.files[0];
       if (droppedFile.name.endsWith('.ics')) {
         setFile(droppedFile);
-        toast.success("Fichier .ics importé avec succès !");
       } else {
-        toast.error("Veuillez déposer un fichier .ics");
+        console.error('Invalid file format');
       }
     }
   };
@@ -70,11 +67,9 @@ const Import = () => {
       // Store events in localStorage
       localStorage.setItem('importedEvents', JSON.stringify(events));
       
-      toast.success("Emploi du temps enregistré !");
       navigate('/planning');
     } catch (error) {
       console.error('Error parsing ICS file:', error);
-      toast.error("Erreur lors de l'import du fichier");
     }
   };
 

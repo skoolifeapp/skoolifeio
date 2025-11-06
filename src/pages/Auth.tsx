@@ -22,7 +22,6 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -48,32 +47,11 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "Cet email est déjà utilisé. Essayez de vous connecter."
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: error.message
-          });
-        }
-      } else {
-        toast({
-          title: "Compte créé !",
-          description: "Vérifiez votre email pour confirmer votre inscription."
-        });
+        console.error('Sign up error:', error);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({
-          variant: "destructive",
-          title: "Erreur de validation",
-          description: error.errors[0].message
-        });
+        console.error('Validation error:', error.errors[0].message);
       }
     } finally {
       setLoading(false);
@@ -93,21 +71,13 @@ const Auth = () => {
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect."
-        });
+        console.error('Sign in error:', error);
       } else {
         navigate('/');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({
-          variant: "destructive",
-          title: "Erreur de validation",
-          description: error.errors[0].message
-        });
+        console.error('Validation error:', error.errors[0].message);
       }
     } finally {
       setLoading(false);
