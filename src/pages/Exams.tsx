@@ -107,7 +107,7 @@ const Exams = () => {
       <Button
         onClick={() => setIsDialogOpen(true)}
         size="icon"
-        className="fixed top-16 right-6 z-20 rounded-full"
+        className="fixed top-12 right-6 z-20 rounded-full"
       >
         <Plus className="h-6 w-6" />
       </Button>

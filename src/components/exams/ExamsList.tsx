@@ -23,17 +23,12 @@ export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 pb-24">
-        <Card>
-        <CardHeader>
-          <CardTitle>Examens enregistrés</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {exams.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Aucun examen enregistré. Ajoute ton premier examen !
-            </p>
-          ) : (
-            <div className="space-y-3">
+        {exams.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            Aucun examen enregistré. Ajoute ton premier examen !
+          </p>
+        ) : (
+          <div className="space-y-3">
               {exams.map((exam) => (
                 <div
                   key={exam.id}
@@ -53,11 +48,9 @@ export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
