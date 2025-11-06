@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, User, Briefcase, MapPin, Zap, Clock, Utensils, Ban, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -169,23 +169,34 @@ const Constraints = () => {
 
   return (
     <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
-      <div className="sticky top-0 z-10 bg-background border-b p-4">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold">Mes contraintes</h1>
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b p-4 md:p-6">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Mes contraintes</h1>
+          <p className="text-sm text-muted-foreground mt-1">Configure tes préférences et disponibilités</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-3xl mx-auto space-y-6">
           {/* Statut & rythme de vie */}
-          <Card>
-            <CardHeader>
-              <CardTitle>📊 Statut & rythme de vie</CardTitle>
-              <CardDescription>Définis ton profil étudiant</CardDescription>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Statut & rythme de vie</CardTitle>
+                  <CardDescription className="text-sm">Définis ton profil étudiant</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="alternant">Alternant ?</Label>
+            <CardContent className="space-y-5 pt-6">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="alternant" className="cursor-pointer font-medium">Alternant</Label>
+                </div>
                 <Switch
                   id="alternant"
                   checked={profile.is_alternant}
@@ -194,8 +205,11 @@ const Constraints = () => {
                   }
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="job">Job étudiant ?</Label>
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="job" className="cursor-pointer font-medium">Job étudiant</Label>
+                </div>
                 <Switch
                   id="job"
                   checked={profile.has_student_job}
@@ -208,16 +222,23 @@ const Constraints = () => {
           </Card>
 
           {/* Contraintes fixes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🚫 Contraintes fixes (bloquées au planning)</CardTitle>
-              <CardDescription>
-                Ces créneaux seront affichés comme bloqués dans ton planning
-              </CardDescription>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-destructive/10">
+                  <Ban className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Contraintes fixes</CardTitle>
+                  <CardDescription className="text-sm">
+                    Ces créneaux seront bloqués dans ton planning
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               {constraintEvents.map((event, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-3">
+                <div key={index} className="p-5 border rounded-lg space-y-4 bg-muted/20 hover:bg-muted/30 transition-colors">
                   <div className="flex justify-between items-center">
                     <Select
                       value={event.type}
@@ -251,9 +272,9 @@ const Constraints = () => {
                       updateConstraintEvent(index, 'title', e.target.value)
                     }
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>Début</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Début</Label>
                       <Input
                         type="datetime-local"
                         value={event.start_time.slice(0, 16)}
@@ -266,8 +287,8 @@ const Constraints = () => {
                         }
                       />
                     </div>
-                    <div>
-                      <Label>Fin</Label>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Fin</Label>
                       <Input
                         type="datetime-local"
                         value={event.end_time.slice(0, 16)}
@@ -291,14 +312,21 @@ const Constraints = () => {
           </Card>
 
           {/* Trajets */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🚗 Temps de trajet</CardTitle>
-              <CardDescription>En minutes (aller simple)</CardDescription>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <MapPin className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Temps de trajet</CardTitle>
+                  <CardDescription className="text-sm">En minutes (aller simple)</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Domicile ↔ École</Label>
+            <CardContent className="space-y-5 pt-6">
+              <div className="space-y-2">
+                <Label className="font-medium">Domicile ↔ École</Label>
                 <Input
                   type="number"
                   value={profile.commute_home_school}
@@ -308,8 +336,8 @@ const Constraints = () => {
                 />
               </div>
               {profile.has_student_job && (
-                <div>
-                  <Label>Domicile ↔ Job</Label>
+                <div className="space-y-2">
+                  <Label className="font-medium">Domicile ↔ Job</Label>
                   <Input
                     type="number"
                     value={profile.commute_home_job}
@@ -319,8 +347,8 @@ const Constraints = () => {
                   />
                 </div>
               )}
-              <div>
-                <Label>Domicile ↔ Sport</Label>
+              <div className="space-y-2">
+                <Label className="font-medium">Domicile ↔ Sport</Label>
                 <Input
                   type="number"
                   value={profile.commute_home_sport}
@@ -333,12 +361,19 @@ const Constraints = () => {
           </Card>
 
           {/* Productivité */}
-          <Card>
-            <CardHeader>
-              <CardTitle>⚡ Moments de productivité</CardTitle>
-              <CardDescription>Quand es-tu le plus efficace ?</CardDescription>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Moments de productivité</CardTitle>
+                  <CardDescription className="text-sm">Quand es-tu le plus efficace ?</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <Select
                 value={profile.preferred_productivity}
                 onValueChange={(value) =>
@@ -359,14 +394,21 @@ const Constraints = () => {
           </Card>
 
           {/* Limites */}
-          <Card>
-            <CardHeader>
-              <CardTitle>⏱️ Limites & plafonds</CardTitle>
-              <CardDescription>Protège ton bien-être</CardDescription>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Clock className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Limites & plafonds</CardTitle>
+                  <CardDescription className="text-sm">Protège ton bien-être</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>Heures de révision max / jour : {profile.max_daily_revision_hours}h</Label>
+            <CardContent className="space-y-6 pt-6">
+              <div className="space-y-3">
+                <Label className="font-medium">Heures de révision max / jour : {profile.max_daily_revision_hours}h</Label>
                 <Slider
                   value={[profile.max_daily_revision_hours]}
                   onValueChange={([value]) =>
@@ -378,8 +420,8 @@ const Constraints = () => {
                   className="mt-2"
                 />
               </div>
-              <div>
-                <Label>Heures de révision max / semaine : {profile.max_weekly_revision_hours}h</Label>
+              <div className="space-y-3">
+                <Label className="font-medium">Heures de révision max / semaine : {profile.max_weekly_revision_hours}h</Label>
                 <Slider
                   value={[profile.max_weekly_revision_hours]}
                   onValueChange={([value]) =>
@@ -392,8 +434,8 @@ const Constraints = () => {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Pas avant</Label>
+                <div className="space-y-2">
+                  <Label className="font-medium">Pas avant</Label>
                   <Input
                     type="time"
                     value={profile.no_study_before}
@@ -402,8 +444,8 @@ const Constraints = () => {
                     }
                   />
                 </div>
-                <div>
-                  <Label>Pas après</Label>
+                <div className="space-y-2">
+                  <Label className="font-medium">Pas après</Label>
                   <Input
                     type="time"
                     value={profile.no_study_after}
@@ -413,8 +455,11 @@ const Constraints = () => {
                   />
                 </div>
               </div>
-              <div>
-                <Label className="mb-3 block">Jours sans révision</Label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Label className="font-medium">Jours sans révision</Label>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   {days.map((day) => (
                     <div key={day} className="flex items-center space-x-2">
@@ -434,13 +479,21 @@ const Constraints = () => {
           </Card>
 
           {/* Rituels */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🍽️ Rituels & zones de confort</CardTitle>
+          <Card className="shadow-soft border-border/50">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Utensils className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Rituels & zones de confort</CardTitle>
+                  <CardDescription className="text-sm">Préserve ton équilibre</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Respecter les heures de repas</Label>
+            <CardContent className="space-y-5 pt-6">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                <Label className="font-medium cursor-pointer">Respecter les heures de repas</Label>
                 <Switch
                   checked={profile.respect_meal_times}
                   onCheckedChange={(checked) =>
@@ -451,8 +504,8 @@ const Constraints = () => {
               {profile.respect_meal_times && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Déjeuner début</Label>
+                    <div className="space-y-2">
+                      <Label className="font-medium">Déjeuner début</Label>
                       <Input
                         type="time"
                         value={profile.lunch_break_start}
@@ -461,8 +514,8 @@ const Constraints = () => {
                         }
                       />
                     </div>
-                    <div>
-                      <Label>Déjeuner fin</Label>
+                    <div className="space-y-2">
+                      <Label className="font-medium">Déjeuner fin</Label>
                       <Input
                         type="time"
                         value={profile.lunch_break_end}
@@ -473,8 +526,8 @@ const Constraints = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Dîner début</Label>
+                    <div className="space-y-2">
+                      <Label className="font-medium">Dîner début</Label>
                       <Input
                         type="time"
                         value={profile.dinner_break_start}
@@ -483,8 +536,8 @@ const Constraints = () => {
                         }
                       />
                     </div>
-                    <div>
-                      <Label>Dîner fin</Label>
+                    <div className="space-y-2">
+                      <Label className="font-medium">Dîner fin</Label>
                       <Input
                         type="time"
                         value={profile.dinner_break_end}
@@ -496,8 +549,8 @@ const Constraints = () => {
                   </div>
                 </>
               )}
-              <div>
-                <Label>Soirées libres min / semaine : {profile.min_free_evenings_per_week}</Label>
+              <div className="space-y-3">
+                <Label className="font-medium">Soirées libres min / semaine : {profile.min_free_evenings_per_week}</Label>
                 <Slider
                   value={[profile.min_free_evenings_per_week]}
                   onValueChange={([value]) =>
