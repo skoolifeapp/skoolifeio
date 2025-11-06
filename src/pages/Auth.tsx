@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { Calendar } from 'lucide-react';
+import skoolifeLogo from '@/assets/skoolife-logo.png';
 
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Email invalide" }).max(255),
@@ -119,9 +119,11 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <Calendar className="h-8 w-8 text-primary" />
-            </div>
+            <img 
+              src={skoolifeLogo} 
+              alt="Skoolife Logo" 
+              className="h-16 w-16"
+            />
           </div>
           <CardTitle className="text-2xl">Skoolife</CardTitle>
           <CardDescription>
