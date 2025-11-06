@@ -169,16 +169,16 @@ const Constraints = () => {
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
-      {/* Scrollable Content with Fixed Header Inside */}
-      <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))]">
-        {/* Fixed Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-4 shadow-sm">
-          <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold text-foreground">Mes contraintes</h1>
-            <p className="text-sm text-muted-foreground mt-1">Configure tes préférences et disponibilités</p>
-          </div>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b px-4 py-4 shadow-sm">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold text-foreground">Mes contraintes</h1>
+          <p className="text-sm text-muted-foreground mt-1">Configure tes préférences et disponibilités</p>
         </div>
+      </div>
 
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto pt-[88px] pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <div className="px-4 pt-6">
         <div className="max-w-2xl mx-auto space-y-4">
           {/* Statut & rythme de vie */}
