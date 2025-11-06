@@ -184,13 +184,10 @@ export const useMigrateLocalStorageToSupabase = () => {
       localStorage.setItem(migrationKey, 'true');
       setMigrationComplete(true);
 
-      // Show success message if data was migrated
+      // Mark migration as complete
       if (hasDataToMigrate) {
         const totalMigrated = results.exams + results.constraints + results.events;
         if (totalMigrated > 0) {
-          toast.success('Données migrées avec succès', {
-            description: `${results.exams} examens, ${results.constraints} contraintes, ${results.events} événements transférés vers le cloud.`,
-          });
 
           // Clean up localStorage after successful migration
           localStorage.removeItem('exams');

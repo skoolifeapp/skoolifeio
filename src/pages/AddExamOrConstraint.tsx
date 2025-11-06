@@ -45,7 +45,6 @@ const AddExamOrConstraint = () => {
       return;
     }
 
-    toast.success("Examen ajouté avec succès");
     navigate("/exams");
   };
 
@@ -69,7 +68,6 @@ const AddExamOrConstraint = () => {
       return;
     }
 
-    toast.success("Contrainte ajoutée avec succès");
     navigate("/exams");
   };
 

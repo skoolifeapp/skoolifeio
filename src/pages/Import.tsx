@@ -95,10 +95,6 @@ const Import = () => {
         return;
       }
 
-      toast.success("Calendrier importé avec succès", {
-        description: `${events.length} événements importés.`,
-      });
-      
       navigate('/planning');
     } catch (error) {
       console.error('Error parsing ICS file:', error);

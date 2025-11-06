@@ -93,7 +93,6 @@ const Exams = () => {
     }
 
     setExams(exams.filter(exam => exam.id !== id));
-    toast.success("Examen supprimé");
   };
 
   const removeConstraint = async (id: string) => {
@@ -108,7 +107,6 @@ const Exams = () => {
     }
 
     setConstraints(constraints.filter((c) => c.id !== id));
-    toast.success("Contrainte supprimée");
   };
 
   const handleAddClick = () => {

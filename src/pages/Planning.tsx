@@ -131,9 +131,6 @@ const Planning = () => {
     setIsGenerating(false);
 
     if (result.success) {
-      toast.success("Planning généré avec succès !", {
-        description: `${result.count} sessions de révision créées.`,
-      });
       await loadRevisionSessions();
     } else {
       toast.error("Erreur", {
@@ -153,7 +150,6 @@ const Planning = () => {
       return;
     }
 
-    toast.success("Session supprimée");
     await loadRevisionSessions();
   };
 
