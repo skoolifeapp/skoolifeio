@@ -168,15 +168,17 @@ const Constraints = () => {
   const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b p-4 md:p-6">
+    <div className="h-[100dvh] flex flex-col">
+      {/* Fixed Header Section */}
+      <div className="fixed top-0 left-0 right-0 z-10 bg-background border-b px-safe pt-safe pb-3">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Mes contraintes</h1>
           <p className="text-sm text-muted-foreground mt-1">Configure tes préférences et disponibilités</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      {/* Scrollable Content - with top padding for fixed header */}
+      <div className="flex-1 overflow-auto pt-[100px] pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe">
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Statut & rythme de vie */}
           <Card className="shadow-soft border-border/50">
