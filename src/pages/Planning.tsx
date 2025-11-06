@@ -336,95 +336,93 @@ const Planning = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe">
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-10 bg-background pb-4">
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Planning IA</h1>
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".ics"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                title="Importer un fichier .ics"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="hero" size="sm" disabled={isGenerating}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Générer
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh]">
-                  <SheetHeader>
-                    <SheetTitle>Génération du planning IA</SheetTitle>
-                    <SheetDescription>
-                      Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
-                    </SheetDescription>
-                  </SheetHeader>
+    <div className="h-[100dvh] flex flex-col">
+      {/* Fixed Header Section */}
+      <div className="fixed top-0 left-0 right-0 z-10 bg-background border-b px-safe pt-safe pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-2xl font-bold">Planning IA</h1>
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".ics"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              title="Importer un fichier .ics"
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="hero" size="sm" disabled={isGenerating}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Générer
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[80vh]">
+                <SheetHeader>
+                  <SheetTitle>Génération du planning IA</SheetTitle>
+                  <SheetDescription>
+                    Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
+                  </SheetDescription>
+                </SheetHeader>
 
-                  <div className="mt-6 space-y-6">
-                    <div>
-                      <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
-                      {examsCount === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label>Intensité de révision</Label>
-                      <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="leger" id="leger" />
-                          <Label htmlFor="leger" className="font-normal">
-                            Léger (1 session/jour, 45-60 min)
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="standard" id="standard" />
-                          <Label htmlFor="standard" className="font-normal">
-                            Standard (2 sessions/jour, 60-90 min)
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="intensif" id="intensif" />
-                          <Label htmlFor="intensif" className="font-normal">
-                            Intensif (3 sessions/jour, 75-120 min)
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <Button 
-                      onClick={handleGeneratePlanning} 
-                      className="w-full"
-                      disabled={isGenerating || examsCount === 0}
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      {isGenerating ? 'Génération...' : 'Lancer la génération'}
-                    </Button>
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
+                    {examsCount === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
+                      </p>
+                    )}
                   </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+
+                  <div className="space-y-3">
+                    <Label>Intensité de révision</Label>
+                    <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="leger" id="leger" />
+                        <Label htmlFor="leger" className="font-normal">
+                          Léger (1 session/jour, 45-60 min)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="standard" id="standard" />
+                        <Label htmlFor="standard" className="font-normal">
+                          Standard (2 sessions/jour, 60-90 min)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="intensif" id="intensif" />
+                        <Label htmlFor="intensif" className="font-normal">
+                          Intensif (3 sessions/jour, 75-120 min)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <Button 
+                    onClick={handleGeneratePlanning} 
+                    className="w-full"
+                    disabled={isGenerating || examsCount === 0}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {isGenerating ? 'Génération...' : 'Lancer la génération'}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
         {/* Exams Header */}
         {dayExams.length > 0 && (
-          <div className="mb-4 space-y-2">
+          <div className="mb-3 space-y-2">
             {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
               <div
                 key={exam.id}
@@ -445,7 +443,7 @@ const Planning = () => {
         )}
 
         {/* Date Navigation */}
-        <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center justify-between gap-2">
           <Button
             variant="outline"
             size="icon"
@@ -481,120 +479,118 @@ const Planning = () => {
         </div>
       </div>
 
-      {/* Scrollable Day View with Time Grid */}
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-          <div className="relative">
-            {/* Time Grid */}
-            <div className="flex">
-              {/* Hours Column */}
-              <div className="w-12 flex-shrink-0 pr-1">
-                {hours.map(hour => (
-                  <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
-                    {hour.toString().padStart(2, '0')}:00
-                  </div>
-                ))}
-              </div>
-
-              {/* Events Column */}
-              <div className="flex-1 relative border-l border-border">
-                {/* Hour Lines */}
-                {hours.map(hour => (
-                  <div key={hour} className="h-16 border-t border-border first:border-t-0" />
-                ))}
-
-                {/* Events & Revision Sessions */}
-                <div className="absolute inset-0 px-2">
-                  {dayEvents.length === 0 && dayRevisionSessions.length === 0 ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-muted-foreground text-sm italic">Aucun événement</p>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Calendar Events */}
-                      {dayEvents.map((event, index) => {
-                        const style = getEventStyle(event);
-                        const start = new Date(event.startDate);
-                        const end = new Date(event.endDate);
-                        const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
-
-                        return (
-                          <div
-                            key={`event-${index}`}
-                            className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
-                            style={style}
-                          >
-                            <div className="text-xs font-semibold truncate">{event.summary}</div>
-                            <div className="text-xs opacity-90">
-                              {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
-                            </div>
-                            {event.location && (
-                              <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Revision Sessions */}
-                      {dayRevisionSessions.map((session) => {
-                        const start = new Date(session.start_time);
-                        const end = new Date(session.end_time);
-                        const startHour = start.getHours();
-                        const startMinute = start.getMinutes();
-                        const endHour = end.getHours();
-                        const endMinute = end.getMinutes();
-                        
-                        // Adjust hours relative to 7am start
-                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
-                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
-                        
-                        const topPercent = ((adjustedStartHour + startMinute / 60) / DISPLAY_HOURS) * 100;
-                        const durationHours = (adjustedEndHour + endMinute / 60) - (adjustedStartHour + startMinute / 60);
-                        const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
-                        const duration = Math.round(durationHours * 60);
-
-                        const style = {
-                          top: `${topPercent}%`,
-                          height: `${heightPercent}%`,
-                        };
-
-                        return (
-                          <div
-                            key={`session-${session.id}`}
-                            className="absolute left-2 right-2 bg-yellow-500/90 text-yellow-950 rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600"
-                            style={style}
-                          >
-                            <div className="flex items-start justify-between gap-1">
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold truncate">📚 {session.subject}</div>
-                                <div className="text-xs opacity-90">
-                                  {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
-                                </div>
-                                {session.difficulty && (
-                                  <div className="text-xs opacity-80 mt-1">
-                                    Niveau: {session.difficulty}
-                                  </div>
-                                )}
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => deleteRevisionSession(session.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
+      {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
+      <div className="flex-1 overflow-auto pt-[180px] pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe">
+        <div className="relative">
+          {/* Time Grid */}
+          <div className="flex">
+            {/* Hours Column */}
+            <div className="w-12 flex-shrink-0 pr-1">
+              {hours.map(hour => (
+                <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
+                  {hour.toString().padStart(2, '0')}:00
                 </div>
+              ))}
+            </div>
+
+            {/* Events Column */}
+            <div className="flex-1 relative border-l border-border">
+              {/* Hour Lines */}
+              {hours.map(hour => (
+                <div key={hour} className="h-16 border-t border-border first:border-t-0" />
+              ))}
+
+              {/* Events & Revision Sessions */}
+              <div className="absolute inset-0 px-2">
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-muted-foreground text-sm italic">Aucun événement</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Calendar Events */}
+                    {dayEvents.map((event, index) => {
+                      const style = getEventStyle(event);
+                      const start = new Date(event.startDate);
+                      const end = new Date(event.endDate);
+                      const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
+
+                      return (
+                        <div
+                          key={`event-${index}`}
+                          className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
+                          style={style}
+                        >
+                          <div className="text-xs font-semibold truncate">{event.summary}</div>
+                          <div className="text-xs opacity-90">
+                            {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
+                          </div>
+                          {event.location && (
+                            <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Revision Sessions */}
+                    {dayRevisionSessions.map((session) => {
+                      const start = new Date(session.start_time);
+                      const end = new Date(session.end_time);
+                      const startHour = start.getHours();
+                      const startMinute = start.getMinutes();
+                      const endHour = end.getHours();
+                      const endMinute = end.getMinutes();
+                      
+                      // Adjust hours relative to 7am start
+                      const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
+                      const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
+                      
+                      const topPercent = ((adjustedStartHour + startMinute / 60) / DISPLAY_HOURS) * 100;
+                      const durationHours = (adjustedEndHour + endMinute / 60) - (adjustedStartHour + startMinute / 60);
+                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+                      const duration = Math.round(durationHours * 60);
+
+                      const style = {
+                        top: `${topPercent}%`,
+                        height: `${heightPercent}%`,
+                      };
+
+                      return (
+                        <div
+                          key={`session-${session.id}`}
+                          className="absolute left-2 right-2 bg-yellow-500/90 text-yellow-950 rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600"
+                          style={style}
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-semibold truncate">📚 {session.subject}</div>
+                              <div className="text-xs opacity-90">
+                                {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
+                              </div>
+                              {session.difficulty && (
+                                <div className="text-xs opacity-80 mt-1">
+                                  Niveau: {session.difficulty}
+                                </div>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => deleteRevisionSession(session.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
