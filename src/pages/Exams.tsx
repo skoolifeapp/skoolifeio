@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ExamsList } from "@/components/exams/ExamsList";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,10 +26,11 @@ interface Exam {
 }
 
 const Exams = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newExam, setNewExam] = useState({ subject: "", date: "", priority: "medium" });
 
   useEffect(() => {
     if (user) {
@@ -71,14 +76,36 @@ const Exams = () => {
     setExams(exams.filter(exam => exam.id !== id));
   };
 
-  const handleAddClick = () => {
-    navigate("/exams/add", { state: { exams } });
+  const handleAddExam = async () => {
+    if (!user || !newExam.subject || !newExam.date) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('exams')
+      .insert({
+        user_id: user.id,
+        subject: newExam.subject,
+        date: newExam.date,
+        priority: newExam.priority,
+      });
+
+    if (error) {
+      console.error('Error adding exam:', error);
+      toast.error("Erreur lors de l'ajout de l'examen");
+      return;
+    }
+
+    setIsDialogOpen(false);
+    setNewExam({ subject: "", date: "", priority: "medium" });
+    loadData();
   };
 
   return (
     <div className="relative w-full h-screen pt-safe pb-safe">
       <Button
-        onClick={handleAddClick}
+        onClick={() => setIsDialogOpen(true)}
         size="icon"
         className="fixed top-20 right-6 z-20 rounded-full"
       >
@@ -88,6 +115,55 @@ const Exams = () => {
       <div className="h-full">
         <ExamsList exams={exams} removeExam={removeExam} />
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nouvel examen</DialogTitle>
+          </DialogHeader>
+          <Card className="border-0 shadow-none">
+            <CardContent className="space-y-4 p-0 pt-4">
+              <div>
+                <Label htmlFor="subject">Matière</Label>
+                <Input
+                  id="subject"
+                  placeholder="Ex: Mathématiques"
+                  value={newExam.subject}
+                  onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Date de l'examen</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newExam.date}
+                  onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select
+                  value={newExam.priority}
+                  onValueChange={(value) => setNewExam({ ...newExam, priority: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Faible</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAddExam} className="w-full">
+                Ajouter l'examen
+              </Button>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
