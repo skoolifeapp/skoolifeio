@@ -248,7 +248,6 @@ const Planning = () => {
         if (error) throw error;
 
         await loadCalendarEvents();
-        toast.success(`${events.length} événement(s) importé(s) avec succès`);
       } catch (error) {
         console.error('Error importing calendar:', error);
         toast.error("Erreur lors de l'import du fichier");

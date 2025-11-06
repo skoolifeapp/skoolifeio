@@ -145,8 +145,6 @@ const Constraints = () => {
         });
 
       if (profileError) throw profileError;
-
-      toast.success("Contraintes enregistrées avec succès");
     } catch (error) {
       console.error('Error saving constraints:', error);
       toast.error("Erreur lors de l'enregistrement");
