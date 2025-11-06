@@ -178,7 +178,7 @@ const Constraints = () => {
       </div>
 
       {/* Scrollable Content - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[100px] pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe">
+      <div className="flex-1 overflow-auto pt-[100px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Statut & rythme de vie */}
           <Card className="shadow-soft border-border/50">

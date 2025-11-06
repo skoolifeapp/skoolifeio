@@ -17,8 +17,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
-      <div className="max-w-md mx-auto">
+    <div className="h-[100dvh] flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe pt-safe overflow-y-auto scroll-smooth">
+      <div className="w-full max-w-md mx-auto">
         <h1 className="text-3xl font-bold mb-2">Profil</h1>
         <p className="text-muted-foreground mb-8">
           Gère tes informations personnelles

@@ -103,16 +103,16 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full min-h-[100dvh] flex flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] pt-safe px-safe overflow-y-auto scroll-smooth">
+    <div className="h-[100dvh] flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe overflow-y-auto scroll-smooth">
       <Button
         onClick={() => setIsDialogOpen(true)}
         size="icon"
-        className="fixed top-12 right-6 z-20 rounded-full"
+        className="fixed top-[max(3rem,calc(var(--safe-area-inset-top)+1rem))] right-6 z-20 rounded-full shadow-[var(--shadow-medium)]"
       >
         <Plus className="h-6 w-6" />
       </Button>
 
-      <div className="h-full">
+      <div className="flex-1">
         <ExamsList exams={exams} removeExam={removeExam} />
       </div>
 
