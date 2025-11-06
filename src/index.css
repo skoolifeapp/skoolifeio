@@ -112,10 +112,22 @@ All colors MUST be HSL.
     padding-right: var(--safe-area-inset-right);
     padding-bottom: var(--safe-area-inset-bottom);
     padding-left: var(--safe-area-inset-left);
+    overflow-x: hidden;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
+  }
+
+  /* Désactiver les animations de transition entre les pages */
+  * {
+    transition: none !important;
+    animation-duration: 0s !important;
+  }
+
+  /* Exceptions: garder les animations pour les interactions utilisateur */
+  button, a, input, select, textarea {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
   }
 }
 

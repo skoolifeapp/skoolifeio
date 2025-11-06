@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { ScrollReset } from "@/components/layout/ScrollReset";
 import Index from "./pages/Index";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
@@ -23,6 +24,7 @@ const AppContent = () => {
   
   return (
     <div className="relative">
+      <ScrollReset />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
