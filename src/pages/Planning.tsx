@@ -480,7 +480,7 @@ const Planning = () => {
       </div>
 
       {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[180px] pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe">
+      <div className="flex-1 overflow-auto pt-[150px] pb-[calc(4rem+env(safe-area-inset-bottom))] px-safe">
         <div className="relative">
           {/* Time Grid */}
           <div className="flex">
