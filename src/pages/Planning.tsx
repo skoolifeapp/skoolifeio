@@ -154,7 +154,7 @@ const Planning = () => {
             {/* Hours Column */}
             <div className="w-16 flex-shrink-0 pr-2">
               {hours.map(hour => (
-                <div key={hour} className="h-16 flex items-start justify-end text-xs text-muted-foreground border-t border-border first:border-t-0">
+                <div key={hour} className="h-20 flex items-start justify-end text-sm text-muted-foreground border-t border-border first:border-t-0">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
               ))}
@@ -164,7 +164,7 @@ const Planning = () => {
             <div className="flex-1 relative border-l border-border">
               {/* Hour Lines */}
               {hours.map(hour => (
-                <div key={hour} className="h-16 border-t border-border first:border-t-0" />
+                <div key={hour} className="h-20 border-t border-border first:border-t-0" />
               ))}
 
               {/* Events */}
@@ -179,22 +179,22 @@ const Planning = () => {
                     return (
                       <div
                         key={index}
-                        className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
+                        className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-xl p-3 overflow-hidden shadow-md touch-manipulation"
                         style={style}
                       >
-                        <div className="text-xs font-semibold truncate">{event.summary}</div>
-                        <div className="text-xs opacity-90">
+                        <div className="text-sm font-semibold truncate">{event.summary}</div>
+                        <div className="text-sm opacity-90">
                           {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
                         </div>
                         {event.location && (
-                          <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
+                          <div className="text-sm opacity-80 truncate mt-1">{event.location}</div>
                         )}
                       </div>
                     );
                   })
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-muted-foreground text-sm italic">Aucun événement</p>
+                    <p className="text-muted-foreground text-base italic">Aucun événement</p>
                   </div>
                 )}
               </div>

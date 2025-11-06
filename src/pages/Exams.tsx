@@ -78,9 +78,9 @@ const Exams = () => {
       <Button
         onClick={handleAddClick}
         size="icon"
-        className="fixed top-4 right-4 z-20 rounded-full shadow-lg"
+        className="fixed top-4 right-4 z-20 rounded-full shadow-lg min-h-[56px] min-w-[56px] h-14 w-14"
       >
-        <Plus className="h-5 w-5" />
+        <Plus className="h-6 w-6" />
       </Button>
 
       <Carousel 

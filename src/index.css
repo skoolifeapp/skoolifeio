@@ -104,6 +104,12 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
@@ -115,21 +121,18 @@ All colors MUST be HSL.
     overflow-x: hidden;
     width: 100vw;
     max-width: 100vw;
+    touch-action: pan-y;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
   }
 
-  /* Désactiver les animations de transition entre les pages */
-  * {
-    transition: none !important;
-    animation-duration: 0s !important;
-  }
-
-  /* Exceptions: garder les animations pour les interactions utilisateur */
-  button, a, input, select, textarea {
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+  /* Optimize touch interactions */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 

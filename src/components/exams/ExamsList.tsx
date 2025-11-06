@@ -22,13 +22,13 @@ export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
         <p className="text-sm text-muted-foreground">Liste de tes examens à venir</p>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="shadow-md">
+        <CardHeader className="pb-3">
           <CardTitle>Examens enregistrés</CardTitle>
         </CardHeader>
         <CardContent>
           {exams.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+            <p className="text-center text-muted-foreground py-8 text-base">
               Aucun examen enregistré. Ajoute ton premier examen !
             </p>
           ) : (
@@ -36,11 +36,11 @@ export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
               {exams.map((exam) => (
                 <div
                   key={exam.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-4 border-2 rounded-xl hover:bg-muted/50 transition-colors touch-manipulation"
                 >
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{exam.subject}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0 pr-3">
+                    <h3 className="font-semibold truncate text-base">{exam.subject}</h3>
+                    <p className="text-base text-muted-foreground">
                       {new Date(exam.date).toLocaleDateString('fr-FR')} - Priorité: {exam.priority}
                     </p>
                   </div>
@@ -48,8 +48,9 @@ export const ExamsList = ({ exams, removeExam }: ExamsListProps) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeExam(exam.id)}
+                    className="flex-shrink-0 min-h-[48px] min-w-[48px]"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
               ))}

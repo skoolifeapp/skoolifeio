@@ -12,12 +12,12 @@ const Index = () => {
           <p className="text-sm text-muted-foreground">Bienvenue sur Skoolife</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-[var(--shadow-medium)] transition-all">
-            <CardHeader>
-              <Calendar className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle className="text-lg">Emploi du temps</CardTitle>
-              <CardDescription>Importe ton calendrier scolaire</CardDescription>
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="hover:shadow-[var(--shadow-medium)] transition-all touch-manipulation active:scale-[0.98]">
+            <CardHeader className="pb-3">
+              <Calendar className="h-10 w-10 mb-2 text-primary" />
+              <CardTitle>Emploi du temps</CardTitle>
+              <CardDescription className="text-base">Importe ton calendrier scolaire</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/import">
@@ -29,11 +29,11 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-[var(--shadow-medium)] transition-all">
-            <CardHeader>
-              <BookOpen className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle className="text-lg">Examens</CardTitle>
-              <CardDescription>Gère tes examens et contraintes</CardDescription>
+          <Card className="hover:shadow-[var(--shadow-medium)] transition-all touch-manipulation active:scale-[0.98]">
+            <CardHeader className="pb-3">
+              <BookOpen className="h-10 w-10 mb-2 text-primary" />
+              <CardTitle>Examens</CardTitle>
+              <CardDescription className="text-base">Gère tes examens et contraintes</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/exams">
@@ -45,11 +45,11 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-[var(--shadow-medium)] transition-all">
-            <CardHeader>
-              <Target className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle className="text-lg">Planning IA</CardTitle>
-              <CardDescription>Ton planning de révisions optimal</CardDescription>
+          <Card className="hover:shadow-[var(--shadow-medium)] transition-all touch-manipulation active:scale-[0.98]">
+            <CardHeader className="pb-3">
+              <Target className="h-10 w-10 mb-2 text-primary" />
+              <CardTitle>Planning IA</CardTitle>
+              <CardDescription className="text-base">Ton planning de révisions optimal</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/planning">
@@ -62,23 +62,23 @@ const Index = () => {
           </Card>
         </div>
 
-        <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
-          <CardHeader>
+        <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 mt-2">
+          <CardHeader className="pb-3">
             <CardTitle>Commencer avec Skoolife</CardTitle>
-            <CardDescription>Suis ces étapes pour créer ton planning de révisions optimal</CardDescription>
+            <CardDescription className="text-base">Suis ces étapes pour créer ton planning de révisions optimal</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
-              <p className="text-sm">Importe ton emploi du temps au format .ics</p>
+              <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">1</div>
+              <p className="text-base leading-relaxed">Importe ton emploi du temps au format .ics</p>
             </div>
             <div className="flex items-start gap-3">
-              <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
-              <p className="text-sm">Ajoute tes examens avec leur date et difficulté</p>
+              <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">2</div>
+              <p className="text-base leading-relaxed">Ajoute tes examens avec leur date et difficulté</p>
             </div>
             <div className="flex items-start gap-3">
-              <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold">3</div>
-              <p className="text-sm">Génère ton planning de révisions avec l'IA</p>
+              <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">3</div>
+              <p className="text-base leading-relaxed">Génère ton planning de révisions avec l'IA</p>
             </div>
           </CardContent>
         </Card>
