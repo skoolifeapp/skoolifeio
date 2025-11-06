@@ -33,19 +33,21 @@ serve(async (req) => {
     const { intensity = 'standard' } = await req.json();
 
     // Fetch user data
-    const [examsRes, eventsRes, constraintsRes] = await Promise.all([
+    const [examsRes, eventsRes, constraintEventsRes, profileRes] = await Promise.all([
       supabaseClient.from('exams').select('*').eq('user_id', user.id).order('date', { ascending: true }),
       supabaseClient.from('calendar_events').select('*').eq('user_id', user.id),
-      supabaseClient.from('constraints').select('*').eq('user_id', user.id),
+      supabaseClient.from('constraint_events').select('*').eq('user_id', user.id),
+      supabaseClient.from('user_constraints_profile').select('*').eq('user_id', user.id).single(),
     ]);
 
     if (examsRes.error) throw examsRes.error;
     if (eventsRes.error) throw eventsRes.error;
-    if (constraintsRes.error) throw constraintsRes.error;
+    if (constraintEventsRes.error) throw constraintEventsRes.error;
 
     const exams = examsRes.data || [];
     const events = eventsRes.data || [];
-    const constraints = constraintsRes.data || [];
+    const constraintEvents = constraintEventsRes.data || [];
+    const profile = profileRes.data || null;
 
     if (exams.length === 0) {
       return new Response(JSON.stringify({ error: 'Aucun examen trouvé. Ajoute d\'abord tes examens.' }), {
@@ -73,19 +75,26 @@ RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE :
 1. CONTRAINTES HORAIRES :
    - Les sessions doivent durer entre ${config.minDuration} et ${config.maxDuration} minutes
    - Maximum ${config.sessionsPerDay} sessions par jour
-   - JAMAIS de sessions entre 22h00 et 8h00
-   - JAMAIS le dimanche (jour de repos)
+   - JAMAIS de sessions entre ${profile?.no_study_after || '22:00'} et ${profile?.no_study_before || '08:00'}
+   ${profile?.no_study_days && profile.no_study_days.length > 0 ? `- JAMAIS de sessions les jours suivants : ${profile.no_study_days.join(', ')}` : '- JAMAIS le dimanche (jour de repos)'}
+   ${profile?.max_daily_revision_hours ? `- Maximum ${profile.max_daily_revision_hours}h de révision par jour` : ''}
+   ${profile?.max_weekly_revision_hours ? `- Maximum ${profile.max_weekly_revision_hours}h de révision par semaine` : ''}
 
 2. RESPECT DE L'EMPLOI DU TEMPS :
    - NE JAMAIS créer de session qui chevauche un événement existant (cours, TD, etc.)
+   - NE JAMAIS créer de session qui chevauche une contrainte fixe (alternance, job, sport, rdv)
    - Vérifier pour CHAQUE session que le créneau horaire est totalement libre
    - Laisser au minimum 30 minutes de marge avant/après chaque événement
-   
-3. RESPECT DES CONTRAINTES UTILISATEUR :
-   - Si contrainte "alternance" : NE PAS placer de sessions les jours d'alternance indiqués
-   - Si contrainte "sport" : NE PAS placer de sessions aux horaires de sport indiqués
-   - Si contrainte "job" : NE PAS placer de sessions pendant les heures de travail
-   - TEMPS DE TRAJET : Si une contrainte a un temps de trajet (commute_time), réduire la plage horaire disponible avant/après cette activité pour éviter le surmenage
+   ${profile?.respect_meal_times ? `- RESPECTER les heures de repas : déjeuner ${profile.lunch_break_start}-${profile.lunch_break_end}, dîner ${profile.dinner_break_start}-${profile.dinner_break_end}` : ''}
+
+3. RESPECT DES TRAJETS & PRÉFÉRENCES :
+   ${profile?.commute_home_school ? `- Temps trajet école : ${profile.commute_home_school} min (aller simple) - Éviter de placer sessions juste avant/après un événement école` : ''}
+   ${profile?.commute_home_job ? `- Temps trajet job : ${profile.commute_home_job} min - Prévoir marge suffisante` : ''}
+   ${profile?.commute_home_sport ? `- Temps trajet sport : ${profile.commute_home_sport} min - Prévoir marge suffisante` : ''}
+   ${profile?.preferred_productivity === 'morning' ? '- PRIVILÉGIER les créneaux du matin (7h-12h) pour les sessions' : ''}
+   ${profile?.preferred_productivity === 'afternoon' ? '- PRIVILÉGIER les créneaux de l\'après-midi (12h-18h) pour les sessions' : ''}
+   ${profile?.preferred_productivity === 'evening' ? '- PRIVILÉGIER les créneaux du soir (18h-22h) pour les sessions' : ''}
+   ${profile?.min_free_evenings_per_week ? `- Garantir au moins ${profile.min_free_evenings_per_week} soirée(s) libre(s) par semaine (après 18h)` : ''}
 
 4. COUVERTURE COMPLÈTE DES EXAMENS :
    - Tu DOIS créer des sessions pour TOUS les examens listés, pas juste un seul
@@ -97,7 +106,7 @@ RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE :
    - Alterner entre les matières pour éviter la monotonie
    - Concentrer les révisions dans les 2 semaines avant chaque examen
    - Privilégier plusieurs sessions courtes plutôt qu'une longue
-   - Varier les horaires (matin, après-midi, soir)
+   - Varier les horaires selon les préférences utilisateur
 
 ⚠️ EN CAS DE DOUTE SUR UN CRÉNEAU : NE PAS CRÉER LA SESSION ⚠️
 
@@ -145,18 +154,47 @@ ${events.length > 0 ? events.map(e => {
 }).join('\n\n') : '✅ Aucun événement - Emploi du temps libre'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⛔ CONTRAINTES UTILISATEUR - IMPÉRATIF
+🚫 CONTRAINTES FIXES - BLOQUÉES (Ne jamais utiliser ces créneaux)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${constraints.length > 0 ? constraints.map(c => {
-  const daysStr = c.days.length > 0 ? c.days.join(', ') : 'Tous les jours';
-  const commuteInfo = c.commute_time && c.commute_time > 0 
-    ? `\n   🚗 Temps de trajet: ${c.commute_time} min (aller simple) - Prévoir ${c.commute_time * 2} min de trajet total + marge de repos` 
-    : '';
-  return `🔒 ${c.type.toUpperCase()}
-   Jours concernés: ${daysStr}${commuteInfo}
-   ⚠️ NE PAS créer de sessions pendant ces créneaux (et prévoir les temps de trajet pour planifier intelligemment)`;
-}).join('\n\n') : '✅ Aucune contrainte particulière'}
+${constraintEvents.length > 0 ? constraintEvents.map(c => {
+  const start = new Date(c.start_time);
+  const end = new Date(c.end_time);
+  const typeEmoji = c.type === 'alternance' ? '💼' : c.type === 'job' ? '💰' : c.type === 'sport' ? '⚽' : c.type === 'rdv' ? '📅' : '⚠️';
+  return `${typeEmoji} ${c.title || c.type.toUpperCase()}
+   Du: ${start.toLocaleString('fr-FR')} 
+   Au: ${end.toLocaleString('fr-FR')}
+   ${c.recurrence_rule ? `Récurrence: ${c.recurrence_rule}` : ''}`;
+}).join('\n\n') : '✅ Aucune contrainte fixe'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 PRÉFÉRENCES & SOFT CONSTRAINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${profile ? `
+📊 Profil étudiant :
+${profile.is_alternant ? '- En alternance' : ''}
+${profile.has_student_job ? '- A un job étudiant' : ''}
+
+🚗 Temps de trajet (aller simple) :
+${profile.commute_home_school ? `- École : ${profile.commute_home_school} min` : ''}
+${profile.commute_home_job ? `- Job : ${profile.commute_home_job} min` : ''}
+${profile.commute_home_sport ? `- Sport : ${profile.commute_home_sport} min` : ''}
+
+⚡ Productivité optimale :
+- ${profile.preferred_productivity === 'morning' ? 'Matin (7h-12h)' : profile.preferred_productivity === 'evening' ? 'Soir (18h-22h)' : profile.preferred_productivity === 'afternoon' ? 'Après-midi (12h-18h)' : 'Mixte'}
+
+⏱️ Limites strictes :
+- Max ${profile.max_daily_revision_hours}h/jour
+- Max ${profile.max_weekly_revision_hours}h/semaine
+- Pas avant ${profile.no_study_before}
+- Pas après ${profile.no_study_after}
+${profile.no_study_days.length > 0 ? `- Jours interdits : ${profile.no_study_days.join(', ')}` : ''}
+
+🍽️ Rituels :
+${profile.respect_meal_times ? `- Repas : ${profile.lunch_break_start}-${profile.lunch_break_end} et ${profile.dinner_break_start}-${profile.dinner_break_end}` : '- Pas de contrainte repas'}
+- Soirées libres : min ${profile.min_free_evenings_per_week}/semaine
+` : '✅ Aucune préférence définie - utiliser les valeurs par défaut'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OBJECTIFS DE GÉNÉRATION
@@ -170,9 +208,11 @@ ${constraints.length > 0 ? constraints.map(c => {
 ⚠️ RAPPEL CRITIQUE ⚠️
 Vérifie CHAQUE session générée pour t'assurer qu'elle :
 1. Ne chevauche AUCUN événement de l'emploi du temps
-2. Respecte TOUTES les contraintes utilisateur
-3. Se situe dans les horaires autorisés (8h-22h, pas dimanche)
-4. Couvre TOUS les examens listés ci-dessus
+2. Ne chevauche AUCUNE contrainte fixe
+3. Respecte TOUTES les préférences & limites utilisateur
+4. Se situe dans les horaires autorisés
+5. Couvre TOUS les examens listés ci-dessus
+6. Optimise selon les moments de productivité préférés
 
 Génère maintenant le planning optimal.`;
 
