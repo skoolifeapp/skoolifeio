@@ -68,24 +68,37 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es Skoolife, un assistant IA qui génère des plannings de révision pour étudiants.
 
-RÈGLES STRICTES :
-1. Les sessions doivent durer entre ${config.minDuration} et ${config.maxDuration} minutes
-2. Maximum ${config.sessionsPerDay} sessions par jour
-3. Pas de sessions entre 22h00 et 8h00
-4. Éviter tout chevauchement avec les événements existants
-5. Respecter les contraintes utilisateur
-6. IMPÉRATIF : Tu DOIS créer des sessions de révision pour TOUS les examens listés, pas juste un seul
-7. Répartir équitablement les sessions entre toutes les matières selon leur priorité et date
-8. Prioriser les examens proches et difficiles (haute priorité)
-9. Augmenter progressivement l'intensité à l'approche de chaque examen
-10. Assurer une couverture complète : chaque examen doit avoir plusieurs sessions de révision
+RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE :
 
-STRATÉGIE DE RÉPARTITION :
-- Pour chaque examen, calculer le nombre de jours jusqu'à la date d'examen
-- Allouer plus de sessions aux examens avec priorité "high"
-- Alterner entre les matières pour éviter la monotonie
-- Concentrer les révisions dans les 2 semaines avant chaque examen
-- Si plusieurs examens sont proches, prioriser celui avec la date la plus proche
+1. CONTRAINTES HORAIRES :
+   - Les sessions doivent durer entre ${config.minDuration} et ${config.maxDuration} minutes
+   - Maximum ${config.sessionsPerDay} sessions par jour
+   - JAMAIS de sessions entre 22h00 et 8h00
+   - JAMAIS le dimanche (jour de repos)
+
+2. RESPECT DE L'EMPLOI DU TEMPS :
+   - NE JAMAIS créer de session qui chevauche un événement existant (cours, TD, etc.)
+   - Vérifier pour CHAQUE session que le créneau horaire est totalement libre
+   - Laisser au minimum 30 minutes de marge avant/après chaque événement
+   
+3. RESPECT DES CONTRAINTES UTILISATEUR :
+   - Si contrainte "alternance" : NE PAS placer de sessions les jours d'alternance indiqués
+   - Si contrainte "sport" : NE PAS placer de sessions aux horaires de sport indiqués
+   - Si contrainte "job" : NE PAS placer de sessions pendant les heures de travail
+
+4. COUVERTURE COMPLÈTE DES EXAMENS :
+   - Tu DOIS créer des sessions pour TOUS les examens listés, pas juste un seul
+   - Répartir équitablement entre toutes les matières selon priorité et date
+   - Prioriser les examens proches et difficiles (haute priorité)
+   - Augmenter l'intensité à l'approche de chaque examen
+
+5. STRATÉGIE DE RÉPARTITION :
+   - Alterner entre les matières pour éviter la monotonie
+   - Concentrer les révisions dans les 2 semaines avant chaque examen
+   - Privilégier plusieurs sessions courtes plutôt qu'une longue
+   - Varier les horaires (matin, après-midi, soir)
+
+⚠️ EN CAS DE DOUTE SUR UN CRÉNEAU : NE PAS CRÉER LA SESSION ⚠️
 
 RETOURNE UNIQUEMENT un JSON valide avec ce format exact :
 {
@@ -93,37 +106,71 @@ RETOURNE UNIQUEMENT un JSON valide avec ce format exact :
     {
       "subject": "nom de la matière",
       "exam_id": "uuid de l'examen",
-      "start_time": "ISO 8601 timestamp",
-      "end_time": "ISO 8601 timestamp",
+      "start_time": "ISO 8601 timestamp avec fuseau horaire",
+      "end_time": "ISO 8601 timestamp avec fuseau horaire",
       "difficulty": "facile|moyen|difficile",
-      "weight": nombre entre 0 et 1 (plus proche de 1 = plus important)
+      "weight": nombre entre 0 et 1
     }
   ]
 }`;
 
     const userPrompt = `Génère un planning de révision du ${now} au ${lastExamDate}.
 
-IMPORTANT : Il y a ${exams.length} examen(s) différent(s). Tu DOIS créer des sessions pour CHACUN d'entre eux.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 EXAMENS À RÉVISER (${exams.length} au total - TOUS obligatoires)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-EXAMENS À RÉVISER (TOUS obligatoires) :
 ${exams.map((e, idx) => {
-  const daysUntilExam = Math.ceil((new Date(e.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-  return `${idx + 1}. ${e.subject} - Date: ${e.date} (dans ${daysUntilExam} jours), Priorité: ${e.priority}, ID: ${e.id}`;
-}).join('\n')}
+  const examDate = new Date(e.date);
+  const daysUntilExam = Math.ceil((examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  const priorityEmoji = e.priority === 'high' ? '🔴' : e.priority === 'medium' ? '🟡' : '🟢';
+  return `${idx + 1}. ${priorityEmoji} ${e.subject}
+   - Date examen: ${e.date} (J-${daysUntilExam})
+   - Priorité: ${e.priority}
+   - ID: ${e.id}`;
+}).join('\n\n')}
 
-ÉVÉNEMENTS (créneaux occupés) :
-${events.length > 0 ? events.map(e => `- ${e.summary} : ${e.start_date} → ${e.end_date}`).join('\n') : 'Aucun événement'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 CRÉNEAUX OCCUPÉS - À ÉVITER ABSOLUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CONTRAINTES :
-${constraints.length > 0 ? constraints.map(c => `- Type: ${c.type}, Jours: ${c.days.join(', ')}`).join('\n') : 'Aucune contrainte'}
+${events.length > 0 ? events.map(e => {
+  const start = new Date(e.start_date);
+  const end = new Date(e.end_date);
+  return `❌ ${e.summary}
+   Du: ${start.toLocaleString('fr-FR')} 
+   Au: ${end.toLocaleString('fr-FR')}
+   ${e.location ? `Lieu: ${e.location}` : ''}`;
+}).join('\n\n') : '✅ Aucun événement - Emploi du temps libre'}
 
-INSTRUCTIONS SPÉCIFIQUES :
-- Génère un minimum de ${Math.max(5, exams.length * 3)} sessions au total
-- Chaque examen doit avoir au moins ${Math.max(2, Math.ceil(5 / exams.length))} sessions de révision
-- Varie les horaires (matin, après-midi, soir) pour un meilleur apprentissage
-- Privilégie des sessions plus courtes et fréquentes aux sessions longues et rares
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⛔ CONTRAINTES UTILISATEUR - IMPÉRATIF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Génère maintenant le planning optimal pour réviser TOUS ces examens.`;
+${constraints.length > 0 ? constraints.map(c => {
+  const daysStr = c.days.length > 0 ? c.days.join(', ') : 'Tous les jours';
+  return `🔒 ${c.type.toUpperCase()}
+   Jours concernés: ${daysStr}
+   ⚠️ NE PAS créer de sessions pendant ces créneaux`;
+}).join('\n\n') : '✅ Aucune contrainte particulière'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 OBJECTIFS DE GÉNÉRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Nombre minimum de sessions: ${Math.max(10, exams.length * 4)}
+- Sessions par examen (minimum): ${Math.max(3, Math.ceil(10 / exams.length))}
+- Durée des sessions: ${config.minDuration}-${config.maxDuration} minutes
+- Sessions max par jour: ${config.sessionsPerDay}
+
+⚠️ RAPPEL CRITIQUE ⚠️
+Vérifie CHAQUE session générée pour t'assurer qu'elle :
+1. Ne chevauche AUCUN événement de l'emploi du temps
+2. Respecte TOUTES les contraintes utilisateur
+3. Se situe dans les horaires autorisés (8h-22h, pas dimanche)
+4. Couvre TOUS les examens listés ci-dessus
+
+Génère maintenant le planning optimal.`;
 
     console.log('Calling Lovable AI...');
 
