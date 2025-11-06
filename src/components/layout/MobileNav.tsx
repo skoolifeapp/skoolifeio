@@ -14,8 +14,8 @@ export const MobileNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-[var(--shadow-strong)] pb-[env(safe-area-inset-bottom)] pt-3">
-      <div className="flex justify-around items-center h-16 px-4">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-[var(--shadow-strong)] pb-[env(safe-area-inset-bottom)] pt-2">
+      <div className="flex justify-around items-center h-12 px-4">
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive = location.pathname === path;
           return (
@@ -23,13 +23,13 @@ export const MobileNav = () => {
               key={path}
               to={path}
               className={cn(
-                "flex items-center justify-center p-3 rounded-lg transition-all duration-300",
+                "flex items-center justify-center p-2 rounded-lg transition-all duration-300",
                 isActive
                   ? "text-primary scale-110"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Icon className={cn("h-6 w-6", isActive && "animate-pulse-soft")} />
+              <Icon className={cn("h-5 w-5", isActive && "animate-pulse-soft")} />
             </Link>
           );
         })}
