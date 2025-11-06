@@ -85,6 +85,7 @@ RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE :
    - Si contrainte "alternance" : NE PAS placer de sessions les jours d'alternance indiqués
    - Si contrainte "sport" : NE PAS placer de sessions aux horaires de sport indiqués
    - Si contrainte "job" : NE PAS placer de sessions pendant les heures de travail
+   - TEMPS DE TRAJET : Si une contrainte a un temps de trajet (commute_time), réduire la plage horaire disponible avant/après cette activité pour éviter le surmenage
 
 4. COUVERTURE COMPLÈTE DES EXAMENS :
    - Tu DOIS créer des sessions pour TOUS les examens listés, pas juste un seul
@@ -149,9 +150,12 @@ ${events.length > 0 ? events.map(e => {
 
 ${constraints.length > 0 ? constraints.map(c => {
   const daysStr = c.days.length > 0 ? c.days.join(', ') : 'Tous les jours';
+  const commuteInfo = c.commute_time && c.commute_time > 0 
+    ? `\n   🚗 Temps de trajet: ${c.commute_time} min (aller simple) - Prévoir ${c.commute_time * 2} min de trajet total + marge de repos` 
+    : '';
   return `🔒 ${c.type.toUpperCase()}
-   Jours concernés: ${daysStr}
-   ⚠️ NE PAS créer de sessions pendant ces créneaux`;
+   Jours concernés: ${daysStr}${commuteInfo}
+   ⚠️ NE PAS créer de sessions pendant ces créneaux (et prévoir les temps de trajet pour planifier intelligemment)`;
 }).join('\n\n') : '✅ Aucune contrainte particulière'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
