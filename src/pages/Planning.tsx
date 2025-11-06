@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { format, isSameDay, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -37,6 +38,7 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
   const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
@@ -272,6 +274,13 @@ const Planning = () => {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Planning IA</h1>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate('/import')}
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
             {isNative && (
               <Button 
                 variant={notificationsEnabled ? "default" : "outline"} 

@@ -1,10 +1,10 @@
-import { Home, Upload, FileText, Calendar, User } from "lucide-react";
+import { Home, ListTodo, FileText, Calendar, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Home, label: "Accueil", path: "/" },
-  { icon: Upload, label: "Import", path: "/import" },
+  { icon: ListTodo, label: "Contraintes", path: "/constraints" },
   { icon: FileText, label: "Examens", path: "/exams" },
   { icon: Calendar, label: "Planning", path: "/planning" },
   { icon: User, label: "Profil", path: "/profile" },
