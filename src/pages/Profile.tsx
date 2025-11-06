@@ -17,7 +17,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
+    <div className="min-h-screen pb-24 px-safe pt-safe">
       <div className="max-w-md mx-auto">
         <h1 className="text-3xl font-bold mb-2">Profil</h1>
         <p className="text-muted-foreground mb-8">
@@ -99,7 +99,7 @@ const Profile = () => {
         {/* Logout Button */}
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full mb-4"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4 mr-2" />

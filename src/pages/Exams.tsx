@@ -103,7 +103,7 @@ const Exams = () => {
   };
 
   return (
-    <div className="relative w-full h-screen pt-safe pb-safe">
+    <div className="relative w-full min-h-screen pb-24 pt-safe px-safe">
       <Button
         onClick={() => setIsDialogOpen(true)}
         size="icon"
