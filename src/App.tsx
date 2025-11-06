@@ -13,7 +13,6 @@ import Exams from "./pages/Exams";
 
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
-import DayDetail from "./pages/DayDetail";
 import Constraints from "./pages/Constraints";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -36,7 +35,6 @@ const AppContent = () => {
         
         <Route path="/constraints" element={<ProtectedRoute><Constraints /></ProtectedRoute>} />
         <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-        <Route path="/planning/day/:day" element={<ProtectedRoute><DayDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
