@@ -49,29 +49,10 @@ const AddExamOrConstraint = () => {
     navigate("/exams");
   };
 
-  const handleAddConstraint = async () => {
-    if (!user || !constraintType) {
-      toast.error("Veuillez sélectionner un type de contrainte");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('constraints')
-      .insert({
-        user_id: user.id,
-        type: constraintType,
-        days: [],
-        commute_time: commuteTime,
-      });
-
-    if (error) {
-      console.error('Error adding constraint:', error);
-      toast.error("Erreur lors de l'ajout de la contrainte");
-      return;
-    }
-
-    toast.success("Contrainte ajoutée avec succès");
-    navigate("/exams");
+  const handleAddConstraint = () => {
+    // Redirect to the new Constraints page
+    toast.info("Utilise la page Contraintes pour une gestion complète");
+    navigate("/constraints");
   };
 
   return (

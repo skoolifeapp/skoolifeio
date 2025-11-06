@@ -15,6 +15,7 @@ import AddExamOrConstraint from "./pages/AddExamOrConstraint";
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import DayDetail from "./pages/DayDetail";
+import Constraints from "./pages/Constraints";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const AppContent = () => {
         <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
         <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
         <Route path="/exams/add" element={<ProtectedRoute><AddExamOrConstraint /></ProtectedRoute>} />
+        <Route path="/constraints" element={<ProtectedRoute><Constraints /></ProtectedRoute>} />
         <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
         <Route path="/planning/day/:day" element={<ProtectedRoute><DayDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

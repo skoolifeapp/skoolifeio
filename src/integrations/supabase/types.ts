@@ -50,31 +50,37 @@ export type Database = {
         }
         Relationships: []
       }
-      constraints: {
+      constraint_events: {
         Row: {
-          commute_time: number | null
           created_at: string
-          days: string[]
+          end_time: string
           id: string
-          type: string
+          recurrence_rule: string | null
+          start_time: string
+          title: string
+          type: Database["public"]["Enums"]["constraint_type"]
           updated_at: string
           user_id: string
         }
         Insert: {
-          commute_time?: number | null
           created_at?: string
-          days?: string[]
+          end_time: string
           id?: string
-          type: string
+          recurrence_rule?: string | null
+          start_time: string
+          title: string
+          type: Database["public"]["Enums"]["constraint_type"]
           updated_at?: string
           user_id: string
         }
         Update: {
-          commute_time?: number | null
           created_at?: string
-          days?: string[]
+          end_time?: string
           id?: string
-          type?: string
+          recurrence_rule?: string | null
+          start_time?: string
+          title?: string
+          type?: Database["public"]["Enums"]["constraint_type"]
           updated_at?: string
           user_id?: string
         }
@@ -228,6 +234,75 @@ export type Database = {
           },
         ]
       }
+      user_constraints_profile: {
+        Row: {
+          commute_home_job: number | null
+          commute_home_school: number | null
+          commute_home_sport: number | null
+          created_at: string
+          dinner_break_end: string | null
+          dinner_break_start: string | null
+          has_student_job: boolean | null
+          is_alternant: boolean | null
+          lunch_break_end: string | null
+          lunch_break_start: string | null
+          max_daily_revision_hours: number | null
+          max_weekly_revision_hours: number | null
+          min_free_evenings_per_week: number | null
+          no_study_after: string | null
+          no_study_before: string | null
+          no_study_days: string[] | null
+          preferred_productivity: string | null
+          respect_meal_times: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commute_home_job?: number | null
+          commute_home_school?: number | null
+          commute_home_sport?: number | null
+          created_at?: string
+          dinner_break_end?: string | null
+          dinner_break_start?: string | null
+          has_student_job?: boolean | null
+          is_alternant?: boolean | null
+          lunch_break_end?: string | null
+          lunch_break_start?: string | null
+          max_daily_revision_hours?: number | null
+          max_weekly_revision_hours?: number | null
+          min_free_evenings_per_week?: number | null
+          no_study_after?: string | null
+          no_study_before?: string | null
+          no_study_days?: string[] | null
+          preferred_productivity?: string | null
+          respect_meal_times?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commute_home_job?: number | null
+          commute_home_school?: number | null
+          commute_home_sport?: number | null
+          created_at?: string
+          dinner_break_end?: string | null
+          dinner_break_start?: string | null
+          has_student_job?: boolean | null
+          is_alternant?: boolean | null
+          lunch_break_end?: string | null
+          lunch_break_start?: string | null
+          max_daily_revision_hours?: number | null
+          max_weekly_revision_hours?: number | null
+          min_free_evenings_per_week?: number | null
+          no_study_after?: string | null
+          no_study_before?: string | null
+          no_study_days?: string[] | null
+          preferred_productivity?: string | null
+          respect_meal_times?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -333,6 +408,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      constraint_type: "alternance" | "job" | "sport" | "rdv" | "exception"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -461,6 +537,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      constraint_type: ["alternance", "job", "sport", "rdv", "exception"],
     },
   },
 } as const

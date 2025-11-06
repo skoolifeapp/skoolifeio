@@ -99,43 +99,12 @@ export const useMigrateLocalStorageToSupabase = () => {
         }
       }
 
-      // 2. Migrate Constraints
+      // 2. Skip old constraints migration (table structure changed)
       const constraintsData = localStorage.getItem('constraints');
       if (constraintsData) {
-        try {
-          const constraints: LocalConstraint[] = JSON.parse(constraintsData);
-          if (constraints.length > 0) {
-            hasDataToMigrate = true;
-
-            // Check if constraints already exist
-            const { count } = await supabase
-              .from('constraints')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', user.id);
-
-            if (count === 0) {
-              const constraintsToInsert = constraints.map(constraint => ({
-                user_id: user.id,
-                type: constraint.type,
-                days: constraint.days,
-              }));
-
-              const { error, data } = await supabase
-                .from('constraints')
-                .insert(constraintsToInsert)
-                .select();
-
-              if (error) {
-                console.error('Error migrating constraints:', error);
-              } else {
-                results.constraints = data?.length || 0;
-                console.log(`Migrated ${results.constraints} constraints`);
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error parsing constraints from localStorage:', error);
-        }
+        // Just remove old constraints data without migrating
+        localStorage.removeItem('constraints');
+        console.log('Removed old constraints data (table structure changed)');
       }
 
       // 3. Migrate Imported Events (calendar)
