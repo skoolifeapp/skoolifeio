@@ -2,12 +2,20 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, GraduationCap, Settings } from "lucide-react";
+import { User, Mail, GraduationCap, Settings, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
+  const { signOut, user } = useAuth();
+  
   const handleSave = () => {
     toast.success("Profil sauvegardé !");
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Déconnexion réussie");
   };
 
   return (
@@ -53,7 +61,8 @@ const Profile = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="jean.dupont@university.fr"
+                value={user?.email || ''}
+                disabled
                 className="mt-1"
               />
             </div>
@@ -88,6 +97,16 @@ const Profile = () => {
             Sauvegarder
           </Button>
         </Card>
+
+        {/* Logout Button */}
+        <Button
+          variant="outline"
+          className="w-full mb-6"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Se déconnecter
+        </Button>
 
         {/* Statistics Card */}
         <Card className="p-6 shadow-[var(--shadow-soft)]">
