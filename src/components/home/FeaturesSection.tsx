@@ -23,19 +23,19 @@ const features = [
 export const FeaturesSection = () => {
   return (
     <section className="px-6 py-8">
-      <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+      <h2 className="text-2xl font-semibold mb-6 text-center">
         Comment ça marche ?
       </h2>
       
-      <div className="space-y-5">
+      <div className="space-y-4">
         {features.map((feature, index) => (
           <div
             key={index}
-            className="bg-gradient-to-br from-card to-card/50 rounded-2xl p-6 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-strong)] transition-all duration-300 border border-border/50 hover:border-primary/30 animate-slide-up group cursor-pointer hover:-translate-y-1"
+            className="bg-card rounded-2xl p-5 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all duration-300 border border-border animate-slide-up"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className="flex items-start gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary-glow/5 flex items-center justify-center flex-shrink-0 shadow-[var(--shadow-soft)] group-hover:shadow-[var(--shadow-medium)] transition-all duration-300 group-hover:scale-110">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 shadow-[var(--shadow-soft)]">
                 <img 
                   src={feature.icon} 
                   alt={feature.title}
@@ -43,10 +43,10 @@ export const FeaturesSection = () => {
                 />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-2 text-foreground">
+                <h3 className="font-semibold text-lg mb-1">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground">
                   {feature.description}
                 </p>
               </div>

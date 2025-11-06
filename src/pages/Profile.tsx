@@ -17,25 +17,22 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe bg-gradient-to-b from-background to-secondary/20">
+    <div className="min-h-screen safe-area-inset-bottom px-safe pt-safe">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-primary-glow bg-clip-text text-transparent">Profil</h1>
+        <h1 className="text-3xl font-bold mb-2">Profil</h1>
         <p className="text-muted-foreground mb-8">
           Gère tes informations personnelles
         </p>
 
         {/* Profile Avatar */}
-        <div className="flex justify-center mb-8 animate-fade-in">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-glow rounded-full blur-xl opacity-50" />
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-[var(--shadow-strong)]">
-              <User className="h-12 w-12 text-primary-foreground" />
-            </div>
+        <div className="flex justify-center mb-8">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-[var(--shadow-medium)]">
+            <User className="h-12 w-12 text-primary-foreground" />
           </div>
         </div>
 
         {/* Profile Information */}
-        <Card className="p-6 mb-6 animate-slide-up border-border/50">
+        <Card className="p-6 mb-6 shadow-[var(--shadow-soft)]">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Settings className="h-5 w-5 text-primary" />
             Informations
