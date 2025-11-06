@@ -299,10 +299,8 @@ const Planning = () => {
     isSameDay(new Date(session.start_time), selectedDate)
   );
 
-  // Generate hours (7-23, then 0 for midnight)
-  const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
-  const DISPLAY_HOURS = 18; // Total hours displayed
-  const START_HOUR = 7; // Start at 7am
+  // Generate hours (0-23)
+  const hours = Array.from({ length: 24 }, (_, i) => i);
 
   // Helper to get event position and height
   const getEventStyle = (event: ImportedEvent) => {
@@ -313,13 +311,9 @@ const Planning = () => {
     const endHour = end.getHours();
     const endMinute = end.getMinutes();
     
-    // Adjust hours relative to 7am start
-    const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
-    const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
-    
-    const topPercent = ((adjustedStartHour + startMinute / 60) / DISPLAY_HOURS) * 100;
-    const durationHours = (adjustedEndHour + endMinute / 60) - (adjustedStartHour + startMinute / 60);
-    const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+    const topPercent = ((startHour + startMinute / 60) / 24) * 100;
+    const durationHours = (endHour + endMinute / 60) - (startHour + startMinute / 60);
+    const heightPercent = (durationHours / 24) * 100;
     
     return {
       top: `${topPercent}%`,
@@ -540,13 +534,9 @@ const Planning = () => {
                       const endHour = end.getHours();
                       const endMinute = end.getMinutes();
                       
-                      // Adjust hours relative to 7am start
-                      const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
-                      const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
-                      
-                      const topPercent = ((adjustedStartHour + startMinute / 60) / DISPLAY_HOURS) * 100;
-                      const durationHours = (adjustedEndHour + endMinute / 60) - (adjustedStartHour + startMinute / 60);
-                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+                      const topPercent = ((startHour + startMinute / 60) / 24) * 100;
+                      const durationHours = (endHour + endMinute / 60) - (startHour + startMinute / 60);
+                      const heightPercent = (durationHours / 24) * 100;
                       const duration = Math.round(durationHours * 60);
 
                       const style = {
