@@ -23,14 +23,13 @@ export const MobileNav = () => {
               key={path}
               to={path}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-300 min-w-[60px]",
+                "flex items-center justify-center p-3 rounded-lg transition-all duration-300",
                 isActive
                   ? "text-primary scale-110"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "animate-pulse-soft")} />
-              <span className="text-[10px] font-medium">{label}</span>
+              <Icon className={cn("h-6 w-6", isActive && "animate-pulse-soft")} />
             </Link>
           );
         })}
