@@ -168,13 +168,15 @@ const Constraints = () => {
   const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
   return (
-    <div className="min-h-screen p-4 pb-24">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
+    <div className="min-h-screen flex flex-col">
+      <div className="sticky top-0 z-10 bg-background border-b p-4">
+        <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold">Mes contraintes</h1>
         </div>
+      </div>
 
-        <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 pb-24">
+        <div className="max-w-2xl mx-auto space-y-6">
           {/* Statut & rythme de vie */}
           <Card>
             <CardHeader>
