@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff, Upload } from "lucide-react";
 import ICAL from "ical.js";
 import { toast } from "sonner";
 import { format, isSameDay, addDays } from "date-fns";
@@ -16,7 +16,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
-import { useQuery } from "@tanstack/react-query";
+import { notificationService } from "@/services/notificationService";
+import { Capacitor } from "@capacitor/core";
 
 interface ImportedEvent {
   summary: string;
@@ -41,88 +42,122 @@ const Planning = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
+  const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intensity, setIntensity] = useState<IntensityLevel>('standard');
+  const [examsCount, setExamsCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
-  // Use React Query for all data fetching with aggressive caching
-  const { data: calendarEvents = [] } = useQuery({
-    queryKey: ['calendar-events', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      return (data || []).map(event => ({
-        summary: event.summary,
-        startDate: event.start_date,
-        endDate: event.end_date,
-        location: event.location || '',
-        description: event.description || '',
-      }));
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+  useEffect(() => {
+    // Check if running on native platform
+    setIsNative(Capacitor.isNativePlatform());
+    
+    if (user) {
+      loadCalendarEvents();
+      checkNotificationStatus();
+    }
+  }, [user]);
 
-  const { data: revisionSessions = [], refetch: refetchSessions } = useQuery({
-    queryKey: ['revision-sessions', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
-        .from('revision_sessions')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
+  const loadCalendarEvents = async () => {
+    if (!user) return;
 
-  const { data: examsCount = 0 } = useQuery({
-    queryKey: ['exams-count', user?.id],
-    queryFn: async () => {
-      if (!user) return 0;
-      const { count, error } = await supabase
-        .from('exams')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq('user_id', user.id);
 
-  const { data: dayExams = [] } = useQuery({
-    queryKey: ['day-exams', user?.id, selectedDate.toDateString()],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data, error } = await supabase
-        .from('exams')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      return (data || []).filter((exam: { date: string }) => 
-        isSameDay(new Date(exam.date), selectedDate)
-      );
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
+    if (error) {
+      console.error('Error loading calendar events:', error);
+      return;
+    }
+
+    // Transform Supabase data to match the expected format
+    const events = (data || []).map(event => ({
+      summary: event.summary,
+      startDate: event.start_date,
+      endDate: event.end_date,
+      location: event.location || '',
+      description: event.description || '',
+    }));
+
+    setImportedEvents(events);
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadRevisionSessions();
+      loadExamsCount();
+    }
+  }, [user]);
+
+  const loadRevisionSessions = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('revision_sessions')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading revision sessions:', error);
+      return;
+    }
+
+    const sessions = data || [];
+    setRevisionSessions(sessions);
+    
+    // Schedule notifications for all upcoming sessions
+    if (isNative && notificationsEnabled) {
+      await notificationService.scheduleSessionReminders(sessions);
+    }
+  };
+
+  const checkNotificationStatus = async () => {
+    if (!isNative) return;
+    
+    const permission = await notificationService.checkPermissions();
+    setNotificationsEnabled(permission === 'granted');
+  };
+
+  const toggleNotifications = async () => {
+    if (!isNative) {
+      toast.error("Les notifications ne fonctionnent que sur l'app native");
+      return;
+    }
+
+    if (notificationsEnabled) {
+      // Disable notifications
+      await notificationService.cancelAllNotifications();
+      setNotificationsEnabled(false);
+      toast.error("Notifications désactivées");
+    } else {
+      // Enable notifications
+      const success = await notificationService.initialize();
+      if (success) {
+        await notificationService.scheduleSessionReminders(revisionSessions);
+        setNotificationsEnabled(true);
+        toast.error("Notifications activées - Tu seras rappelé 15 min avant chaque session");
+      } else {
+        toast.error("Impossible d'activer les notifications");
+      }
+    }
+  };
+
+  const loadExamsCount = async () => {
+    if (!user) return;
+    
+    const { count, error } = await supabase
+      .from('exams')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (!error && count !== null) {
+      setExamsCount(count);
+    }
+  };
 
   const handleGeneratePlanning = async () => {
     if (examsCount === 0) {
@@ -145,7 +180,7 @@ const Planning = () => {
     setIsGenerating(false);
 
     if (result.success) {
-      await refetchSessions();
+      await loadRevisionSessions();
     } else {
       toast.error("Erreur", {
         description: result.error || "Impossible de générer le planning.",
@@ -164,7 +199,7 @@ const Planning = () => {
       return;
     }
 
-    await refetchSessions();
+    await loadRevisionSessions();
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,7 +247,7 @@ const Planning = () => {
 
         if (error) throw error;
 
-        toast.success("Calendrier importé avec succès");
+        await loadCalendarEvents();
       } catch (error) {
         console.error('Error importing calendar:', error);
         toast.error("Erreur lors de l'import du fichier");
@@ -226,8 +261,36 @@ const Planning = () => {
     }
   };
 
+  // Get exams for selected day from Supabase (not localStorage)
+  const [dayExams, setDayExams] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      loadDayExams();
+    }
+  }, [user, selectedDate]);
+
+  const loadDayExams = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading exams:', error);
+      return;
+    }
+
+    const filtered = (data || []).filter((exam: { date: string }) => 
+      isSameDay(new Date(exam.date), selectedDate)
+    );
+    setDayExams(filtered);
+  };
+
   // Get events for selected day
-  const dayEvents = calendarEvents.filter(event =>
+  const dayEvents = importedEvents.filter(event => 
     isSameDay(new Date(event.startDate), selectedDate)
   );
 
