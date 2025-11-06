@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, CheckCircle2, FileText } from "lucide-react";
 import ICAL from "ical.js";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Import = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -45,7 +50,9 @@ const Import = () => {
   };
 
   const handleSubmit = async () => {
-    if (!file) return;
+    if (!file || !user) return;
+
+    setIsImporting(true);
 
     try {
       const text = await file.text();
@@ -56,20 +63,48 @@ const Import = () => {
       const events = vevents.map((vevent: any) => {
         const event = new ICAL.Event(vevent);
         return {
+          user_id: user.id,
           summary: event.summary,
-          startDate: event.startDate.toJSDate(),
-          endDate: event.endDate.toJSDate(),
-          location: event.location || '',
-          description: event.description || '',
+          start_date: event.startDate.toJSDate().toISOString(),
+          end_date: event.endDate.toJSDate().toISOString(),
+          location: event.location || null,
+          description: event.description || null,
         };
       });
 
-      // Store events in localStorage
-      localStorage.setItem('importedEvents', JSON.stringify(events));
+      // Delete existing events for this user before importing new ones
+      const { error: deleteError } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('Error deleting old events:', deleteError);
+        toast.error("Erreur lors de la suppression des anciens événements");
+        return;
+      }
+
+      // Insert new events into Supabase
+      const { error: insertError } = await supabase
+        .from('calendar_events')
+        .insert(events);
+
+      if (insertError) {
+        console.error('Error inserting events:', insertError);
+        toast.error("Erreur lors de l'importation des événements");
+        return;
+      }
+
+      toast.success("Calendrier importé avec succès", {
+        description: `${events.length} événements importés.`,
+      });
       
       navigate('/planning');
     } catch (error) {
       console.error('Error parsing ICS file:', error);
+      toast.error("Erreur lors de la lecture du fichier .ics");
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -142,8 +177,9 @@ const Import = () => {
             size="lg"
             className="w-full mt-6"
             onClick={handleSubmit}
+            disabled={isImporting}
           >
-            Valider l'import
+            {isImporting ? 'Importation en cours...' : 'Valider l\'import'}
           </Button>
         )}
 

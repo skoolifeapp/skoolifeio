@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ScrollReset } from "@/components/layout/ScrollReset";
+import { useMigrateLocalStorageToSupabase } from "@/hooks/useMigrateLocalStorageToSupabase";
 import Index from "./pages/Index";
 import Import from "./pages/Import";
 import Exams from "./pages/Exams";
@@ -21,6 +22,9 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user } = useAuth();
+  
+  // Automatically migrate localStorage data to Supabase on first load
+  useMigrateLocalStorageToSupabase();
   
   return (
     <div className="relative">

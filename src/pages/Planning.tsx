@@ -44,11 +44,35 @@ const Planning = () => {
   const [examsCount, setExamsCount] = useState(0);
 
   useEffect(() => {
-    const storedEvents = localStorage.getItem('importedEvents');
-    if (storedEvents) {
-      setImportedEvents(JSON.parse(storedEvents));
+    if (user) {
+      loadCalendarEvents();
     }
-  }, []);
+  }, [user]);
+
+  const loadCalendarEvents = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading calendar events:', error);
+      return;
+    }
+
+    // Transform Supabase data to match the expected format
+    const events = (data || []).map(event => ({
+      summary: event.summary,
+      startDate: event.start_date,
+      endDate: event.end_date,
+      location: event.location || '',
+      description: event.description || '',
+    }));
+
+    setImportedEvents(events);
+  };
 
   useEffect(() => {
     if (user) {
