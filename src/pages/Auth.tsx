@@ -123,7 +123,7 @@ const Auth = () => {
               <Calendar className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Plannify</CardTitle>
+          <CardTitle className="text-2xl">Skoolife</CardTitle>
           <CardDescription>
             Gérez vos examens et optimisez votre planning de révisions
           </CardDescription>
