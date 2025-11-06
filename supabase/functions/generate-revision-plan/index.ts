@@ -163,7 +163,21 @@ Génère maintenant le planning optimal pour réviser TOUS ces examens.`;
       });
     }
 
-    // Insert sessions
+    // IMPORTANT: Delete all existing revision sessions for this user before inserting new ones
+    console.log('Deleting existing revision sessions...');
+    const { error: deleteError } = await supabaseClient
+      .from('revision_sessions')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      console.error('Error deleting old sessions:', deleteError);
+      throw new Error('Failed to delete old sessions');
+    }
+
+    console.log('Old sessions deleted successfully');
+
+    // Insert new sessions
     const sessionsToInsert = sessions.map((s: any) => ({
       user_id: user.id,
       exam_id: s.exam_id,
