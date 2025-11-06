@@ -40,6 +40,8 @@ export const FeaturesSection = () => {
                   src={feature.icon} 
                   alt={feature.title}
                   className="w-10 h-10 object-contain"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="flex-1">

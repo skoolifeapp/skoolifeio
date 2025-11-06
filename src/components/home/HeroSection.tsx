@@ -11,6 +11,8 @@ export const HeroSection = () => {
           src={heroImage} 
           alt="Students collaborating with AI" 
           className="w-full max-w-md rounded-2xl shadow-[var(--shadow-medium)]"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       

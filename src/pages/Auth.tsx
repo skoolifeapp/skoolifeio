@@ -122,6 +122,8 @@ const Auth = () => {
               src={skoolifeLogo} 
               alt="Skoolife Logo" 
               className="h-16 w-16"
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
           <CardTitle className="text-2xl">Skoolife</CardTitle>
