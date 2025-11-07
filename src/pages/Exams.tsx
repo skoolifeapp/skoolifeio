@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Calendar, AlertTriangle, TrendingUp, CheckCircle2, Clock, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -398,13 +398,13 @@ const Exams = () => {
         </div>
       </div>
 
-      {/* Dialog Ajout */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Nouvel examen</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
+      {/* Drawer Ajout */}
+      <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Nouvel examen</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
             <div>
               <Label htmlFor="subject">Matière *</Label>
               <Input
@@ -483,7 +483,6 @@ const Exams = () => {
                   id="coefficient"
                   type="number"
                   step="0.5"
-                  min="0"
                   placeholder="Ex: 2"
                   value={newExam.coefficient}
                   onChange={(e) => setNewExam({ ...newExam, coefficient: e.target.value })}
@@ -510,23 +509,23 @@ const Exams = () => {
             </div>
 
             <div>
-              <Label htmlFor="notes">Notes importantes</Label>
+              <Label htmlFor="notes">Notes personnelles</Label>
               <Textarea
                 id="notes"
-                placeholder="Chapitres à réviser, conseils du prof, etc."
+                placeholder="Chapitres, sujets importants, conseils..."
                 value={newExam.notes}
                 onChange={(e) => setNewExam({ ...newExam, notes: e.target.value })}
                 className="mt-1.5 min-h-[100px]"
               />
             </div>
 
-            <Button onClick={handleAddExam} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
+            <Button onClick={handleAddExam} className="w-full" size="lg">
+              <Save className="mr-2 h-4 w-4" />
               Enregistrer l'examen
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
