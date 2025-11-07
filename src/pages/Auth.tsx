@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
@@ -17,26 +17,10 @@ const signInSchema = z.object({
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }).max(100)
 });
 
-const signUpSchema = z.object({
-  firstName: z.string().trim().min(1, { message: "Le prénom est requis" }).max(50),
-  lastName: z.string().trim().min(1, { message: "Le nom est requis" }).max(50),
-  studies: z.string().trim().min(1, { message: "Les études sont requises" }).max(100),
-  email: z.string().trim().email({ message: "Email invalide" }).max(255),
-  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }).max(100)
-});
 
 const Auth = () => {
-  // Sign In state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Sign Up state
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [studies, setStudies] = useState('');
-  const [signUpEmail, setSignUpEmail] = useState('');
-  const [signUpPassword, setSignUpPassword] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -46,46 +30,6 @@ const Auth = () => {
       navigate('/');
     }
   }, [user, navigate]);
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const validated = signUpSchema.parse({ 
-        firstName, 
-        lastName, 
-        studies, 
-        email: signUpEmail, 
-        password: signUpPassword 
-      });
-      setLoading(true);
-
-      const redirectUrl = `${window.location.origin}/`;
-      const { error } = await supabase.auth.signUp({
-        email: validated.email,
-        password: validated.password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: `${validated.firstName} ${validated.lastName}`,
-            first_name: validated.firstName,
-            last_name: validated.lastName,
-            studies: validated.studies
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Sign up error:', error);
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors[0].message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,107 +74,36 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Inscription</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Mot de passe</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Connexion..." : "Se connecter"}
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-firstname">Prénom</Label>
-                    <Input
-                      id="signup-firstname"
-                      type="text"
-                      placeholder="Jean"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-lastname">Nom</Label>
-                    <Input
-                      id="signup-lastname"
-                      type="text"
-                      placeholder="Dupont"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-studies">Études</Label>
-                  <Input
-                    id="signup-studies"
-                    type="text"
-                    placeholder="Ex: L2 Informatique"
-                    value={studies}
-                    onChange={(e) => setStudies(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={signUpEmail}
-                    onChange={(e) => setSignUpEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Création..." : "Créer mon compte"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <div className="w-full">
+            <h2 className="text-lg font-semibold mb-6 text-center">Connecter votre compte testeur</h2>
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  placeholder="votre@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Mot de passe</Label>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Connexion..." : "Se connecter"}
+              </Button>
+            </form>
+          </div>
         </CardContent>
       </Card>
     </div>
