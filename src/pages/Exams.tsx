@@ -405,7 +405,7 @@ const Exams = () => {
             <DrawerTitle>Nouvel examen</DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 px-4 pb-8 overflow-y-auto">
-            <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
+            <div>
               <Label htmlFor="subject">Matière *</Label>
               <Input
                 id="subject"
@@ -416,7 +416,7 @@ const Exams = () => {
               />
             </div>
 
-            <div className="animate-fade-in" style={{ animationDelay: '50ms' }}>
+            <div>
               <Label htmlFor="date">Date & heure *</Label>
               <Input
                 id="date"
@@ -427,7 +427,7 @@ const Exams = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="priority">Priorité</Label>
                 <Select
@@ -465,7 +465,7 @@ const Exams = () => {
               </div>
             </div>
 
-            <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+            <div>
               <Label htmlFor="location">Lieu</Label>
               <Input
                 id="location"
@@ -476,7 +476,7 @@ const Exams = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="coefficient">Coefficient</Label>
                 <Input
@@ -508,7 +508,7 @@ const Exams = () => {
               </div>
             </div>
 
-            <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
+            <div>
               <Label htmlFor="notes">Notes personnelles</Label>
               <Textarea
                 id="notes"
@@ -519,7 +519,7 @@ const Exams = () => {
               />
             </div>
 
-            <Button onClick={handleAddExam} className="w-full animate-fade-in" size="lg" style={{ animationDelay: '300ms' }}>
+            <Button onClick={handleAddExam} className="w-full" size="lg">
               <Save className="mr-2 h-4 w-4" />
               Enregistrer l'examen
             </Button>
