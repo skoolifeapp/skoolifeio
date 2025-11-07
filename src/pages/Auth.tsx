@@ -68,15 +68,13 @@ const Auth = () => {
               className="h-16 w-16"
             />
           </div>
-          <CardTitle className="text-2xl">Skoolife</CardTitle>
+          <CardTitle className="text-2xl">Connecter votre compte testeur</CardTitle>
           <CardDescription>
-            Gérez vos examens et optimisez votre planning de révisions
+            Accédez à Skoolife pour gérer vos examens et révisions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full">
-            <h2 className="text-lg font-semibold mb-6 text-center">Connecter votre compte testeur</h2>
-            <form onSubmit={handleSignIn} className="space-y-4">
+          <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
                 <Input
@@ -103,7 +101,6 @@ const Auth = () => {
                 {loading ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
-          </div>
         </CardContent>
       </Card>
     </div>
