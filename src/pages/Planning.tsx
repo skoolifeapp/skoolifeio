@@ -359,8 +359,8 @@ const Planning = () => {
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="hero" size="sm" disabled={isGenerating} className="px-4">
-                  Générer
+                <Button variant="hero" size="icon" disabled={isGenerating}>
+                  <Sparkles className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[80vh]">
