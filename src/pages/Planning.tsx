@@ -351,18 +351,15 @@ const Planning = () => {
             />
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={() => fileInputRef.current?.click()}
               title="Importer un fichier .ics"
-              className="w-24"
             >
-              <Upload className="h-4 w-4 mr-1" />
-              Import
+              <Upload className="h-4 w-4" />
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="hero" size="sm" disabled={isGenerating} className="w-24">
-                  <Sparkles className="h-4 w-4 mr-1" />
+                <Button variant="hero" size="sm" disabled={isGenerating}>
                   Générer
                 </Button>
               </SheetTrigger>
