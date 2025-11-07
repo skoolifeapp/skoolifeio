@@ -340,7 +340,7 @@ const Planning = () => {
       {/* Fixed Header Section */}
       <div className="fixed top-0 left-0 right-0 z-10 bg-background border-b px-safe pt-safe pb-2">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-bold">Planning IA</h1>
+          <h1 className="text-2xl font-bold">Mon planning</h1>
           <div className="flex gap-2">
             <input
               ref={fileInputRef}
@@ -351,16 +351,18 @@ const Planning = () => {
             />
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
               title="Importer un fichier .ics"
+              className="w-24"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="h-4 w-4 mr-1" />
+              Import
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="hero" size="sm" disabled={isGenerating}>
-                  <Sparkles className="h-4 w-4 mr-2" />
+                <Button variant="hero" size="sm" disabled={isGenerating} className="w-24">
+                  <Sparkles className="h-4 w-4 mr-1" />
                   Générer
                 </Button>
               </SheetTrigger>
