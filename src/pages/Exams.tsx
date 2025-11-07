@@ -117,51 +117,51 @@ const Exams = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Nouvel examen</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Nouvel examen</DialogTitle>
           </DialogHeader>
-          <Card className="border-0 shadow-none">
-            <CardContent className="space-y-4 p-0 pt-4">
-              <div>
-                <Label htmlFor="subject">Matière</Label>
-                <Input
-                  id="subject"
-                  placeholder="Ex: Mathématiques"
-                  value={newExam.subject}
-                  onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="date">Date de l'examen</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={newExam.date}
-                  onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="priority">Priorité</Label>
-                <Select
-                  value={newExam.priority}
-                  onValueChange={(value) => setNewExam({ ...newExam, priority: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Faible</SelectItem>
-                    <SelectItem value="medium">Moyenne</SelectItem>
-                    <SelectItem value="high">Haute</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleAddExam} className="w-full">
-                Ajouter l'examen
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-5 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="subject" className="text-sm font-semibold">Matière</Label>
+              <Input
+                id="subject"
+                placeholder="Ex: Mathématiques"
+                value={newExam.subject}
+                onChange={(e) => setNewExam({ ...newExam, subject: e.target.value })}
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-sm font-semibold">Date de l'examen</Label>
+              <Input
+                id="date"
+                type="date"
+                value={newExam.date}
+                onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priority" className="text-sm font-semibold">Priorité</Label>
+              <Select
+                value={newExam.priority}
+                onValueChange={(value) => setNewExam({ ...newExam, priority: value })}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="low">🟢 Faible</SelectItem>
+                  <SelectItem value="medium">🟡 Moyenne</SelectItem>
+                  <SelectItem value="high">🔴 Haute</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleAddExam} className="w-full h-12 text-base font-semibold">
+              Ajouter l'examen
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
