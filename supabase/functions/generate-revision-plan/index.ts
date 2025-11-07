@@ -134,9 +134,14 @@ ${exams.map((e, idx) => {
   const examDate = new Date(e.date);
   const daysUntilExam = Math.ceil((examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   const priorityEmoji = e.priority === 'high' ? '🔴' : e.priority === 'medium' ? '🟡' : '🟢';
+  const difficultyText = e.difficulty ? ` | Difficulté: ${e.difficulty}` : '';
+  const coeffText = e.coefficient ? ` | Coeff: ${e.coefficient}` : '';
+  const typeText = e.type ? ` | Type: ${e.type}` : '';
+  const locationText = e.location ? ` | Lieu: ${e.location}` : '';
   return `${idx + 1}. ${priorityEmoji} ${e.subject}
    - Date examen: ${e.date} (J-${daysUntilExam})
-   - Priorité: ${e.priority}
+   - Priorité: ${e.priority}${difficultyText}${coeffText}${typeText}${locationText}
+   ${e.notes ? `- Notes: ${e.notes}` : ''}
    - ID: ${e.id}`;
 }).join('\n\n')}
 

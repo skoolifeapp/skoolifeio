@@ -184,16 +184,8 @@ const Constraints = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Chargement...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
+    <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s' }}>
       {/* Header Sticky */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
         <div className="flex items-start justify-between">
