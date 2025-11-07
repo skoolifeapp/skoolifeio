@@ -1,6 +1,5 @@
 import { PomodoroTimer } from "@/components/dashboard/PomodoroTimer";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { QuickActions } from "@/components/dashboard/QuickActions";
 
 const Index = () => {
   return (
@@ -17,12 +16,6 @@ const Index = () => {
 
         {/* Pomodoro Timer */}
         <PomodoroTimer />
-
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-xl font-semibold text-foreground mb-3">Accès rapide</h2>
-          <QuickActions />
-        </div>
       </div>
     </div>
   );
