@@ -88,29 +88,47 @@ export type Database = {
       }
       exams: {
         Row: {
+          coefficient: number | null
           created_at: string
           date: string
+          difficulty: string | null
           id: string
+          is_done: boolean | null
+          location: string | null
+          notes: string | null
           priority: string
           subject: string
+          type: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          coefficient?: number | null
           created_at?: string
           date: string
+          difficulty?: string | null
           id?: string
+          is_done?: boolean | null
+          location?: string | null
+          notes?: string | null
           priority: string
           subject: string
+          type?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          coefficient?: number | null
           created_at?: string
           date?: string
+          difficulty?: string | null
           id?: string
+          is_done?: boolean | null
+          location?: string | null
+          notes?: string | null
           priority?: string
           subject?: string
+          type?: string | null
           updated_at?: string
           user_id?: string
         }
