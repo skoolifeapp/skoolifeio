@@ -8,9 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 const Profile = () => {
   const { signOut, user } = useAuth();
   
-  const handleSave = () => {
-    console.log('Profile saved');
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -53,14 +50,6 @@ const Profile = () => {
               />
             </div>
           </div>
-
-          <Button
-            variant="default"
-            className="w-full mt-6"
-            onClick={handleSave}
-          >
-            Sauvegarder
-          </Button>
         </Card>
 
         {/* Logout Button */}
