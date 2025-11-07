@@ -359,7 +359,7 @@ const Planning = () => {
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="hero" size="sm" disabled={isGenerating} className="min-w-[2.5rem]">
+                <Button variant="hero" size="sm" disabled={isGenerating} className="px-4">
                   Générer
                 </Button>
               </SheetTrigger>
