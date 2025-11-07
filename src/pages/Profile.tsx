@@ -40,18 +40,6 @@ const Profile = () => {
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Nom complet
-              </Label>
-              <Input
-                id="name"
-                placeholder="Jean Dupont"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 Email
@@ -61,27 +49,6 @@ const Profile = () => {
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="university" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" />
-                Université
-              </Label>
-              <Input
-                id="university"
-                placeholder="Université Paris-Saclay"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="year">Année d'études</Label>
-              <Input
-                id="year"
-                placeholder="L2 Informatique"
                 className="mt-1"
               />
             </div>
