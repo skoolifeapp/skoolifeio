@@ -198,7 +198,6 @@ const Constraints = () => {
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wider text-primary font-semibold mb-1">School Life</p>
             <h1 className="text-3xl font-bold mb-1">Mes contraintes</h1>
             <p className="text-sm text-muted-foreground">Dis-nous comment tu vis. On protège ton temps, l'IA fait le reste.</p>
           </div>
@@ -213,30 +212,6 @@ const Constraints = () => {
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Bannière résumé */}
-        <Card className="bg-gradient-to-br from-primary/10 to-background border-primary/20 shadow-md">
-          <CardContent className="p-6">
-            <div className="flex gap-3 mb-4">
-              <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold mb-2">Ces infos guident notre moteur IA</h3>
-                <p className="text-sm text-muted-foreground">
-                  Plus tu es précis, plus le planning généré sera réaliste et adapté à ton quotidien.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {profile.is_alternant && <Badge variant="outline">Alternance prise en compte</Badge>}
-              {profile.has_student_job && <Badge variant="outline">Job étudiant</Badge>}
-              {profile.max_daily_revision_hours && (
-                <Badge variant="outline">Max {profile.max_daily_revision_hours}h/jour</Badge>
-              )}
-              {profile.min_free_evenings_per_week && (
-                <Badge variant="outline">{profile.min_free_evenings_per_week} soirée(s) libre(s)/semaine</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Bloc 1 – Profil & rythme */}
         <Card>
@@ -588,13 +563,6 @@ const Constraints = () => {
           </CardContent>
         </Card>
 
-        {/* Bouton Save sticky bottom */}
-        <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] pb-4">
-          <Button onClick={handleSave} className="w-full shadow-lg" size="lg">
-            <Save className="h-5 w-5 mr-2" />
-            Enregistrer mes contraintes
-          </Button>
-        </div>
       </div>
     </div>
   );

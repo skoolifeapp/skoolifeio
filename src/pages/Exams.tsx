@@ -208,7 +208,6 @@ const Exams = () => {
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wider text-primary font-semibold mb-1">School Life</p>
             <h1 className="text-3xl font-bold mb-1">Mes examens</h1>
             <p className="text-sm text-muted-foreground">Visualise, priorise et prépare chaque épreuve sans stress.</p>
           </div>
