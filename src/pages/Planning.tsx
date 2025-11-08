@@ -472,7 +472,6 @@ const Planning = () => {
                   <span className="text-xs text-muted-foreground ml-auto">Priorité: {exam.priority}</span>
                 </div>
               ))}
-              <div className="h-px bg-border mt-4" />
             </div>
           )}
 
