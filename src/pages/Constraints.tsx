@@ -6,6 +6,8 @@ import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
 import { CommuteTab } from "@/components/constraints/CommuteTab";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface WorkSchedule {
   id?: string;
@@ -40,7 +42,7 @@ interface RoutineMoment {
 const Constraints = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
+  const [openSections, setOpenSections] = useState<string[]>([]);
   
   // Work data
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
@@ -300,69 +302,114 @@ const Constraints = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Tabs */}
-        <div className="flex justify-center gap-2 overflow-x-auto pb-2">
-          {[
-            { key: 'travail', label: 'Travail' },
-            { key: 'activite', label: 'Activité' },
-            { key: 'routine', label: 'Routine' },
-            { key: 'trajet', label: 'Trajet' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                activeTab === tab.key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <div className="max-w-4xl mx-auto space-y-4">
+        {/* Travail Section */}
+        <Collapsible
+          open={openSections.includes('travail')}
+          onOpenChange={(isOpen) => {
+            setOpenSections(isOpen ? [...openSections, 'travail'] : openSections.filter(s => s !== 'travail'));
+          }}
+        >
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="text-left">
+                <h3 className="font-semibold">Travail</h3>
+                <p className="text-xs text-muted-foreground">Alternance, job étudiant, engagements</p>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${openSections.includes('travail') ? 'rotate-180' : ''}`} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <WorkTab
+              workSchedules={workSchedules}
+              onWorkSchedulesChange={handleWorkSchedulesChange}
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Tab content */}
-        {activeTab === 'travail' && (
-          <WorkTab
-            workSchedules={workSchedules}
-            onWorkSchedulesChange={handleWorkSchedulesChange}
-          />
-        )}
+        {/* Activité Section */}
+        <Collapsible
+          open={openSections.includes('activite')}
+          onOpenChange={(isOpen) => {
+            setOpenSections(isOpen ? [...openSections, 'activite'] : openSections.filter(s => s !== 'activite'));
+          }}
+        >
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="text-left">
+                <h3 className="font-semibold">Activité</h3>
+                <p className="text-xs text-muted-foreground">Sport, assos, cours, projets</p>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${openSections.includes('activite') ? 'rotate-180' : ''}`} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <ActivityTab activities={activities} onActivitiesChange={handleActivitiesChange} />
+          </CollapsibleContent>
+        </Collapsible>
 
-        {activeTab === 'activite' && (
-          <ActivityTab activities={activities} onActivitiesChange={handleActivitiesChange} />
-        )}
+        {/* Routine Section */}
+        <Collapsible
+          open={openSections.includes('routine')}
+          onOpenChange={(isOpen) => {
+            setOpenSections(isOpen ? [...openSections, 'routine'] : openSections.filter(s => s !== 'routine'));
+          }}
+        >
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="text-left">
+                <h3 className="font-semibold">Routine</h3>
+                <p className="text-xs text-muted-foreground">Rythme, sommeil, moments importants</p>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${openSections.includes('routine') ? 'rotate-180' : ''}`} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <RoutineTab
+              wakeUpTime={wakeUpTime}
+              noStudyAfter={noStudyAfter}
+              sleepHoursNeeded={sleepHoursNeeded}
+              minPersonalTimePerWeek={minPersonalTimePerWeek}
+              routineMoments={routineMoments}
+              onWakeUpTimeChange={handleWakeUpTimeChange}
+              onNoStudyAfterChange={handleNoStudyAfterChange}
+              onSleepHoursNeededChange={handleSleepHoursChange}
+              onMinPersonalTimePerWeekChange={handleMinPersonalTimeChange}
+              onRoutineMomentsChange={handleRoutineMomentsChange}
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
-        {activeTab === 'routine' && (
-          <RoutineTab
-            wakeUpTime={wakeUpTime}
-            noStudyAfter={noStudyAfter}
-            sleepHoursNeeded={sleepHoursNeeded}
-            minPersonalTimePerWeek={minPersonalTimePerWeek}
-            routineMoments={routineMoments}
-            onWakeUpTimeChange={handleWakeUpTimeChange}
-            onNoStudyAfterChange={handleNoStudyAfterChange}
-            onSleepHoursNeededChange={handleSleepHoursChange}
-            onMinPersonalTimePerWeekChange={handleMinPersonalTimeChange}
-            onRoutineMomentsChange={handleRoutineMomentsChange}
-          />
-        )}
-
-        {activeTab === 'trajet' && (
-          <CommuteTab
-            commuteHomeSchool={commuteHomeSchool}
-            commuteHomeJob={commuteHomeJob}
-            commuteHomeActivity={commuteHomeActivity}
-            hasAlternance={workSchedules.some(s => s.type === 'alternance')}
-            hasJob={workSchedules.some(s => s.type === 'job')}
-            hasActivities={activities.length > 0}
-            onCommuteHomeSchoolChange={handleCommuteHomeSchoolChange}
-            onCommuteHomeJobChange={handleCommuteHomeJobChange}
-            onCommuteHomeActivityChange={handleCommuteHomeActivityChange}
-          />
-        )}
+        {/* Trajet Section */}
+        <Collapsible
+          open={openSections.includes('trajet')}
+          onOpenChange={(isOpen) => {
+            setOpenSections(isOpen ? [...openSections, 'trajet'] : openSections.filter(s => s !== 'trajet'));
+          }}
+        >
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-accent/5 transition-colors">
+              <div className="text-left">
+                <h3 className="font-semibold">Trajet</h3>
+                <p className="text-xs text-muted-foreground">Temps de déplacement</p>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${openSections.includes('trajet') ? 'rotate-180' : ''}`} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <CommuteTab
+              commuteHomeSchool={commuteHomeSchool}
+              commuteHomeJob={commuteHomeJob}
+              commuteHomeActivity={commuteHomeActivity}
+              hasAlternance={workSchedules.some(s => s.type === 'alternance')}
+              hasJob={workSchedules.some(s => s.type === 'job')}
+              hasActivities={activities.length > 0}
+              onCommuteHomeSchoolChange={handleCommuteHomeSchoolChange}
+              onCommuteHomeJobChange={handleCommuteHomeJobChange}
+              onCommuteHomeActivityChange={handleCommuteHomeActivityChange}
+            />
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
