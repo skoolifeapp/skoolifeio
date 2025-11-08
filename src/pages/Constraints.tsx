@@ -114,44 +114,37 @@ const Constraints = () => {
   const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
     if (!user) return;
     try {
-      console.log("Saving work schedules:", schedules);
-      
       // Delete existing schedules
-      const { error: deleteError } = await supabase
+      await supabase
         .from('work_schedules')
         .delete()
         .eq('user_id', user.id);
       
-      if (deleteError) {
-        console.error('Delete error:', deleteError);
-        throw deleteError;
-      }
-      
       // Insert new schedules if any
       if (schedules.length > 0) {
-        const dataToInsert = schedules.map(s => ({ 
-          ...s, 
-          user_id: user.id, 
-          id: undefined 
-        }));
-        
-        console.log("Data to insert:", dataToInsert);
-        
-        const { data, error: insertError } = await supabase
+        const { error } = await supabase
           .from('work_schedules')
-          .insert(dataToInsert)
-          .select();
+          .insert(schedules.map(s => ({
+            type: s.type,
+            title: s.title,
+            days: s.days,
+            start_time: s.start_time,
+            end_time: s.end_time,
+            location: s.location || null,
+            frequency: s.frequency,
+            hours_per_week: s.hours_per_week,
+            user_id: user.id,
+          })));
         
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw insertError;
+        if (error) {
+          console.error('Error inserting work schedules:', error);
+          toast.error("Erreur lors de l'enregistrement du travail");
+          return;
         }
-        
-        console.log("Insert success, data:", data);
       }
       
-      console.log("Work schedules saved successfully");
       toast.success("Contrainte de travail enregistrée");
+      loadData();
     } catch (error) {
       console.error('Error saving work schedules:', error);
       toast.error("Erreur lors de l'enregistrement du travail");
@@ -161,25 +154,33 @@ const Constraints = () => {
   const saveActivities = async (acts: Activity[]) => {
     if (!user) return;
     try {
-      console.log("Saving activities:", acts);
-      
-      const { error: deleteError } = await supabase
+      await supabase
         .from('activities')
         .delete()
         .eq('user_id', user.id);
       
-      if (deleteError) throw deleteError;
-      
       if (acts.length > 0) {
-        const { error: insertError } = await supabase
+        const { error } = await supabase
           .from('activities')
-          .insert(acts.map(a => ({ ...a, user_id: user.id, id: undefined })));
+          .insert(acts.map(a => ({
+            type: a.type,
+            title: a.title,
+            days: a.days,
+            start_time: a.start_time,
+            end_time: a.end_time,
+            location: a.location || null,
+            user_id: user.id,
+          })));
         
-        if (insertError) throw insertError;
+        if (error) {
+          console.error('Error inserting activities:', error);
+          toast.error("Erreur lors de l'enregistrement des activités");
+          return;
+        }
       }
       
-      console.log("Activities saved successfully");
       toast.success("Activité enregistrée");
+      loadData();
     } catch (error) {
       console.error('Error saving activities:', error);
       toast.error("Erreur lors de l'enregistrement des activités");
@@ -189,25 +190,31 @@ const Constraints = () => {
   const saveRoutineMoments = async (moments: RoutineMoment[]) => {
     if (!user) return;
     try {
-      console.log("Saving routine moments:", moments);
-      
-      const { error: deleteError } = await supabase
+      await supabase
         .from('routine_moments')
         .delete()
         .eq('user_id', user.id);
       
-      if (deleteError) throw deleteError;
-      
       if (moments.length > 0) {
-        const { error: insertError } = await supabase
+        const { error } = await supabase
           .from('routine_moments')
-          .insert(moments.map(m => ({ ...m, user_id: user.id, id: undefined })));
+          .insert(moments.map(m => ({
+            title: m.title,
+            days: m.days,
+            start_time: m.start_time,
+            end_time: m.end_time,
+            user_id: user.id,
+          })));
         
-        if (insertError) throw insertError;
+        if (error) {
+          console.error('Error inserting routine moments:', error);
+          toast.error("Erreur lors de l'enregistrement de la routine");
+          return;
+        }
       }
       
-      console.log("Routine moments saved successfully");
       toast.success("Routine enregistrée");
+      loadData();
     } catch (error) {
       console.error('Error saving routine moments:', error);
       toast.error("Erreur lors de l'enregistrement de la routine");
