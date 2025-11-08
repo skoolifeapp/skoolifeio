@@ -160,7 +160,7 @@ export const WorkTab = ({
             <Button 
               onClick={() => setIsAlternanceDialogOpen(true)}
               size="icon" 
-              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -268,7 +268,7 @@ export const WorkTab = ({
             <Button 
               onClick={() => setIsJobDialogOpen(true)}
               size="icon" 
-              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -368,7 +368,7 @@ export const WorkTab = ({
             <Button 
               onClick={() => setIsOtherDialogOpen(true)}
               size="icon" 
-              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -521,7 +521,7 @@ export const WorkTab = ({
               </Select>
             </div>
 
-            <Button onClick={addAlternance} className="w-full bg-yellow-500 hover:bg-yellow-600">
+            <Button onClick={addAlternance} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter l'alternance
             </Button>
@@ -597,7 +597,7 @@ export const WorkTab = ({
               />
             </div>
 
-            <Button onClick={addJob} className="w-full bg-yellow-500 hover:bg-yellow-600">
+            <Button onClick={addJob} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter le job
             </Button>
@@ -662,7 +662,7 @@ export const WorkTab = ({
               </div>
             </div>
 
-            <Button onClick={addOther} className="w-full bg-yellow-500 hover:bg-yellow-600">
+            <Button onClick={addOther} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter l'engagement
             </Button>

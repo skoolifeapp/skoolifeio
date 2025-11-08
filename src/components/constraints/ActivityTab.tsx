@@ -94,7 +94,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
           <Button 
             onClick={() => setIsDialogOpen(true)}
             size="icon" 
-            className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+            className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -293,7 +293,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
               />
             </div>
 
-            <Button onClick={addActivity} className="w-full bg-yellow-500 hover:bg-yellow-600">
+            <Button onClick={addActivity} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter l'activité
             </Button>
