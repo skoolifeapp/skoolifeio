@@ -13,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
@@ -52,6 +54,10 @@ const Planning = () => {
   const [examsCount, setExamsCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<{
+    type: 'calendar' | 'revision' | 'work';
+    data: any;
+  } | null>(null);
 
   useEffect(() => {
     // Check if running on native platform
@@ -341,9 +347,50 @@ const Planning = () => {
     };
   };
 
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !user) return;
+
+    try {
+      if (editingEvent.type === 'calendar') {
+        const { error } = await supabase
+          .from('calendar_events')
+          .update({
+            summary: editingEvent.data.summary,
+            start_date: editingEvent.data.start_date,
+            end_date: editingEvent.data.end_date,
+            location: editingEvent.data.location,
+            description: editingEvent.data.description,
+          })
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadCalendarEvents();
+      } else if (editingEvent.type === 'revision') {
+        const { error } = await supabase
+          .from('revision_sessions')
+          .update({
+            subject: editingEvent.data.subject,
+            start_time: editingEvent.data.start_time,
+            end_time: editingEvent.data.end_time,
+          })
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadRevisionSessions();
+      }
+
+      refetchAll();
+      setEditingEvent(null);
+      toast.success("Événement modifié");
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast.error("Erreur lors de la modification");
+    }
+  };
+
   const goToPreviousDay = () => {
     setSelectedDate(prev => addDays(prev, -1));
-  };
+  }
 
   const goToNextDay = () => {
     setSelectedDate(prev => addDays(prev, 1));
@@ -521,11 +568,34 @@ const Planning = () => {
                       const end = new Date(event.endDate);
                       const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
 
+                      // Find the original event with id from calendar_events
+                      const originalEvent = importedEvents.find(e => 
+                        e.summary === event.summary && 
+                        e.startDate === event.startDate
+                      );
+
                       return (
                         <div
                           key={`event-${index}`}
-                          className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md"
+                          className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md cursor-pointer hover:opacity-90 transition-opacity"
                           style={style}
+                          onClick={async () => {
+                            // Fetch the full event data with id
+                            const { data } = await supabase
+                              .from('calendar_events')
+                              .select('*')
+                              .eq('user_id', user?.id)
+                              .eq('summary', event.summary)
+                              .eq('start_date', event.startDate)
+                              .maybeSingle();
+
+                            if (data) {
+                              setEditingEvent({
+                                type: 'calendar',
+                                data: { ...data }
+                              });
+                            }
+                          }}
                         >
                           <div className="text-xs font-semibold truncate">{event.summary}</div>
                           <div className="text-xs opacity-90">
@@ -562,8 +632,9 @@ const Planning = () => {
                       return (
                         <div
                           key={`work-${schedule.id}-${index}`}
-                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600"
+                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-not-allowed"
                           style={style}
+                          title="Les horaires de travail ne peuvent pas être modifiés ici"
                         >
                           <div className="text-xs font-semibold truncate">
                             {typeEmoji} {schedule.title || 'Travail'}
@@ -604,8 +675,14 @@ const Planning = () => {
                       return (
                         <div
                           key={`session-${session.id}`}
-                          className="absolute left-2 right-2 bg-yellow-500/90 text-yellow-950 rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600"
+                          className="absolute left-2 right-2 bg-primary/90 text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary cursor-pointer hover:opacity-90 transition-opacity"
                           style={style}
+                          onClick={() => {
+                            setEditingEvent({
+                              type: 'revision',
+                              data: { ...session }
+                            });
+                          }}
                         >
                           <div className="flex items-start justify-between gap-1">
                             <div className="flex-1 min-w-0">
@@ -623,7 +700,10 @@ const Planning = () => {
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6 shrink-0"
-                              onClick={() => deleteRevisionSession(session.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteRevisionSession(session.id);
+                              }}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -638,6 +718,127 @@ const Planning = () => {
           </div>
         </div>
       </div>
+
+      {/* Drawer pour éditer les événements */}
+      <Drawer open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>
+              {editingEvent?.type === 'calendar' && 'Modifier l\'événement'}
+              {editingEvent?.type === 'revision' && 'Modifier la session de révision'}
+            </DrawerTitle>
+            <DrawerDescription>
+              Modifie les informations de cet événement
+            </DrawerDescription>
+          </DrawerHeader>
+          
+          <div className="px-4 space-y-4 pb-6">
+            {editingEvent?.type === 'calendar' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-summary">Titre</Label>
+                  <Input
+                    id="edit-summary"
+                    value={editingEvent.data.summary || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, summary: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="edit-start">Début</Label>
+                    <Input
+                      id="edit-start"
+                      type="datetime-local"
+                      value={editingEvent.data.start_date ? format(new Date(editingEvent.data.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, start_date: new Date(e.target.value).toISOString() }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-end">Fin</Label>
+                    <Input
+                      id="edit-end"
+                      type="datetime-local"
+                      value={editingEvent.data.end_date ? format(new Date(editingEvent.data.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, end_date: new Date(e.target.value).toISOString() }
+                      })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-location">Lieu</Label>
+                  <Input
+                    id="edit-location"
+                    value={editingEvent.data.location || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, location: e.target.value }
+                    })}
+                  />
+                </div>
+              </>
+            )}
+
+            {editingEvent?.type === 'revision' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-subject">Matière</Label>
+                  <Input
+                    id="edit-subject"
+                    value={editingEvent.data.subject || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, subject: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="edit-start-time">Début</Label>
+                    <Input
+                      id="edit-start-time"
+                      type="datetime-local"
+                      value={editingEvent.data.start_time ? format(new Date(editingEvent.data.start_time), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, start_time: new Date(e.target.value).toISOString() }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-end-time">Fin</Label>
+                    <Input
+                      id="edit-end-time"
+                      type="datetime-local"
+                      value={editingEvent.data.end_time ? format(new Date(editingEvent.data.end_time), "yyyy-MM-dd'T'HH:mm") : ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, end_time: new Date(e.target.value).toISOString() }
+                      })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <DrawerFooter>
+            <Button onClick={handleUpdateEvent}>
+              Enregistrer les modifications
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
