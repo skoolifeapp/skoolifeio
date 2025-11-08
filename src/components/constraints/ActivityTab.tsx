@@ -203,7 +203,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
                   className="w-full text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Supprimer cette activité
+                  Supprimer
                 </Button>
               </div>
             ))}
