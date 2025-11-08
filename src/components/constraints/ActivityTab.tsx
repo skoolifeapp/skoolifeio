@@ -43,7 +43,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
     location: '',
   });
 
-  const addActivity = () => {
+  const addActivity = async () => {
     const activity: Activity = {
       type: newActivity.type as Activity['type'],
       title: newActivity.title || '',

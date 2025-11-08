@@ -68,7 +68,7 @@ export const WorkTab = ({
   const jobSchedules = workSchedules.filter(s => s.type === 'job');
   const otherSchedules = workSchedules.filter(s => s.type === 'other');
 
-  const addAlternance = () => {
+  const addAlternance = async () => {
     const schedule: WorkSchedule = {
       type: 'alternance',
       days: newAlternance.days || [],
@@ -82,7 +82,7 @@ export const WorkTab = ({
     setNewAlternance({ days: [], start_time: '09:00', end_time: '17:00', location: '', frequency: 'weekly' });
   };
 
-  const addJob = () => {
+  const addJob = async () => {
     const schedule: WorkSchedule = {
       type: 'job',
       days: newJob.days || [],
@@ -96,7 +96,7 @@ export const WorkTab = ({
     setNewJob({ days: [], start_time: '09:00', end_time: '17:00', location: '', hours_per_week: 0 });
   };
 
-  const addOther = () => {
+  const addOther = async () => {
     const schedule: WorkSchedule = {
       type: 'other',
       title: newOther.title,

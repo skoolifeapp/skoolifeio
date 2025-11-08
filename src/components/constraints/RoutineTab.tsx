@@ -58,7 +58,7 @@ export const RoutineTab = ({
     end_time: '13:00',
   });
 
-  const addRoutineMoment = () => {
+  const addRoutineMoment = async () => {
     const moment: RoutineMoment = {
       title: newMoment.title || '',
       days: newMoment.days || [],

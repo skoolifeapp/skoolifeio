@@ -43,6 +43,7 @@ const Constraints = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
+  const [isSaving, setIsSaving] = useState(false);
   
   // Work data
   const [hasAlternance, setHasAlternance] = useState(false);
@@ -69,6 +70,16 @@ const Constraints = () => {
       loadData();
     }
   }, [user]);
+
+  // Auto-save when data changes
+  useEffect(() => {
+    if (!loading && user) {
+      const timer = setTimeout(() => {
+        handleSave();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [workSchedules, activities, routineMoments, wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, commuteHomeSchool, commuteHomeJob, commuteHomeActivity]);
 
   const loadData = async () => {
     if (!user) return;
@@ -118,8 +129,9 @@ const Constraints = () => {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || isSaving) return;
 
+    setIsSaving(true);
     try {
       // Save profile
       const { error: profileError } = await supabase
@@ -166,11 +178,12 @@ const Constraints = () => {
         if (error) throw error;
       }
 
-      toast.success("Contraintes enregistrées");
-      loadData();
+      console.log("Contraintes sauvegardées automatiquement");
     } catch (error) {
       console.error('Error saving constraints:', error);
       toast.error("Erreur lors de l'enregistrement");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -183,7 +196,15 @@ const Constraints = () => {
             <h1 className="text-3xl font-bold mb-1">Mes contraintes</h1>
             <p className="text-sm text-muted-foreground">Dis-nous comment tu vis. On protège ton temps, l'IA fait le reste.</p>
           </div>
-          <Button onClick={handleSave} size="icon" className="rounded-full shadow-lg">
+          <Button 
+            onClick={() => {
+              handleSave();
+              toast.success("Contraintes enregistrées");
+            }} 
+            size="icon" 
+            className="rounded-full shadow-lg"
+            disabled={isSaving}
+          >
             <Save className="h-5 w-5" />
           </Button>
         </div>
