@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,11 +41,8 @@ const Constraints = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
-  const [isSaving, setIsSaving] = useState(false);
   
   // Work data
-  const [hasAlternance, setHasAlternance] = useState(false);
-  const [hasJob, setHasJob] = useState(false);
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
   
   // Activity data
@@ -71,16 +66,6 @@ const Constraints = () => {
     }
   }, [user]);
 
-  // Auto-save when data changes
-  useEffect(() => {
-    if (!loading && user) {
-      const timer = setTimeout(() => {
-        handleSave();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [workSchedules, activities, routineMoments, wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, commuteHomeSchool, commuteHomeJob, commuteHomeActivity]);
-
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
@@ -93,8 +78,6 @@ const Constraints = () => {
       .maybeSingle();
 
     if (profileData) {
-      setHasAlternance(profileData.is_alternant || false);
-      setHasJob(profileData.has_student_job || false);
       setWakeUpTime(profileData.wake_up_time || '07:00');
       setNoStudyAfter(profileData.no_study_after || '22:00');
       setSleepHoursNeeded(profileData.sleep_hours_needed || 8);
@@ -128,18 +111,61 @@ const Constraints = () => {
     setLoading(false);
   };
 
-  const handleSave = async () => {
-    if (!user || isSaving) return;
-
-    setIsSaving(true);
+  const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
+    if (!user) return;
     try {
-      // Save profile
-      const { error: profileError } = await supabase
+      await supabase.from('work_schedules').delete().eq('user_id', user.id);
+      if (schedules.length > 0) {
+        await supabase.from('work_schedules').insert(
+          schedules.map(s => ({ ...s, user_id: user.id, id: undefined }))
+        );
+      }
+      console.log("Work schedules saved");
+    } catch (error) {
+      console.error('Error saving work schedules:', error);
+      toast.error("Erreur lors de l'enregistrement du travail");
+    }
+  };
+
+  const saveActivities = async (acts: Activity[]) => {
+    if (!user) return;
+    try {
+      await supabase.from('activities').delete().eq('user_id', user.id);
+      if (acts.length > 0) {
+        await supabase.from('activities').insert(
+          acts.map(a => ({ ...a, user_id: user.id, id: undefined }))
+        );
+      }
+      console.log("Activities saved");
+    } catch (error) {
+      console.error('Error saving activities:', error);
+      toast.error("Erreur lors de l'enregistrement des activités");
+    }
+  };
+
+  const saveRoutineMoments = async (moments: RoutineMoment[]) => {
+    if (!user) return;
+    try {
+      await supabase.from('routine_moments').delete().eq('user_id', user.id);
+      if (moments.length > 0) {
+        await supabase.from('routine_moments').insert(
+          moments.map(m => ({ ...m, user_id: user.id, id: undefined }))
+        );
+      }
+      console.log("Routine moments saved");
+    } catch (error) {
+      console.error('Error saving routine moments:', error);
+      toast.error("Erreur lors de l'enregistrement de la routine");
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+    try {
+      await supabase
         .from('user_constraints_profile')
         .upsert({
           user_id: user.id,
-          is_alternant: hasAlternance,
-          has_student_job: hasJob,
           wake_up_time: wakeUpTime,
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
@@ -148,65 +174,70 @@ const Constraints = () => {
           commute_home_job: commuteHomeJob,
           commute_home_activity: commuteHomeActivity,
         });
-
-      if (profileError) throw profileError;
-
-      // Save work schedules
-      await supabase.from('work_schedules').delete().eq('user_id', user.id);
-      if (workSchedules.length > 0) {
-        const { error } = await supabase.from('work_schedules').insert(
-          workSchedules.map(s => ({ ...s, user_id: user.id, id: undefined }))
-        );
-        if (error) throw error;
-      }
-
-      // Save activities
-      await supabase.from('activities').delete().eq('user_id', user.id);
-      if (activities.length > 0) {
-        const { error } = await supabase.from('activities').insert(
-          activities.map(a => ({ ...a, user_id: user.id, id: undefined }))
-        );
-        if (error) throw error;
-      }
-
-      // Save routine moments
-      await supabase.from('routine_moments').delete().eq('user_id', user.id);
-      if (routineMoments.length > 0) {
-        const { error } = await supabase.from('routine_moments').insert(
-          routineMoments.map(m => ({ ...m, user_id: user.id, id: undefined }))
-        );
-        if (error) throw error;
-      }
-
-      console.log("Contraintes sauvegardées automatiquement");
+      console.log("Profile saved");
     } catch (error) {
-      console.error('Error saving constraints:', error);
-      toast.error("Erreur lors de l'enregistrement");
-    } finally {
-      setIsSaving(false);
+      console.error('Error saving profile:', error);
+      toast.error("Erreur lors de l'enregistrement du profil");
     }
+  };
+
+  const handleWorkSchedulesChange = async (schedules: WorkSchedule[]) => {
+    setWorkSchedules(schedules);
+    await saveWorkSchedules(schedules);
+  };
+
+  const handleActivitiesChange = async (acts: Activity[]) => {
+    setActivities(acts);
+    await saveActivities(acts);
+  };
+
+  const handleRoutineMomentsChange = async (moments: RoutineMoment[]) => {
+    setRoutineMoments(moments);
+    await saveRoutineMoments(moments);
+  };
+
+  const handleWakeUpTimeChange = async (time: string) => {
+    setWakeUpTime(time);
+    await saveProfile();
+  };
+
+  const handleNoStudyAfterChange = async (time: string) => {
+    setNoStudyAfter(time);
+    await saveProfile();
+  };
+
+  const handleSleepHoursChange = async (hours: number) => {
+    setSleepHoursNeeded(hours);
+    await saveProfile();
+  };
+
+  const handleMinPersonalTimeChange = async (hours: number) => {
+    setMinPersonalTimePerWeek(hours);
+    await saveProfile();
+  };
+
+  const handleCommuteHomeSchoolChange = async (minutes: number) => {
+    setCommuteHomeSchool(minutes);
+    await saveProfile();
+  };
+
+  const handleCommuteHomeJobChange = async (minutes: number) => {
+    setCommuteHomeJob(minutes);
+    await saveProfile();
+  };
+
+  const handleCommuteHomeActivityChange = async (minutes: number) => {
+    setCommuteHomeActivity(minutes);
+    await saveProfile();
   };
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s' }}>
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">Mes contraintes</h1>
-            <p className="text-sm text-muted-foreground">Dis-nous comment tu vis. On protège ton temps, l'IA fait le reste.</p>
-          </div>
-          <Button 
-            onClick={() => {
-              handleSave();
-              toast.success("Contraintes enregistrées");
-            }} 
-            size="icon" 
-            className="rounded-full shadow-lg"
-            disabled={isSaving}
-          >
-            <Save className="h-5 w-5" />
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Mes contraintes</h1>
+          <p className="text-sm text-muted-foreground">Dis-nous comment tu vis. On protège ton temps, l'IA fait le reste.</p>
         </div>
       </div>
 
@@ -237,12 +268,12 @@ const Constraints = () => {
         {activeTab === 'travail' && (
           <WorkTab
             workSchedules={workSchedules}
-            onWorkSchedulesChange={setWorkSchedules}
+            onWorkSchedulesChange={handleWorkSchedulesChange}
           />
         )}
 
         {activeTab === 'activite' && (
-          <ActivityTab activities={activities} onActivitiesChange={setActivities} />
+          <ActivityTab activities={activities} onActivitiesChange={handleActivitiesChange} />
         )}
 
         {activeTab === 'routine' && (
@@ -252,11 +283,11 @@ const Constraints = () => {
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
             routineMoments={routineMoments}
-            onWakeUpTimeChange={setWakeUpTime}
-            onNoStudyAfterChange={setNoStudyAfter}
-            onSleepHoursNeededChange={setSleepHoursNeeded}
-            onMinPersonalTimePerWeekChange={setMinPersonalTimePerWeek}
-            onRoutineMomentsChange={setRoutineMoments}
+            onWakeUpTimeChange={handleWakeUpTimeChange}
+            onNoStudyAfterChange={handleNoStudyAfterChange}
+            onSleepHoursNeededChange={handleSleepHoursChange}
+            onMinPersonalTimePerWeekChange={handleMinPersonalTimeChange}
+            onRoutineMomentsChange={handleRoutineMomentsChange}
           />
         )}
 
@@ -265,12 +296,12 @@ const Constraints = () => {
             commuteHomeSchool={commuteHomeSchool}
             commuteHomeJob={commuteHomeJob}
             commuteHomeActivity={commuteHomeActivity}
-            hasAlternance={hasAlternance}
-            hasJob={hasJob}
+            hasAlternance={workSchedules.some(s => s.type === 'alternance')}
+            hasJob={workSchedules.some(s => s.type === 'job')}
             hasActivities={activities.length > 0}
-            onCommuteHomeSchoolChange={setCommuteHomeSchool}
-            onCommuteHomeJobChange={setCommuteHomeJob}
-            onCommuteHomeActivityChange={setCommuteHomeActivity}
+            onCommuteHomeSchoolChange={handleCommuteHomeSchoolChange}
+            onCommuteHomeJobChange={handleCommuteHomeJobChange}
+            onCommuteHomeActivityChange={handleCommuteHomeActivityChange}
           />
         )}
       </div>
