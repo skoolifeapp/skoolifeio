@@ -40,7 +40,7 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
-  const { refetchAll } = useData();
+  const { refetchAll, workSchedules } = useData();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -307,6 +307,12 @@ const Planning = () => {
     isSameDay(new Date(session.start_time), selectedDate)
   );
 
+  // Get work schedules for selected day
+  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
+  const dayWorkSchedules = (workSchedules || []).filter(schedule => 
+    schedule.days.includes(selectedDayName)
+  );
+
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
   const DISPLAY_HOURS = 18; // Total hours displayed
@@ -500,9 +506,9 @@ const Planning = () => {
                 <div key={hour} className="h-16 border-t border-border first:border-t-0" />
               ))}
 
-              {/* Events & Revision Sessions */}
+              {/* Events, Work Schedules & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 ? (
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -527,6 +533,46 @@ const Planning = () => {
                           </div>
                           {event.location && (
                             <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Work Schedules */}
+                    {dayWorkSchedules.map((schedule, index) => {
+                      const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
+                      const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
+                      
+                      // Adjust hours relative to 7am start
+                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                      
+                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
+                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
+                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+                      const duration = Math.round(durationHours * 60);
+
+                      const style = {
+                        top: `${topPercent}%`,
+                        height: `${heightPercent}%`,
+                      };
+
+                      const typeEmoji = schedule.type === 'alternance' ? '💼' : schedule.type === 'job' ? '🏢' : '📋';
+
+                      return (
+                        <div
+                          key={`work-${schedule.id}-${index}`}
+                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600"
+                          style={style}
+                        >
+                          <div className="text-xs font-semibold truncate">
+                            {typeEmoji} {schedule.title || 'Travail'}
+                          </div>
+                          <div className="text-xs opacity-90">
+                            {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} ({duration} min)
+                          </div>
+                          {schedule.location && (
+                            <div className="text-xs opacity-80 truncate mt-1">{schedule.location}</div>
                           )}
                         </div>
                       );
