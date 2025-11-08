@@ -462,14 +462,13 @@ const Planning = () => {
           {/* Exams Section - Above the time grid */}
           {dayExams.length > 0 && (
             <div className="mb-4 space-y-2 px-2 py-3">
-              {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
+              {dayExams.map((exam: { id: string; subject: string }) => (
                 <div
                   key={exam.id}
                   className="bg-primary/10 border-l-4 border-primary rounded px-3 py-2 flex items-center gap-2"
                 >
                   <span className="text-sm">📚</span>
                   <span className="text-sm font-semibold truncate">{exam.subject}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">Priorité: {exam.priority}</span>
                 </div>
               ))}
             </div>
