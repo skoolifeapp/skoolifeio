@@ -353,16 +353,29 @@ const Planning = () => {
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
+  console.log('Filtering work schedules for:', selectedDateStr, 'Exceptions:', eventExceptions.length);
+  
   const dayWorkSchedules = (workSchedules || [])
-    .filter(schedule => schedule.days.includes(selectedDayName))
     .filter(schedule => {
+      const hasDay = schedule.days.includes(selectedDayName);
+      if (!hasDay) return false;
+      
       // Vérifier si cette occurrence a une exception "deleted"
       const hasException = eventExceptions.some(
-        exc => exc.source_type === 'work_schedule' 
-          && exc.source_id === schedule.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'deleted'
+        exc => {
+          const match = exc.source_type === 'work_schedule' 
+            && exc.source_id === schedule.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'deleted';
+          
+          if (match) {
+            console.log('Exception trouvée pour:', schedule.id, 'date:', selectedDateStr);
+          }
+          
+          return match;
+        }
       );
+      
       return !hasException;
     })
     .map(schedule => {
@@ -384,6 +397,8 @@ const Planning = () => {
       
       return schedule;
     });
+  
+  console.log('Work schedules after filtering:', dayWorkSchedules.length);
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
@@ -529,29 +544,27 @@ const Planning = () => {
       } else if (editingEvent.type === 'work') {
         // Si c'est récurrent et qu'on supprime seulement cette occurrence
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          // Créer un événement négatif ou marquer cette date comme exception
-          // Pour simplifier, on crée un événement calendar vide qui bloque cette occurrence
-          const [startHours, startMinutes] = editingEvent.data.start_time.split(':').map(Number);
-          const [endHours, endMinutes] = editingEvent.data.end_time.split(':').map(Number);
+          // Créer une exception de type "deleted" 
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
           
-          const startDate = new Date(editingEvent.selectedDate);
-          startDate.setHours(startHours, startMinutes, 0, 0);
-          
-          const endDate = new Date(editingEvent.selectedDate);
-          endDate.setHours(endHours, endMinutes, 0, 0);
-
           const { error } = await supabase
-            .from('calendar_events')
-            .insert({
+            .from('event_exceptions')
+            .upsert({
               user_id: user.id,
-              summary: '❌ Annulé',
-              start_date: startDate.toISOString(),
-              end_date: endDate.toISOString(),
-              description: `Annulation de: ${editingEvent.data.title || 'Travail'}`,
+              source_type: 'work_schedule',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'deleted',
+              modified_data: null
             });
 
-          if (error) throw error;
-          await loadCalendarEvents();
+          if (error) {
+            console.error('Error creating exception:', error);
+            throw error;
+          }
+          
+          console.log('Exception créée pour:', exceptionDate, editingEvent.data.id);
+          await loadEventExceptions();
         } else {
           // Supprimer toutes les occurrences
           const { error } = await supabase
