@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useData } from "@/contexts/DataContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
@@ -38,87 +38,40 @@ interface RoutineMoment {
 }
 
 const Constraints = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { 
+    constraintsProfile, 
+    workSchedules: dataWorkSchedules, 
+    activities: dataActivities, 
+    routineMoments: dataRoutineMoments 
+  } = useData();
+  
   const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
   
-  // Work data
-  const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
+  // Work data - initialisé depuis DataContext
+  const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>(dataWorkSchedules || []);
   
-  // Activity data
-  const [activities, setActivities] = useState<Activity[]>([]);
+  // Activity data - initialisé depuis DataContext
+  const [activities, setActivities] = useState<Activity[]>(dataActivities || []);
   
-  // Routine data
-  const [wakeUpTime, setWakeUpTime] = useState('07:00');
-  const [noStudyAfter, setNoStudyAfter] = useState('22:00');
-  const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
-  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
-  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
+  // Routine data - initialisé depuis DataContext
+  const [wakeUpTime, setWakeUpTime] = useState(constraintsProfile?.wake_up_time || '07:00');
+  const [noStudyAfter, setNoStudyAfter] = useState(constraintsProfile?.no_study_after || '22:00');
+  const [sleepHoursNeeded, setSleepHoursNeeded] = useState(constraintsProfile?.sleep_hours_needed || 8);
+  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(constraintsProfile?.min_personal_time_per_week || 5);
+  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>(dataRoutineMoments || []);
   
-  // Commute data
-  const [commuteHomeSchool, setCommuteHomeSchool] = useState(0);
-  const [commuteHomeJob, setCommuteHomeJob] = useState(0);
-  const [commuteHomeActivity, setCommuteHomeActivity] = useState(0);
+  // Commute data - initialisé depuis DataContext
+  const [commuteHomeSchool, setCommuteHomeSchool] = useState(constraintsProfile?.commute_home_school || 0);
+  const [commuteHomeJob, setCommuteHomeJob] = useState(constraintsProfile?.commute_home_job || 0);
+  const [commuteHomeActivity, setCommuteHomeActivity] = useState(constraintsProfile?.commute_home_activity || 0);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
-    if (!user) return;
-    setLoading(true);
-
-    // Load profile
-    const { data: profileData } = await supabase
-      .from('user_constraints_profile')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (profileData) {
-      setWakeUpTime(profileData.wake_up_time || '07:00');
-      setNoStudyAfter(profileData.no_study_after || '22:00');
-      setSleepHoursNeeded(profileData.sleep_hours_needed || 8);
-      setMinPersonalTimePerWeek(profileData.min_personal_time_per_week || 5);
-      setCommuteHomeSchool(profileData.commute_home_school || 0);
-      setCommuteHomeJob(profileData.commute_home_job || 0);
-      setCommuteHomeActivity(profileData.commute_home_activity || 0);
-    }
-
-    // Load work schedules
-    const { data: workData } = await supabase
-      .from('work_schedules')
-      .select('*')
-      .eq('user_id', user.id);
-    if (workData) setWorkSchedules(workData as WorkSchedule[]);
-
-    // Load activities
-    const { data: activitiesData } = await supabase
-      .from('activities')
-      .select('*')
-      .eq('user_id', user.id);
-    if (activitiesData) setActivities(activitiesData as Activity[]);
-
-    // Load routine moments
-    const { data: routineData } = await supabase
-      .from('routine_moments')
-      .select('*')
-      .eq('user_id', user.id);
-    if (routineData) setRoutineMoments(routineData);
-
-    setLoading(false);
-  };
 
   const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
-    if (!user) return;
     try {
-      // Delete existing schedules
       const { error: deleteError } = await supabase
         .from('work_schedules')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
       
       if (deleteError) {
         console.error('Error deleting work schedules:', deleteError);
@@ -128,6 +81,9 @@ const Constraints = () => {
       
       // Insert new schedules if any
       if (schedules.length > 0) {
+        const userId = (await supabase.auth.getUser()).data.user?.id;
+        if (!userId) return;
+        
         const { error } = await supabase
           .from('work_schedules')
           .insert(schedules.map(s => ({
@@ -139,7 +95,7 @@ const Constraints = () => {
             location: s.location || null,
             frequency: s.frequency,
             hours_per_week: s.hours_per_week,
-            user_id: user.id,
+            user_id: userId,
           })));
         
         if (error) {
@@ -157,12 +113,14 @@ const Constraints = () => {
   };
 
   const saveActivities = async (acts: Activity[]) => {
-    if (!user) return;
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+      
       const { error: deleteError } = await supabase
         .from('activities')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
       
       if (deleteError) {
         console.error('Error deleting activities:', deleteError);
@@ -180,7 +138,7 @@ const Constraints = () => {
             start_time: a.start_time,
             end_time: a.end_time,
             location: a.location || null,
-            user_id: user.id,
+            user_id: userId,
           })));
         
         if (error) {
@@ -198,12 +156,14 @@ const Constraints = () => {
   };
 
   const saveRoutineMoments = async (moments: RoutineMoment[]) => {
-    if (!user) return;
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+      
       const { error: deleteError } = await supabase
         .from('routine_moments')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
       
       if (deleteError) {
         console.error('Error deleting routine moments:', deleteError);
@@ -219,7 +179,7 @@ const Constraints = () => {
             days: m.days,
             start_time: m.start_time,
             end_time: m.end_time,
-            user_id: user.id,
+            user_id: userId,
           })));
         
         if (error) {
@@ -237,12 +197,14 @@ const Constraints = () => {
   };
 
   const saveProfile = async () => {
-    if (!user) return;
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+      
       const { error } = await supabase
         .from('user_constraints_profile')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           wake_up_time: wakeUpTime,
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
@@ -316,7 +278,7 @@ const Constraints = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s' }}>
+    <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
         <div>
