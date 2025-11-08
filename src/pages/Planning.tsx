@@ -421,21 +421,15 @@ const Planning = () => {
 
         {/* Exams Header */}
         {dayExams.length > 0 && (
-          <div className="mb-3 space-y-2">
+          <div className="mb-2 space-y-1">
             {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
               <div
                 key={exam.id}
-                className="bg-primary/10 border border-primary/20 rounded-lg p-3"
+                className="bg-primary/5 border-l-2 border-primary/40 rounded px-2 py-1.5 flex items-center gap-1.5"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📚</span>
-                    <div>
-                      <h3 className="font-semibold">{exam.subject}</h3>
-                      <p className="text-xs text-muted-foreground">Priorité: {exam.priority}</p>
-                    </div>
-                  </div>
-                </div>
+                <span className="text-xs">📚</span>
+                <span className="text-xs font-medium truncate">{exam.subject}</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">P: {exam.priority}</span>
               </div>
             ))}
           </div>
