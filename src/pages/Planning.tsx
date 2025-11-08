@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useData } from "@/contexts/DataContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
@@ -39,6 +40,7 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
+  const { refetchAll } = useData();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -181,6 +183,8 @@ const Planning = () => {
 
     if (result.success) {
       await loadRevisionSessions();
+      // Recharger depuis Supabase
+      refetchAll();
     } else {
       toast.error("Erreur", {
         description: result.error || "Impossible de générer le planning.",
@@ -200,6 +204,8 @@ const Planning = () => {
     }
 
     await loadRevisionSessions();
+    // Recharger depuis Supabase
+    refetchAll();
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,6 +254,8 @@ const Planning = () => {
         if (error) throw error;
 
         await loadCalendarEvents();
+        // Recharger depuis Supabase
+        refetchAll();
       } catch (error) {
         console.error('Error importing calendar:', error);
         toast.error("Erreur lors de l'import du fichier");

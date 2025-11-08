@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
 import { format, differenceInDays, isPast, isFuture, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -29,6 +30,7 @@ interface Exam {
 
 const Exams = () => {
   const { user } = useAuth();
+  const { exams: dataExams, refetchAll } = useData();
   const [exams, setExams] = useState<Exam[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'upcoming' | 'all' | 'past' | 'high'>('upcoming');
@@ -43,11 +45,12 @@ const Exams = () => {
     notes: "",
   });
 
+  // Synchroniser les examens locaux avec le DataContext
   useEffect(() => {
-    if (user) {
-      loadData();
+    if (dataExams) {
+      setExams(dataExams);
     }
-  }, [user]);
+  }, [dataExams]);
 
   const loadData = async () => {
     if (!user) return;
@@ -77,7 +80,8 @@ const Exams = () => {
       return;
     }
 
-    setExams(exams.filter(exam => exam.id !== id));
+    // Recharger depuis Supabase
+    refetchAll();
   };
 
   const toggleDone = async (exam: Exam) => {
@@ -91,7 +95,8 @@ const Exams = () => {
       return;
     }
 
-    loadData();
+    // Recharger depuis Supabase
+    refetchAll();
   };
 
   const handleAddExam = async () => {
@@ -131,7 +136,9 @@ const Exams = () => {
       difficulty: "moyen",
       notes: "",
     });
-    loadData();
+    
+    // Recharger depuis Supabase
+    refetchAll();
   };
 
   const getCountdown = (dateStr: string) => {
