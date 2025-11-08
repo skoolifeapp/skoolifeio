@@ -419,6 +419,22 @@ const Planning = () => {
           </div>
         </div>
 
+        {/* Exams Section - Fixed between header and grid */}
+        {dayExams.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
+              <div
+                key={exam.id}
+                className="bg-primary/5 border-l-2 border-primary/40 rounded px-2 py-1.5 flex items-center gap-1.5"
+              >
+                <span className="text-xs">📚</span>
+                <span className="text-xs font-medium truncate">{exam.subject}</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">P: {exam.priority}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Date Navigation */}
         <div className="flex items-center justify-between gap-2">
           <Button
@@ -457,24 +473,8 @@ const Planning = () => {
       </div>
 
       {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[120px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
+      <div className={`flex-1 overflow-auto pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe ${dayExams.length > 0 ? 'pt-[200px]' : 'pt-[120px]'}`}>
         <div className="relative">
-          {/* Exams Section */}
-          {dayExams.length > 0 && (
-            <div className="mb-4 space-y-1.5 px-2">
-              {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
-                <div
-                  key={exam.id}
-                  className="bg-primary/5 border-l-2 border-primary/40 rounded px-2 py-1.5 flex items-center gap-1.5"
-                >
-                  <span className="text-xs">📚</span>
-                  <span className="text-xs font-medium truncate">{exam.subject}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">P: {exam.priority}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Time Grid */}
           <div className="flex">
             {/* Hours Column */}
