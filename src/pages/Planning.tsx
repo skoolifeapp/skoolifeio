@@ -15,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
@@ -61,7 +60,6 @@ const Planning = () => {
     isRecurring?: boolean;
     selectedDate?: Date;
   } | null>(null);
-  const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
   const [recurrenceChoice, setRecurrenceChoice] = useState<'this' | 'all'>('this');
 
   useEffect(() => {
@@ -439,7 +437,6 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
-      setShowRecurrenceDialog(false);
       toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
@@ -447,11 +444,77 @@ const Planning = () => {
     }
   };
 
-  const handleSaveClick = () => {
-    if (editingEvent?.isRecurring && editingEvent.type === 'work') {
-      setShowRecurrenceDialog(true);
-    } else {
-      handleUpdateEvent();
+  const handleDeleteEvent = async () => {
+    if (!editingEvent || !user) return;
+
+    try {
+      if (editingEvent.type === 'calendar') {
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadCalendarEvents();
+      } else if (editingEvent.type === 'revision') {
+        const { error } = await supabase
+          .from('revision_sessions')
+          .delete()
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadRevisionSessions();
+      } else if (editingEvent.type === 'work') {
+        // Si c'est récurrent et qu'on supprime seulement cette occurrence
+        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
+          // Créer un événement négatif ou marquer cette date comme exception
+          // Pour simplifier, on crée un événement calendar vide qui bloque cette occurrence
+          const [startHours, startMinutes] = editingEvent.data.start_time.split(':').map(Number);
+          const [endHours, endMinutes] = editingEvent.data.end_time.split(':').map(Number);
+          
+          const startDate = new Date(editingEvent.selectedDate);
+          startDate.setHours(startHours, startMinutes, 0, 0);
+          
+          const endDate = new Date(editingEvent.selectedDate);
+          endDate.setHours(endHours, endMinutes, 0, 0);
+
+          const { error } = await supabase
+            .from('calendar_events')
+            .insert({
+              user_id: user.id,
+              summary: '❌ Annulé',
+              start_date: startDate.toISOString(),
+              end_date: endDate.toISOString(),
+              description: `Annulation de: ${editingEvent.data.title || 'Travail'}`,
+            });
+
+          if (error) throw error;
+          await loadCalendarEvents();
+        } else {
+          // Supprimer toutes les occurrences
+          const { error } = await supabase
+            .from('work_schedules')
+            .delete()
+            .eq('id', editingEvent.data.id);
+
+          if (error) throw error;
+        }
+      } else if (editingEvent.type === 'exam') {
+        const { error } = await supabase
+          .from('exams')
+          .delete()
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadDayExams();
+      }
+
+      refetchAll();
+      setEditingEvent(null);
+      toast.success("Événement supprimé");
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -816,6 +879,27 @@ const Planning = () => {
           </DrawerHeader>
           
           <div className="px-4 space-y-4 pb-6">
+            {/* Choix pour événements récurrents */}
+            {editingEvent?.isRecurring && editingEvent.type === 'work' && (
+              <div className="bg-muted p-3 rounded-lg space-y-2">
+                <Label>Que veux-tu modifier ?</Label>
+                <RadioGroup value={recurrenceChoice} onValueChange={(v) => setRecurrenceChoice(v as 'this' | 'all')}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="this" id="this-occ" />
+                    <Label htmlFor="this-occ" className="font-normal">
+                      Cette occurrence ({format(editingEvent?.selectedDate || new Date(), 'd MMM', { locale: fr })})
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="all-occ" />
+                    <Label htmlFor="all-occ" className="font-normal">
+                      Toutes les occurrences
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
             {editingEvent?.type === 'calendar' && (
               <>
                 <div>
@@ -1016,49 +1100,27 @@ const Planning = () => {
           </div>
 
           <DrawerFooter>
-            <Button onClick={handleSaveClick}>
-              Enregistrer les modifications
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteEvent}
+                className="flex-1"
+              >
+                Supprimer
+              </Button>
+              <Button 
+                onClick={handleUpdateEvent}
+                className="flex-1"
+              >
+                Enregistrer
+              </Button>
+            </div>
             <DrawerClose asChild>
-              <Button variant="outline">Annuler</Button>
+              <Button variant="outline" className="w-full">Annuler</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-
-      {/* Dialog pour choisir entre cette occurrence ou toutes les occurrences */}
-      <AlertDialog open={showRecurrenceDialog} onOpenChange={setShowRecurrenceDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Modifier l'événement récurrent</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cet événement se répète plusieurs jours. Que veux-tu modifier ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <RadioGroup value={recurrenceChoice} onValueChange={(v) => setRecurrenceChoice(v as 'this' | 'all')}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="this" id="this-occurrence" />
-              <Label htmlFor="this-occurrence" className="font-normal">
-                Cette occurrence seulement ({format(editingEvent?.selectedDate || new Date(), 'd MMMM yyyy', { locale: fr })})
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="all" id="all-occurrences" />
-              <Label htmlFor="all-occurrences" className="font-normal">
-                Toutes les occurrences
-              </Label>
-            </div>
-          </RadioGroup>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUpdateEvent}>
-              Enregistrer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
