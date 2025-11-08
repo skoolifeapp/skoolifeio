@@ -34,18 +34,27 @@ interface ActivityTabProps {
 
 export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newActivity, setNewActivity] = useState<Partial<Activity>>({
+    type: 'sport',
+    title: '',
+    days: [],
+    start_time: '18:00',
+    end_time: '20:00',
+    location: '',
+  });
 
   const addActivity = () => {
-    const newActivity: Activity = {
-      type: 'sport',
-      title: '',
-      days: [],
-      start_time: '18:00',
-      end_time: '20:00',
-      location: '',
+    const activity: Activity = {
+      type: newActivity.type as Activity['type'],
+      title: newActivity.title || '',
+      days: newActivity.days || [],
+      start_time: newActivity.start_time || '18:00',
+      end_time: newActivity.end_time || '20:00',
+      location: newActivity.location,
     };
-    onActivitiesChange([...activities, newActivity]);
+    onActivitiesChange([...activities, activity]);
     setIsDialogOpen(false);
+    setNewActivity({ type: 'sport', title: '', days: [], start_time: '18:00', end_time: '20:00', location: '' });
   };
 
   const updateActivity = (index: number, updates: Partial<Activity>) => {
@@ -56,6 +65,13 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
 
   const removeActivity = (index: number) => {
     onActivitiesChange(activities.filter((_, i) => i !== index));
+  };
+
+  const toggleNewDay = (day: string) => {
+    const days = newActivity.days?.includes(day)
+      ? newActivity.days.filter(d => d !== day)
+      : [...(newActivity.days || []), day];
+    setNewActivity({ ...newActivity, days });
   };
 
   const toggleDay = (activityIndex: number, day: string) => {
@@ -80,16 +96,95 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Ajouter une activité</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
-                <p className="text-sm text-muted-foreground">
-                  Une activité sera ajoutée. Tu pourras ensuite la configurer ci-dessous.
-                </p>
-                <Button onClick={addActivity} className="w-full">
-                  Confirmer
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Type</Label>
+                    <Select
+                      value={newActivity.type}
+                      onValueChange={(value: Activity['type']) => setNewActivity({ ...newActivity, type: value })}
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sport">Sport</SelectItem>
+                        <SelectItem value="asso">Asso</SelectItem>
+                        <SelectItem value="cours">Cours</SelectItem>
+                        <SelectItem value="projet">Projet</SelectItem>
+                        <SelectItem value="autre">Autre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm">Nom</Label>
+                    <Input
+                      value={newActivity.title || ''}
+                      onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
+                      placeholder="Ex: Football..."
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm">Jours</Label>
+                  <div className="flex gap-1 mt-2">
+                    {DAYS.map((day) => (
+                      <button
+                        key={day.key}
+                        onClick={() => toggleNewDay(day.key)}
+                        className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                          newActivity.days?.includes(day.key)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Début</Label>
+                    <Input
+                      type="time"
+                      value={newActivity.start_time}
+                      onChange={(e) => setNewActivity({ ...newActivity, start_time: e.target.value })}
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Fin</Label>
+                    <Input
+                      type="time"
+                      value={newActivity.end_time}
+                      onChange={(e) => setNewActivity({ ...newActivity, end_time: e.target.value })}
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm">Lieu (optionnel)</Label>
+                  <Input
+                    value={newActivity.location || ''}
+                    onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })}
+                    placeholder="Optionnel"
+                    className="mt-1.5"
+                  />
+                </div>
+
+                <Button onClick={addActivity} className="w-full bg-yellow-500 hover:bg-yellow-600">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter l'activité
                 </Button>
               </div>
             </DialogContent>

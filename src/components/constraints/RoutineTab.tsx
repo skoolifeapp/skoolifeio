@@ -51,16 +51,23 @@ export const RoutineTab = ({
   onRoutineMomentsChange,
 }: RoutineTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newMoment, setNewMoment] = useState<Partial<RoutineMoment>>({
+    title: '',
+    days: [],
+    start_time: '12:00',
+    end_time: '13:00',
+  });
 
   const addRoutineMoment = () => {
-    const newMoment: RoutineMoment = {
-      title: '',
-      days: [],
-      start_time: '12:00',
-      end_time: '13:00',
+    const moment: RoutineMoment = {
+      title: newMoment.title || '',
+      days: newMoment.days || [],
+      start_time: newMoment.start_time || '12:00',
+      end_time: newMoment.end_time || '13:00',
     };
-    onRoutineMomentsChange([...routineMoments, newMoment]);
+    onRoutineMomentsChange([...routineMoments, moment]);
     setIsDialogOpen(false);
+    setNewMoment({ title: '', days: [], start_time: '12:00', end_time: '13:00' });
   };
 
   const updateRoutineMoment = (index: number, updates: Partial<RoutineMoment>) => {
@@ -71,6 +78,13 @@ export const RoutineTab = ({
 
   const removeRoutineMoment = (index: number) => {
     onRoutineMomentsChange(routineMoments.filter((_, i) => i !== index));
+  };
+
+  const toggleNewDay = (day: string) => {
+    const days = newMoment.days?.includes(day)
+      ? newMoment.days.filter(d => d !== day)
+      : [...(newMoment.days || []), day];
+    setNewMoment({ ...newMoment, days });
   };
 
   const toggleDay = (momentIndex: number, day: string) => {
@@ -138,16 +152,64 @@ export const RoutineTab = ({
                   <Plus className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Ajouter un moment important</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Un moment régulier sera ajouté. Tu pourras ensuite le configurer ci-dessous.
-                  </p>
-                  <Button onClick={addRoutineMoment} className="w-full">
-                    Confirmer
+                  <div>
+                    <Label className="text-sm">Nom</Label>
+                    <Input
+                      value={newMoment.title || ''}
+                      onChange={(e) => setNewMoment({ ...newMoment, title: e.target.value })}
+                      placeholder="Ex: Repas famille, Prière..."
+                      className="mt-1.5"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm">Jours</Label>
+                    <div className="flex gap-1 mt-2">
+                      {DAYS.map((day) => (
+                        <button
+                          key={day.key}
+                          onClick={() => toggleNewDay(day.key)}
+                          className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                            newMoment.days?.includes(day.key)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {day.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-sm">Début</Label>
+                      <Input
+                        type="time"
+                        value={newMoment.start_time}
+                        onChange={(e) => setNewMoment({ ...newMoment, start_time: e.target.value })}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Fin</Label>
+                      <Input
+                        type="time"
+                        value={newMoment.end_time}
+                        onChange={(e) => setNewMoment({ ...newMoment, end_time: e.target.value })}
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+
+                  <Button onClick={addRoutineMoment} className="w-full bg-yellow-500 hover:bg-yellow-600">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter le moment
                   </Button>
                 </div>
               </DialogContent>
