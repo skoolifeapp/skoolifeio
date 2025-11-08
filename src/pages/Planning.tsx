@@ -595,6 +595,8 @@ const Planning = () => {
                 end_time: editingEvent.data.end_time,
                 location: editingEvent.data.location,
               }
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) throw error;
@@ -629,6 +631,8 @@ const Planning = () => {
                 start_time: editingEvent.data.start_time,
                 end_time: editingEvent.data.end_time,
               }
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) throw error;
@@ -690,6 +694,8 @@ const Planning = () => {
               exception_date: exceptionDate,
               exception_type: 'deleted',
               modified_data: null
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) {
@@ -729,6 +735,8 @@ const Planning = () => {
               exception_date: exceptionDate,
               exception_type: 'deleted',
               modified_data: null
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) throw error;
@@ -754,6 +762,8 @@ const Planning = () => {
               exception_date: exceptionDate,
               exception_type: 'deleted',
               modified_data: null
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) throw error;
