@@ -143,7 +143,6 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Contrainte de travail enregistrée");
       loadData();
     } catch (error) {
       console.error('Error saving work schedules:', error);
@@ -179,7 +178,6 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Activité enregistrée");
       loadData();
     } catch (error) {
       console.error('Error saving activities:', error);
@@ -213,7 +211,6 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Routine enregistrée");
       loadData();
     } catch (error) {
       console.error('Error saving routine moments:', error);
