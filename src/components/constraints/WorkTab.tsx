@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -147,6 +147,7 @@ export const WorkTab = ({
   };
 
   return (
+    <>
     <div className="space-y-6">
       {/* Alternance */}
       <Card>
@@ -156,90 +157,13 @@ export const WorkTab = ({
               <Label className="text-base">As-tu une alternance ?</Label>
               <p className="text-xs text-muted-foreground">École + entreprise</p>
             </div>
-            <Dialog open={isAlternanceDialogOpen} onOpenChange={setIsAlternanceDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Ajouter une alternance</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <Label className="text-sm">Jours travaillés</Label>
-                    <div className="flex gap-1 mt-2">
-                      {DAYS.map((day) => (
-                        <button
-                          key={day.key}
-                          onClick={() => toggleNewDay('alternance', day.key)}
-                          className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                            newAlternance.days?.includes(day.key)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-sm">Début</Label>
-                      <Input
-                        type="time"
-                        value={newAlternance.start_time}
-                        onChange={(e) => setNewAlternance({ ...newAlternance, start_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Fin</Label>
-                      <Input
-                        type="time"
-                        value={newAlternance.end_time}
-                        onChange={(e) => setNewAlternance({ ...newAlternance, end_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Lieu</Label>
-                    <Input
-                      value={newAlternance.location || ''}
-                      onChange={(e) => setNewAlternance({ ...newAlternance, location: e.target.value })}
-                      placeholder="Ville ou 'télétravail'"
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Fréquence</Label>
-                    <Select
-                      value={newAlternance.frequency || 'weekly'}
-                      onValueChange={(value: 'weekly' | 'biweekly') => setNewAlternance({ ...newAlternance, frequency: value })}
-                    >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly">Toutes les semaines</SelectItem>
-                        <SelectItem value="biweekly">1 semaine sur 2</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button onClick={addAlternance} className="w-full bg-yellow-500 hover:bg-yellow-600">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter l'alternance
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => setIsAlternanceDialogOpen(true)}
+              size="icon" 
+              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {alternanceSchedules.length > 0 && (
@@ -341,85 +265,13 @@ export const WorkTab = ({
               <Label className="text-base">As-tu un job étudiant ?</Label>
               <p className="text-xs text-muted-foreground">En parallèle de tes études</p>
             </div>
-            <Dialog open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Ajouter un job étudiant</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <Label className="text-sm">Jours</Label>
-                    <div className="flex gap-1 mt-2">
-                      {DAYS.map((day) => (
-                        <button
-                          key={day.key}
-                          onClick={() => toggleNewDay('job', day.key)}
-                          className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                            newJob.days?.includes(day.key)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-sm">Début</Label>
-                      <Input
-                        type="time"
-                        value={newJob.start_time}
-                        onChange={(e) => setNewJob({ ...newJob, start_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Fin</Label>
-                      <Input
-                        type="time"
-                        value={newJob.end_time}
-                        onChange={(e) => setNewJob({ ...newJob, end_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Lieu</Label>
-                    <Input
-                      value={newJob.location || ''}
-                      onChange={(e) => setNewJob({ ...newJob, location: e.target.value })}
-                      placeholder="Ville"
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Heures moyennes / semaine</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={newJob.hours_per_week || 0}
-                      onChange={(e) => setNewJob({ ...newJob, hours_per_week: parseInt(e.target.value) || 0 })}
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <Button onClick={addJob} className="w-full bg-yellow-500 hover:bg-yellow-600">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter le job
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => setIsJobDialogOpen(true)}
+              size="icon" 
+              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {jobSchedules.length > 0 && (
@@ -513,74 +365,13 @@ export const WorkTab = ({
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-base">Autres engagements réguliers</Label>
-            <Dialog open={isOtherDialogOpen} onOpenChange={setIsOtherDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Ajouter un engagement</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <Label className="text-sm">Nom</Label>
-                    <Input
-                      value={newOther.title || ''}
-                      onChange={(e) => setNewOther({ ...newOther, title: e.target.value })}
-                      placeholder="Ex: Stage, mission..."
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Jours</Label>
-                    <div className="flex gap-1 mt-2">
-                      {DAYS.map((day) => (
-                        <button
-                          key={day.key}
-                          onClick={() => toggleNewDay('other', day.key)}
-                          className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                            newOther.days?.includes(day.key)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-sm">Début</Label>
-                      <Input
-                        type="time"
-                        value={newOther.start_time}
-                        onChange={(e) => setNewOther({ ...newOther, start_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Fin</Label>
-                      <Input
-                        type="time"
-                        value={newOther.end_time}
-                        onChange={(e) => setNewOther({ ...newOther, end_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </div>
-
-                  <Button onClick={addOther} className="w-full bg-yellow-500 hover:bg-yellow-600">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter l'engagement
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => setIsOtherDialogOpen(true)}
+              size="icon" 
+              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {otherSchedules.length > 0 && (
@@ -656,5 +447,228 @@ export const WorkTab = ({
         </CardContent>
       </Card>
     </div>
+
+      {/* Drawer Alternance */}
+      <Drawer open={isAlternanceDialogOpen} onOpenChange={setIsAlternanceDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Ajouter une alternance</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div>
+              <Label className="text-sm">Jours travaillés</Label>
+              <div className="flex gap-1 mt-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleNewDay('alternance', day.key)}
+                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                      newAlternance.days?.includes(day.key)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newAlternance.start_time}
+                  onChange={(e) => setNewAlternance({ ...newAlternance, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newAlternance.end_time}
+                  onChange={(e) => setNewAlternance({ ...newAlternance, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Lieu</Label>
+              <Input
+                value={newAlternance.location || ''}
+                onChange={(e) => setNewAlternance({ ...newAlternance, location: e.target.value })}
+                placeholder="Ville ou 'télétravail'"
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm">Fréquence</Label>
+              <Select
+                value={newAlternance.frequency || 'weekly'}
+                onValueChange={(value: 'weekly' | 'biweekly') => setNewAlternance({ ...newAlternance, frequency: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Toutes les semaines</SelectItem>
+                  <SelectItem value="biweekly">1 semaine sur 2</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={addAlternance} className="w-full bg-yellow-500 hover:bg-yellow-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter l'alternance
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Drawer Job */}
+      <Drawer open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Ajouter un job étudiant</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div>
+              <Label className="text-sm">Jours</Label>
+              <div className="flex gap-1 mt-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleNewDay('job', day.key)}
+                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                      newJob.days?.includes(day.key)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newJob.start_time}
+                  onChange={(e) => setNewJob({ ...newJob, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newJob.end_time}
+                  onChange={(e) => setNewJob({ ...newJob, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Lieu</Label>
+              <Input
+                value={newJob.location || ''}
+                onChange={(e) => setNewJob({ ...newJob, location: e.target.value })}
+                placeholder="Ville"
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm">Heures moyennes / semaine</Label>
+              <Input
+                type="number"
+                min="0"
+                value={newJob.hours_per_week || 0}
+                onChange={(e) => setNewJob({ ...newJob, hours_per_week: parseInt(e.target.value) || 0 })}
+                className="mt-1.5"
+              />
+            </div>
+
+            <Button onClick={addJob} className="w-full bg-yellow-500 hover:bg-yellow-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter le job
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Drawer Other */}
+      <Drawer open={isOtherDialogOpen} onOpenChange={setIsOtherDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Ajouter un engagement régulier</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div>
+              <Label className="text-sm">Titre</Label>
+              <Input
+                value={newOther.title || ''}
+                onChange={(e) => setNewOther({ ...newOther, title: e.target.value })}
+                placeholder="Ex: Bénévolat, engagement associatif..."
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm">Jours</Label>
+              <div className="flex gap-1 mt-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleNewDay('other', day.key)}
+                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                      newOther.days?.includes(day.key)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newOther.start_time}
+                  onChange={(e) => setNewOther({ ...newOther, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newOther.end_time}
+                  onChange={(e) => setNewOther({ ...newOther, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <Button onClick={addOther} className="w-full bg-yellow-500 hover:bg-yellow-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter l'engagement
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };

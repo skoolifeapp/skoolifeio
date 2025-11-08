@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -96,6 +96,7 @@ export const RoutineTab = ({
   };
 
   return (
+    <>
     <div className="space-y-6">
       {/* Rythme de base */}
       <Card>
@@ -146,74 +147,13 @@ export const RoutineTab = ({
               <Label className="text-base">Moments réguliers importants</Label>
               <p className="text-xs text-muted-foreground">Famille, couple, religion, etc.</p>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Ajouter un moment important</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <Label className="text-sm">Nom</Label>
-                    <Input
-                      value={newMoment.title || ''}
-                      onChange={(e) => setNewMoment({ ...newMoment, title: e.target.value })}
-                      placeholder="Ex: Repas famille, Prière..."
-                      className="mt-1.5"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Jours</Label>
-                    <div className="flex gap-1 mt-2">
-                      {DAYS.map((day) => (
-                        <button
-                          key={day.key}
-                          onClick={() => toggleNewDay(day.key)}
-                          className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                            newMoment.days?.includes(day.key)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-sm">Début</Label>
-                      <Input
-                        type="time"
-                        value={newMoment.start_time}
-                        onChange={(e) => setNewMoment({ ...newMoment, start_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Fin</Label>
-                      <Input
-                        type="time"
-                        value={newMoment.end_time}
-                        onChange={(e) => setNewMoment({ ...newMoment, end_time: e.target.value })}
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </div>
-
-                  <Button onClick={addRoutineMoment} className="w-full bg-yellow-500 hover:bg-yellow-600">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter le moment
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              onClick={() => setIsDialogOpen(true)}
+              size="icon" 
+              className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {routineMoments.length > 0 && (
@@ -306,5 +246,71 @@ export const RoutineTab = ({
         </CardContent>
       </Card>
     </div>
+
+      {/* Drawer Routine */}
+      <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Ajouter un moment important</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div>
+              <Label className="text-sm">Nom</Label>
+              <Input
+                value={newMoment.title || ''}
+                onChange={(e) => setNewMoment({ ...newMoment, title: e.target.value })}
+                placeholder="Ex: Repas famille, Prière..."
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm">Jours</Label>
+              <div className="flex gap-1 mt-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleNewDay(day.key)}
+                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                      newMoment.days?.includes(day.key)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newMoment.start_time}
+                  onChange={(e) => setNewMoment({ ...newMoment, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newMoment.end_time}
+                  onChange={(e) => setNewMoment({ ...newMoment, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <Button onClick={addRoutineMoment} className="w-full bg-yellow-500 hover:bg-yellow-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter le moment
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };

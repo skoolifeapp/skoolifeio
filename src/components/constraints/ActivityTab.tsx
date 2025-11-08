@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -83,6 +83,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
   };
 
   return (
+    <>
     <Card>
       <CardContent className="p-6 space-y-4">
         <div className="flex items-center justify-between">
@@ -90,105 +91,13 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
             <Label className="text-base">As-tu des activités régulières ?</Label>
             <p className="text-xs text-muted-foreground">Sport, assos, cours, projets perso...</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Ajouter une activité</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-sm">Type</Label>
-                    <Select
-                      value={newActivity.type}
-                      onValueChange={(value: Activity['type']) => setNewActivity({ ...newActivity, type: value })}
-                    >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sport">Sport</SelectItem>
-                        <SelectItem value="asso">Asso</SelectItem>
-                        <SelectItem value="cours">Cours</SelectItem>
-                        <SelectItem value="projet">Projet</SelectItem>
-                        <SelectItem value="autre">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm">Nom</Label>
-                    <Input
-                      value={newActivity.title || ''}
-                      onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
-                      placeholder="Ex: Football..."
-                      className="mt-1.5"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm">Jours</Label>
-                  <div className="flex gap-1 mt-2">
-                    {DAYS.map((day) => (
-                      <button
-                        key={day.key}
-                        onClick={() => toggleNewDay(day.key)}
-                        className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                          newActivity.days?.includes(day.key)
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {day.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-sm">Début</Label>
-                    <Input
-                      type="time"
-                      value={newActivity.start_time}
-                      onChange={(e) => setNewActivity({ ...newActivity, start_time: e.target.value })}
-                      className="mt-1.5"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Fin</Label>
-                    <Input
-                      type="time"
-                      value={newActivity.end_time}
-                      onChange={(e) => setNewActivity({ ...newActivity, end_time: e.target.value })}
-                      className="mt-1.5"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm">Lieu (optionnel)</Label>
-                  <Input
-                    value={newActivity.location || ''}
-                    onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })}
-                    placeholder="Optionnel"
-                    className="mt-1.5"
-                  />
-                </div>
-
-                <Button onClick={addActivity} className="w-full bg-yellow-500 hover:bg-yellow-600">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter l'activité
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            onClick={() => setIsDialogOpen(true)}
+            size="icon" 
+            className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
 
         {activities.length === 0 ? (
@@ -295,5 +204,102 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
         )}
       </CardContent>
     </Card>
+
+      {/* Drawer Activité */}
+      <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DrawerContent className="max-h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Ajouter une activité</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Type</Label>
+                <Select
+                  value={newActivity.type}
+                  onValueChange={(value: Activity['type']) => setNewActivity({ ...newActivity, type: value })}
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sport">Sport</SelectItem>
+                    <SelectItem value="asso">Asso</SelectItem>
+                    <SelectItem value="cours">Cours</SelectItem>
+                    <SelectItem value="projet">Projet</SelectItem>
+                    <SelectItem value="autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm">Nom</Label>
+                <Input
+                  value={newActivity.title || ''}
+                  onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
+                  placeholder="Ex: Football..."
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Jours</Label>
+              <div className="flex gap-1 mt-2">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleNewDay(day.key)}
+                    className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                      newActivity.days?.includes(day.key)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newActivity.start_time}
+                  onChange={(e) => setNewActivity({ ...newActivity, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newActivity.end_time}
+                  onChange={(e) => setNewActivity({ ...newActivity, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Lieu (optionnel)</Label>
+              <Input
+                value={newActivity.location || ''}
+                onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })}
+                placeholder="Optionnel"
+                className="mt-1.5"
+              />
+            </div>
+
+            <Button onClick={addActivity} className="w-full bg-yellow-500 hover:bg-yellow-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter l'activité
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
