@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          created_at: string
+          days: string[]
+          end_time: string
+          id: string
+          location: string | null
+          start_time: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          end_time: string
+          id?: string
+          location?: string | null
+          start_time: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          end_time?: string
+          id?: string
+          location?: string | null
+          start_time?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string
@@ -45,42 +84,6 @@ export type Database = {
           location?: string | null
           start_date?: string
           summary?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      constraint_events: {
-        Row: {
-          created_at: string
-          end_time: string
-          id: string
-          recurrence_rule: string | null
-          start_time: string
-          title: string
-          type: Database["public"]["Enums"]["constraint_type"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          end_time: string
-          id?: string
-          recurrence_rule?: string | null
-          start_time: string
-          title: string
-          type: Database["public"]["Enums"]["constraint_type"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          end_time?: string
-          id?: string
-          recurrence_rule?: string | null
-          start_time?: string
-          title?: string
-          type?: Database["public"]["Enums"]["constraint_type"]
           updated_at?: string
           user_id?: string
         }
@@ -208,6 +211,39 @@ export type Database = {
           },
         ]
       }
+      routine_moments: {
+        Row: {
+          created_at: string
+          days: string[]
+          end_time: string
+          id: string
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          end_time: string
+          id?: string
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          end_time?: string
+          id?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_sessions: {
         Row: {
           completed: boolean
@@ -254,6 +290,7 @@ export type Database = {
       }
       user_constraints_profile: {
         Row: {
+          commute_home_activity: number | null
           commute_home_job: number | null
           commute_home_school: number | null
           commute_home_sport: number | null
@@ -267,15 +304,20 @@ export type Database = {
           max_daily_revision_hours: number | null
           max_weekly_revision_hours: number | null
           min_free_evenings_per_week: number | null
+          min_personal_time_per_week: number | null
           no_study_after: string | null
           no_study_before: string | null
           no_study_days: string[] | null
+          other_constraints_notes: string | null
           preferred_productivity: string | null
           respect_meal_times: boolean | null
+          sleep_hours_needed: number | null
           updated_at: string
           user_id: string
+          wake_up_time: string | null
         }
         Insert: {
+          commute_home_activity?: number | null
           commute_home_job?: number | null
           commute_home_school?: number | null
           commute_home_sport?: number | null
@@ -289,15 +331,20 @@ export type Database = {
           max_daily_revision_hours?: number | null
           max_weekly_revision_hours?: number | null
           min_free_evenings_per_week?: number | null
+          min_personal_time_per_week?: number | null
           no_study_after?: string | null
           no_study_before?: string | null
           no_study_days?: string[] | null
+          other_constraints_notes?: string | null
           preferred_productivity?: string | null
           respect_meal_times?: boolean | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id: string
+          wake_up_time?: string | null
         }
         Update: {
+          commute_home_activity?: number | null
           commute_home_job?: number | null
           commute_home_school?: number | null
           commute_home_sport?: number | null
@@ -311,13 +358,17 @@ export type Database = {
           max_daily_revision_hours?: number | null
           max_weekly_revision_hours?: number | null
           min_free_evenings_per_week?: number | null
+          min_personal_time_per_week?: number | null
           no_study_after?: string | null
           no_study_before?: string | null
           no_study_days?: string[] | null
+          other_constraints_notes?: string | null
           preferred_productivity?: string | null
           respect_meal_times?: boolean | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id?: string
+          wake_up_time?: string | null
         }
         Relationships: []
       }
@@ -408,6 +459,51 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+        }
+        Relationships: []
+      }
+      work_schedules: {
+        Row: {
+          created_at: string
+          days: string[]
+          end_time: string
+          frequency: string | null
+          hours_per_week: number | null
+          id: string
+          location: string | null
+          start_time: string
+          title: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: string[]
+          end_time: string
+          frequency?: string | null
+          hours_per_week?: number | null
+          id?: string
+          location?: string | null
+          start_time: string
+          title?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: string[]
+          end_time?: string
+          frequency?: string | null
+          hours_per_week?: number | null
+          id?: string
+          location?: string | null
+          start_time?: string
+          title?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -8,7 +8,9 @@ interface DataContextType {
   calendarEvents: any[];
   revisionSessions: any[];
   constraintsProfile: any;
-  constraintEvents: any[];
+  workSchedules: any[];
+  activities: any[];
+  routineMoments: any[];
   isLoading: boolean;
   refetchAll: () => void;
 }
@@ -81,16 +83,45 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Précharger les événements de contraintes
-  const { data: constraintEvents = [] } = useQuery({
-    queryKey: ["constraint_events", user?.id],
+  // Précharger les work schedules
+  const { data: workSchedules = [] } = useQuery({
+    queryKey: ["work_schedules", user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data } = await supabase
-        .from("constraint_events")
+        .from("work_schedules")
         .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true });
+        .eq("user_id", user.id);
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Précharger les activités
+  const { data: activities = [] } = useQuery({
+    queryKey: ["activities", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("activities")
+        .select("*")
+        .eq("user_id", user.id);
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Précharger les routine moments
+  const { data: routineMoments = [] } = useQuery({
+    queryKey: ["routine_moments", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("routine_moments")
+        .select("*")
+        .eq("user_id", user.id);
       return data || [];
     },
     enabled: !!user,
@@ -102,7 +133,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
     queryClient.invalidateQueries({ queryKey: ["revision_sessions"] });
     queryClient.invalidateQueries({ queryKey: ["constraints_profile"] });
-    queryClient.invalidateQueries({ queryKey: ["constraint_events"] });
+    queryClient.invalidateQueries({ queryKey: ["work_schedules"] });
+    queryClient.invalidateQueries({ queryKey: ["activities"] });
+    queryClient.invalidateQueries({ queryKey: ["routine_moments"] });
   };
 
   const isLoading = !user;
@@ -114,7 +147,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         calendarEvents,
         revisionSessions,
         constraintsProfile,
-        constraintEvents,
+        workSchedules,
+        activities,
+        routineMoments,
         isLoading,
         refetchAll,
       }}
