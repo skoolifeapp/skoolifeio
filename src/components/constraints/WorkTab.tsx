@@ -252,17 +252,15 @@ export const WorkTab = ({
                       </Select>
                     </div>
 
-                    {alternanceSchedules.length > 1 && (
-                      <Button
-                        onClick={() => removeSchedule(globalIdx)}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => removeSchedule(globalIdx)}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
                   </div>
                 );
               })}
@@ -365,17 +363,15 @@ export const WorkTab = ({
                       />
                     </div>
 
-                    {jobSchedules.length > 1 && (
-                      <Button
-                        onClick={() => removeSchedule(globalIdx)}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => removeSchedule(globalIdx)}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
                   </div>
                 );
               })}
