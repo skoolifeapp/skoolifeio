@@ -105,7 +105,7 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Travail enregistré");
+      
     } catch (error) {
       console.error('Error saving work schedules:', error);
       toast.error("Erreur lors de l'enregistrement du travail");
@@ -148,7 +148,7 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Activités enregistrées");
+      
     } catch (error) {
       console.error('Error saving activities:', error);
       toast.error("Erreur lors de l'enregistrement des activités");
@@ -189,7 +189,7 @@ const Constraints = () => {
         }
       }
       
-      toast.success("Routine enregistrée");
+      
     } catch (error) {
       console.error('Error saving routine moments:', error);
       toast.error("Erreur lors de l'enregistrement de la routine");
@@ -220,7 +220,7 @@ const Constraints = () => {
         return;
       }
       
-      toast.success("Profil enregistré");
+      
     } catch (error) {
       console.error('Error saving profile:', error);
       toast.error("Erreur lors de l'enregistrement du profil");
