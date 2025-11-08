@@ -412,7 +412,7 @@ export const WorkTab = ({
             </CollapsibleTrigger>
 
             {otherSchedules.length > 0 && (
-              <CollapsibleContent className="space-y-3 animate-accordion-down">
+              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
                 {otherSchedules.map((schedule, idx) => {
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
