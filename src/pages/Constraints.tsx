@@ -115,10 +115,16 @@ const Constraints = () => {
     if (!user) return;
     try {
       // Delete existing schedules
-      await supabase
+      const { error: deleteError } = await supabase
         .from('work_schedules')
         .delete()
         .eq('user_id', user.id);
+      
+      if (deleteError) {
+        console.error('Error deleting work schedules:', deleteError);
+        toast.error("Erreur lors de l'enregistrement du travail");
+        return;
+      }
       
       // Insert new schedules if any
       if (schedules.length > 0) {
@@ -143,7 +149,7 @@ const Constraints = () => {
         }
       }
       
-      loadData();
+      toast.success("Travail enregistré");
     } catch (error) {
       console.error('Error saving work schedules:', error);
       toast.error("Erreur lors de l'enregistrement du travail");
@@ -153,10 +159,16 @@ const Constraints = () => {
   const saveActivities = async (acts: Activity[]) => {
     if (!user) return;
     try {
-      await supabase
+      const { error: deleteError } = await supabase
         .from('activities')
         .delete()
         .eq('user_id', user.id);
+      
+      if (deleteError) {
+        console.error('Error deleting activities:', deleteError);
+        toast.error("Erreur lors de l'enregistrement des activités");
+        return;
+      }
       
       if (acts.length > 0) {
         const { error } = await supabase
@@ -178,7 +190,7 @@ const Constraints = () => {
         }
       }
       
-      loadData();
+      toast.success("Activités enregistrées");
     } catch (error) {
       console.error('Error saving activities:', error);
       toast.error("Erreur lors de l'enregistrement des activités");
@@ -188,10 +200,16 @@ const Constraints = () => {
   const saveRoutineMoments = async (moments: RoutineMoment[]) => {
     if (!user) return;
     try {
-      await supabase
+      const { error: deleteError } = await supabase
         .from('routine_moments')
         .delete()
         .eq('user_id', user.id);
+      
+      if (deleteError) {
+        console.error('Error deleting routine moments:', deleteError);
+        toast.error("Erreur lors de l'enregistrement de la routine");
+        return;
+      }
       
       if (moments.length > 0) {
         const { error } = await supabase
@@ -211,7 +229,7 @@ const Constraints = () => {
         }
       }
       
-      loadData();
+      toast.success("Routine enregistrée");
     } catch (error) {
       console.error('Error saving routine moments:', error);
       toast.error("Erreur lors de l'enregistrement de la routine");
@@ -221,7 +239,7 @@ const Constraints = () => {
   const saveProfile = async () => {
     if (!user) return;
     try {
-      await supabase
+      const { error } = await supabase
         .from('user_constraints_profile')
         .upsert({
           user_id: user.id,
@@ -233,7 +251,14 @@ const Constraints = () => {
           commute_home_job: commuteHomeJob,
           commute_home_activity: commuteHomeActivity,
         });
-      console.log("Profile saved");
+      
+      if (error) {
+        console.error('Error saving profile:', error);
+        toast.error("Erreur lors de l'enregistrement du profil");
+        return;
+      }
+      
+      toast.success("Profil enregistré");
     } catch (error) {
       console.error('Error saving profile:', error);
       toast.error("Erreur lors de l'enregistrement du profil");
