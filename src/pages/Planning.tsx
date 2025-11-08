@@ -437,7 +437,6 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
-      toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error("Erreur lors de la modification");
@@ -509,9 +508,15 @@ const Planning = () => {
         await loadDayExams();
       }
 
+      // Recharger toutes les données pour s'assurer que la suppression est visible
+      await Promise.all([
+        loadCalendarEvents(),
+        loadRevisionSessions(),
+        loadDayExams()
+      ]);
+      
       refetchAll();
       setEditingEvent(null);
-      toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
       toast.error("Erreur lors de la suppression");
