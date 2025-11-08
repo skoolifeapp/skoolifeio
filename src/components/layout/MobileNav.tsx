@@ -23,13 +23,13 @@ export const MobileNav = () => {
               key={path}
               to={path}
               className={cn(
-                "flex items-center justify-center p-2 rounded-lg transition-all duration-300",
+                "flex items-center justify-center p-2 rounded-lg",
                 isActive
                   ? "text-primary scale-110"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "animate-pulse-soft")} />
+              <Icon className="h-5 w-5" />
             </Link>
           );
         })}
