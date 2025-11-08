@@ -161,7 +161,7 @@ export const WorkTab = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">As-tu une alternance ?</Label>
+                  <Label className="text-base">As-tu une alternance ? ({alternanceSchedules.length})</Label>
                   <p className="text-xs text-muted-foreground">École + entreprise</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export const WorkTab = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">As-tu un job étudiant ?</Label>
+                  <Label className="text-base">As-tu un job étudiant ? ({jobSchedules.length})</Label>
                   <p className="text-xs text-muted-foreground">En parallèle de tes études</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -388,7 +388,7 @@ export const WorkTab = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">Autres engagements réguliers</Label>
+                  <Label className="text-base">Autres engagements réguliers ({otherSchedules.length})</Label>
                   <p className="text-xs text-muted-foreground">Stage, mission, projet...</p>
                 </div>
                 <div className="flex items-center gap-2">

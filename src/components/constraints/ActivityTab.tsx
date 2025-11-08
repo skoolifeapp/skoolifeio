@@ -92,7 +92,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between w-full">
               <div className="text-left">
-                <Label className="text-base">As-tu des activités régulières ?</Label>
+                <Label className="text-base">As-tu des activités régulières ? ({activities.length})</Label>
                 <p className="text-xs text-muted-foreground">Sport, assos, cours, projets perso...</p>
               </div>
               <div className="flex items-center gap-2">

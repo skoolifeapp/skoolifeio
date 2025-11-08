@@ -148,7 +148,7 @@ export const RoutineTab = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">Moments réguliers importants</Label>
+                  <Label className="text-base">Moments réguliers importants ({routineMoments.length})</Label>
                   <p className="text-xs text-muted-foreground">Famille, couple, religion, etc.</p>
                 </div>
                 <div className="flex items-center gap-2">
