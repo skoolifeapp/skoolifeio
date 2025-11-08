@@ -457,21 +457,22 @@ const Planning = () => {
       </div>
 
       {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[116px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
-        <div className="relative pt-2">
+      <div className="flex-1 overflow-auto pt-[140px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
+        <div className="relative">
           {/* Exams Section - Above the time grid */}
           {dayExams.length > 0 && (
-            <div className="mb-3 space-y-1.5 px-2">
+            <div className="mb-4 space-y-2 px-2 py-3">
               {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
                 <div
                   key={exam.id}
-                  className="bg-primary/5 border-l-2 border-primary/40 rounded px-2 py-1.5 flex items-center gap-1.5"
+                  className="bg-primary/10 border-l-4 border-primary rounded px-3 py-2 flex items-center gap-2"
                 >
-                  <span className="text-xs">📚</span>
-                  <span className="text-xs font-medium truncate">{exam.subject}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">P: {exam.priority}</span>
+                  <span className="text-sm">📚</span>
+                  <span className="text-sm font-semibold truncate">{exam.subject}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">Priorité: {exam.priority}</span>
                 </div>
               ))}
+              <div className="h-px bg-border mt-4" />
             </div>
           )}
 
