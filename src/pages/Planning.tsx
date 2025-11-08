@@ -61,6 +61,7 @@ const Planning = () => {
     selectedDate?: Date;
   } | null>(null);
   const [recurrenceChoice, setRecurrenceChoice] = useState<'this' | 'all'>('this');
+  const [eventExceptions, setEventExceptions] = useState<any[]>([]);
 
   useEffect(() => {
     // Check if running on native platform
@@ -68,9 +69,26 @@ const Planning = () => {
     
     if (user) {
       loadCalendarEvents();
+      loadEventExceptions();
       checkNotificationStatus();
     }
   }, [user]);
+
+  const loadEventExceptions = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('event_exceptions')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading event exceptions:', error);
+      return;
+    }
+
+    setEventExceptions(data || []);
+  };
 
   const loadCalendarEvents = async () => {
     if (!user) return;
@@ -316,11 +334,41 @@ const Planning = () => {
     isSameDay(new Date(session.start_time), selectedDate)
   );
 
-  // Get work schedules for selected day
+  // Get work schedules for selected day, en excluant les exceptions
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
-  const dayWorkSchedules = (workSchedules || []).filter(schedule => 
-    schedule.days.includes(selectedDayName)
-  );
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+  
+  const dayWorkSchedules = (workSchedules || [])
+    .filter(schedule => schedule.days.includes(selectedDayName))
+    .filter(schedule => {
+      // Vérifier si cette occurrence a une exception "deleted"
+      const hasException = eventExceptions.some(
+        exc => exc.source_type === 'work_schedule' 
+          && exc.source_id === schedule.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'deleted'
+      );
+      return !hasException;
+    })
+    .map(schedule => {
+      // Vérifier si cette occurrence a une exception "modified"
+      const exception = eventExceptions.find(
+        exc => exc.source_type === 'work_schedule' 
+          && exc.source_id === schedule.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'modified'
+      );
+      
+      // Si une exception existe, utiliser les données modifiées
+      if (exception && exception.modified_data) {
+        return {
+          ...schedule,
+          ...exception.modified_data
+        };
+      }
+      
+      return schedule;
+    });
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
@@ -383,29 +431,29 @@ const Planning = () => {
       } else if (editingEvent.type === 'work') {
         // Si c'est récurrent et qu'on modifie seulement cette occurrence
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          // Créer un événement calendar_events pour cette occurrence spécifique
-          const [startHours, startMinutes] = editingEvent.data.start_time.split(':').map(Number);
-          const [endHours, endMinutes] = editingEvent.data.end_time.split(':').map(Number);
+          // Créer une exception de type "modified"
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
           
-          const startDate = new Date(editingEvent.selectedDate);
-          startDate.setHours(startHours, startMinutes, 0, 0);
-          
-          const endDate = new Date(editingEvent.selectedDate);
-          endDate.setHours(endHours, endMinutes, 0, 0);
-
           const { error } = await supabase
-            .from('calendar_events')
-            .insert({
+            .from('event_exceptions')
+            .upsert({
               user_id: user.id,
-              summary: editingEvent.data.title || 'Travail',
-              start_date: startDate.toISOString(),
-              end_date: endDate.toISOString(),
-              location: editingEvent.data.location,
-              description: `Modifié depuis: ${editingEvent.data.title || 'Travail'}`,
+              source_type: 'work_schedule',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'modified',
+              modified_data: {
+                title: editingEvent.data.title,
+                start_time: editingEvent.data.start_time,
+                end_time: editingEvent.data.end_time,
+                location: editingEvent.data.location,
+              }
+            }, {
+              onConflict: 'user_id,source_type,source_id,exception_date'
             });
 
           if (error) throw error;
-          await loadCalendarEvents();
+          await loadEventExceptions();
         } else {
           // Modifier toutes les occurrences
           const { error } = await supabase

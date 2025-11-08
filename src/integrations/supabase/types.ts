@@ -89,6 +89,42 @@ export type Database = {
         }
         Relationships: []
       }
+      event_exceptions: {
+        Row: {
+          created_at: string
+          exception_date: string
+          exception_type: string
+          id: string
+          modified_data: Json | null
+          source_id: string
+          source_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exception_date: string
+          exception_type: string
+          id?: string
+          modified_data?: Json | null
+          source_id: string
+          source_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exception_date?: string
+          exception_type?: string
+          id?: string
+          modified_data?: Json | null
+          source_id?: string
+          source_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           coefficient: number | null
