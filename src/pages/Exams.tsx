@@ -417,10 +417,10 @@ const Exams = () => {
             </div>
 
             <div>
-              <Label htmlFor="date">Date & heure *</Label>
+              <Label htmlFor="date">Date de l'examen *</Label>
               <Input
                 id="date"
-                type="datetime-local"
+                type="date"
                 value={newExam.date}
                 onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
                 className="mt-1.5"
