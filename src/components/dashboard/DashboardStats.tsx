@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, BookOpen, Clock, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useData } from "@/contexts/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Stat {
@@ -13,34 +14,26 @@ interface Stat {
 
 export const DashboardStats = () => {
   const { user } = useAuth();
+  const { exams, revisionSessions } = useData();
   const [upcomingExams, setUpcomingExams] = useState(0);
   const [plannedHours, setPlannedHours] = useState("0h");
   const [weekSessions, setWeekSessions] = useState(0);
   const [completionRate, setCompletionRate] = useState("0%");
 
+  // Recalculer les stats à chaque changement de données
   useEffect(() => {
     if (!user) return;
 
     const loadStats = async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      // Get upcoming exams count
-      const { data: examsData } = await supabase
-        .from('exams')
-        .select('id')
-        .eq('user_id', user.id)
-        .gte('date', today);
-      
-      setUpcomingExams(examsData?.length || 0);
+      // Get upcoming exams count depuis DataContext
+      const upcomingCount = (exams || []).filter(exam => exam.date >= today).length;
+      setUpcomingExams(upcomingCount);
 
-      // Get total planned hours from revision sessions
-      const { data: revisionsData } = await supabase
-        .from('revision_sessions')
-        .select('start_time, end_time')
-        .eq('user_id', user.id);
-      
-      if (revisionsData) {
-        const totalMinutes = revisionsData.reduce((acc, session) => {
+      // Get total planned hours from revision sessions depuis DataContext
+      if (revisionSessions) {
+        const totalMinutes = revisionSessions.reduce((acc, session) => {
           const start = new Date(session.start_time);
           const end = new Date(session.end_time);
           const minutes = (end.getTime() - start.getTime()) / (1000 * 60);
@@ -77,7 +70,7 @@ export const DashboardStats = () => {
     };
 
     loadStats();
-  }, [user]);
+  }, [user, exams, revisionSessions]);
 
   const stats: Stat[] = [
     {
