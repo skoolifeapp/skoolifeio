@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -41,6 +42,10 @@ export const WorkTab = ({
   const [isAlternanceDialogOpen, setIsAlternanceDialogOpen] = useState(false);
   const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
   const [isOtherDialogOpen, setIsOtherDialogOpen] = useState(false);
+  
+  const [isAlternanceOpen, setIsAlternanceOpen] = useState(false);
+  const [isJobOpen, setIsJobOpen] = useState(false);
+  const [isOtherOpen, setIsOtherOpen] = useState(false);
 
   const [newAlternance, setNewAlternance] = useState<Partial<WorkSchedule>>({
     days: [],
@@ -152,26 +157,35 @@ export const WorkTab = ({
       {/* Alternance */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base">As-tu une alternance ?</Label>
-              <p className="text-xs text-muted-foreground">École + entreprise</p>
-            </div>
-            <Button 
-              onClick={() => setIsAlternanceDialogOpen(true)}
-              size="icon" 
-              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Collapsible open={isAlternanceOpen} onOpenChange={setIsAlternanceOpen}>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="text-left">
+                  <Label className="text-base">As-tu une alternance ?</Label>
+                  <p className="text-xs text-muted-foreground">École + entreprise</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAlternanceDialogOpen(true);
+                    }}
+                    size="icon" 
+                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAlternanceOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+            </CollapsibleTrigger>
 
-          {alternanceSchedules.length > 0 && (
-            <div className="space-y-4 pt-4 border-t">
-              {alternanceSchedules.map((schedule, idx) => {
-                const globalIdx = workSchedules.indexOf(schedule);
-                return (
-                  <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+            {alternanceSchedules.length > 0 && (
+              <CollapsibleContent className="space-y-4 pt-4 border-t animate-accordion-down">
+                {alternanceSchedules.map((schedule, idx) => {
+                  const globalIdx = workSchedules.indexOf(schedule);
+                  return (
+                    <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
                     <div>
                       <Label className="text-sm">Jours travaillés</Label>
                       <div className="flex gap-1 mt-2">
@@ -252,34 +266,44 @@ export const WorkTab = ({
                   </div>
                 );
               })}
-            </div>
-          )}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </CardContent>
       </Card>
 
       {/* Job étudiant */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base">As-tu un job étudiant ?</Label>
-              <p className="text-xs text-muted-foreground">En parallèle de tes études</p>
-            </div>
-            <Button 
-              onClick={() => setIsJobDialogOpen(true)}
-              size="icon" 
-              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Collapsible open={isJobOpen} onOpenChange={setIsJobOpen}>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="text-left">
+                  <Label className="text-base">As-tu un job étudiant ?</Label>
+                  <p className="text-xs text-muted-foreground">En parallèle de tes études</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsJobDialogOpen(true);
+                    }}
+                    size="icon" 
+                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isJobOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+            </CollapsibleTrigger>
 
-          {jobSchedules.length > 0 && (
-            <div className="space-y-4 pt-4 border-t">
-              {jobSchedules.map((schedule, idx) => {
-                const globalIdx = workSchedules.indexOf(schedule);
-                return (
-                  <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+            {jobSchedules.length > 0 && (
+              <CollapsibleContent className="space-y-4 pt-4 border-t animate-accordion-down">
+                {jobSchedules.map((schedule, idx) => {
+                  const globalIdx = workSchedules.indexOf(schedule);
+                  return (
+                    <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
                     <div>
                       <Label className="text-sm">Jours</Label>
                       <div className="flex gap-1 mt-2">
@@ -355,31 +379,43 @@ export const WorkTab = ({
                   </div>
                 );
               })}
-            </div>
-          )}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </CardContent>
       </Card>
 
       {/* Autres engagements */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-base">Autres engagements réguliers</Label>
-            <Button 
-              onClick={() => setIsOtherDialogOpen(true)}
-              size="icon" 
-              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Collapsible open={isOtherOpen} onOpenChange={setIsOtherOpen}>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="text-left">
+                  <Label className="text-base">Autres engagements réguliers</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsOtherDialogOpen(true);
+                    }}
+                    size="icon" 
+                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOtherOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+            </CollapsibleTrigger>
 
-          {otherSchedules.length > 0 && (
-            <div className="space-y-3">
-              {otherSchedules.map((schedule, idx) => {
-                const globalIdx = workSchedules.indexOf(schedule);
-                return (
-                  <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+            {otherSchedules.length > 0 && (
+              <CollapsibleContent className="space-y-3 animate-accordion-down">
+                {otherSchedules.map((schedule, idx) => {
+                  const globalIdx = workSchedules.indexOf(schedule);
+                  return (
+                    <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
                     <div>
                       <Label className="text-sm">Nom</Label>
                       <Input
@@ -442,8 +478,9 @@ export const WorkTab = ({
                   </div>
                 );
               })}
-            </div>
-          )}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </CardContent>
       </Card>
     </div>

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -51,6 +52,7 @@ export const RoutineTab = ({
   onRoutineMomentsChange,
 }: RoutineTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMomentsOpen, setIsMomentsOpen] = useState(false);
   const [newMoment, setNewMoment] = useState<Partial<RoutineMoment>>({
     title: '',
     days: [],
@@ -142,24 +144,33 @@ export const RoutineTab = ({
       {/* Moments réguliers importants */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-base">Moments réguliers importants</Label>
-              <p className="text-xs text-muted-foreground">Famille, couple, religion, etc.</p>
-            </div>
-            <Button 
-              onClick={() => setIsDialogOpen(true)}
-              size="icon" 
-              className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Collapsible open={isMomentsOpen} onOpenChange={setIsMomentsOpen}>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="text-left">
+                  <Label className="text-base">Moments réguliers importants</Label>
+                  <p className="text-xs text-muted-foreground">Famille, couple, religion, etc.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDialogOpen(true);
+                    }}
+                    size="icon" 
+                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isMomentsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+            </CollapsibleTrigger>
 
-          {routineMoments.length > 0 && (
-            <div className="space-y-3">
-              {routineMoments.map((moment, index) => (
-                <div key={index} className="space-y-3 p-4 border rounded-lg">
+            {routineMoments.length > 0 && (
+              <CollapsibleContent className="space-y-3 animate-accordion-down">
+                {routineMoments.map((moment, index) => (
+                  <div key={index} className="space-y-3 p-4 border rounded-lg">
                   <div>
                     <Label className="text-sm">Nom</Label>
                     <Input
@@ -221,8 +232,9 @@ export const RoutineTab = ({
                   </Button>
                 </div>
               ))}
-            </div>
-          )}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </CardContent>
       </Card>
 

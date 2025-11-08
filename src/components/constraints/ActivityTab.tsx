@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -34,6 +35,7 @@ interface ActivityTabProps {
 
 export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isActivitiesOpen, setIsActivitiesOpen] = useState(false);
   const [newActivity, setNewActivity] = useState<Partial<Activity>>({
     type: 'sport',
     title: '',
@@ -86,28 +88,33 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
     <>
     <Card>
       <CardContent className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-base">As-tu des activités régulières ?</Label>
-            <p className="text-xs text-muted-foreground">Sport, assos, cours, projets perso...</p>
-          </div>
-          <Button 
-            onClick={() => setIsDialogOpen(true)}
-            size="icon" 
-            className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        <Collapsible open={isActivitiesOpen} onOpenChange={setIsActivitiesOpen}>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between w-full">
+              <div className="text-left">
+                <Label className="text-base">As-tu des activités régulières ?</Label>
+                <p className="text-xs text-muted-foreground">Sport, assos, cours, projets perso...</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDialogOpen(true);
+                  }}
+                  size="icon" 
+                  className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isActivitiesOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </CollapsibleTrigger>
 
-        {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Aucune activité ajoutée
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {activities.map((activity, index) => (
-              <div key={index} className="space-y-3 p-4 border rounded-lg">
+          {activities.length > 0 && (
+            <CollapsibleContent className="space-y-3 animate-accordion-down">
+              {activities.map((activity, index) => (
+                <div key={index} className="space-y-3 p-4 border rounded-lg">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-sm">Type</Label>
@@ -200,8 +207,9 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
                 </Button>
               </div>
             ))}
-          </div>
-        )}
+            </CollapsibleContent>
+          )}
+        </Collapsible>
       </CardContent>
     </Card>
 
