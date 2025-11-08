@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -47,23 +47,54 @@ const Constraints = () => {
   
   const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
   
-  // Work data - initialisé depuis DataContext
-  const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>(dataWorkSchedules || []);
+  // Work data
+  const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
   
-  // Activity data - initialisé depuis DataContext
-  const [activities, setActivities] = useState<Activity[]>(dataActivities || []);
+  // Activity data
+  const [activities, setActivities] = useState<Activity[]>([]);
   
-  // Routine data - initialisé depuis DataContext
-  const [wakeUpTime, setWakeUpTime] = useState(constraintsProfile?.wake_up_time || '07:00');
-  const [noStudyAfter, setNoStudyAfter] = useState(constraintsProfile?.no_study_after || '22:00');
-  const [sleepHoursNeeded, setSleepHoursNeeded] = useState(constraintsProfile?.sleep_hours_needed || 8);
-  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(constraintsProfile?.min_personal_time_per_week || 5);
-  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>(dataRoutineMoments || []);
+  // Routine data
+  const [wakeUpTime, setWakeUpTime] = useState('07:00');
+  const [noStudyAfter, setNoStudyAfter] = useState('22:00');
+  const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
+  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
+  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
   
-  // Commute data - initialisé depuis DataContext
-  const [commuteHomeSchool, setCommuteHomeSchool] = useState(constraintsProfile?.commute_home_school || 0);
-  const [commuteHomeJob, setCommuteHomeJob] = useState(constraintsProfile?.commute_home_job || 0);
-  const [commuteHomeActivity, setCommuteHomeActivity] = useState(constraintsProfile?.commute_home_activity || 0);
+  // Commute data
+  const [commuteHomeSchool, setCommuteHomeSchool] = useState(0);
+  const [commuteHomeJob, setCommuteHomeJob] = useState(0);
+  const [commuteHomeActivity, setCommuteHomeActivity] = useState(0);
+
+  // Synchroniser les états locaux avec les données du DataContext
+  useEffect(() => {
+    if (dataWorkSchedules) {
+      setWorkSchedules(dataWorkSchedules);
+    }
+  }, [dataWorkSchedules]);
+
+  useEffect(() => {
+    if (dataActivities) {
+      setActivities(dataActivities);
+    }
+  }, [dataActivities]);
+
+  useEffect(() => {
+    if (dataRoutineMoments) {
+      setRoutineMoments(dataRoutineMoments);
+    }
+  }, [dataRoutineMoments]);
+
+  useEffect(() => {
+    if (constraintsProfile) {
+      setWakeUpTime(constraintsProfile.wake_up_time || '07:00');
+      setNoStudyAfter(constraintsProfile.no_study_after || '22:00');
+      setSleepHoursNeeded(constraintsProfile.sleep_hours_needed || 8);
+      setMinPersonalTimePerWeek(constraintsProfile.min_personal_time_per_week || 5);
+      setCommuteHomeSchool(constraintsProfile.commute_home_school || 0);
+      setCommuteHomeJob(constraintsProfile.commute_home_job || 0);
+      setCommuteHomeActivity(constraintsProfile.commute_home_activity || 0);
+    }
+  }, [constraintsProfile]);
 
 
   const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
