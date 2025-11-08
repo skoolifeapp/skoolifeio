@@ -71,8 +71,23 @@ const Planning = () => {
       loadCalendarEvents();
       loadEventExceptions();
       checkNotificationStatus();
+      cleanCancelledEvents();
     }
   }, [user]);
+
+  const cleanCancelledEvents = async () => {
+    if (!user) return;
+    
+    // Nettoyer les anciens événements "Annulé"
+    const { error } = await supabase
+      .from('calendar_events')
+      .delete()
+      .or('summary.ilike.%Annulé%,summary.ilike.%❌%');
+    
+    if (error) {
+      console.error('Error cleaning cancelled events:', error);
+    }
+  };
 
   const loadEventExceptions = async () => {
     if (!user) return;
