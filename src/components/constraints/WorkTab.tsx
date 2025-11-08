@@ -393,6 +393,7 @@ export const WorkTab = ({
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
                   <Label className="text-base">Autres engagements réguliers</Label>
+                  <p className="text-xs text-muted-foreground">Stage, mission, projet...</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
