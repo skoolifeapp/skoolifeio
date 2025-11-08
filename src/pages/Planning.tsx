@@ -457,11 +457,11 @@ const Planning = () => {
       </div>
 
       {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[120px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
-        <div className="relative">
+      <div className="flex-1 overflow-auto pt-[116px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
+        <div className="relative pt-2">
           {/* Exams Section - Above the time grid */}
           {dayExams.length > 0 && (
-            <div className="mb-4 space-y-1.5 px-2">
+            <div className="mb-3 space-y-1.5 px-2">
               {dayExams.map((exam: { id: string; subject: string; priority: string }) => (
                 <div
                   key={exam.id}
