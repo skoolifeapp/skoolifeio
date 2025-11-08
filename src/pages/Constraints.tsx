@@ -114,13 +114,44 @@ const Constraints = () => {
   const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
     if (!user) return;
     try {
-      await supabase.from('work_schedules').delete().eq('user_id', user.id);
-      if (schedules.length > 0) {
-        await supabase.from('work_schedules').insert(
-          schedules.map(s => ({ ...s, user_id: user.id, id: undefined }))
-        );
+      console.log("Saving work schedules:", schedules);
+      
+      // Delete existing schedules
+      const { error: deleteError } = await supabase
+        .from('work_schedules')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
       }
-      console.log("Work schedules saved");
+      
+      // Insert new schedules if any
+      if (schedules.length > 0) {
+        const dataToInsert = schedules.map(s => ({ 
+          ...s, 
+          user_id: user.id, 
+          id: undefined 
+        }));
+        
+        console.log("Data to insert:", dataToInsert);
+        
+        const { data, error: insertError } = await supabase
+          .from('work_schedules')
+          .insert(dataToInsert)
+          .select();
+        
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
+        
+        console.log("Insert success, data:", data);
+      }
+      
+      console.log("Work schedules saved successfully");
+      toast.success("Contrainte de travail enregistrée");
     } catch (error) {
       console.error('Error saving work schedules:', error);
       toast.error("Erreur lors de l'enregistrement du travail");
@@ -130,13 +161,25 @@ const Constraints = () => {
   const saveActivities = async (acts: Activity[]) => {
     if (!user) return;
     try {
-      await supabase.from('activities').delete().eq('user_id', user.id);
+      console.log("Saving activities:", acts);
+      
+      const { error: deleteError } = await supabase
+        .from('activities')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) throw deleteError;
+      
       if (acts.length > 0) {
-        await supabase.from('activities').insert(
-          acts.map(a => ({ ...a, user_id: user.id, id: undefined }))
-        );
+        const { error: insertError } = await supabase
+          .from('activities')
+          .insert(acts.map(a => ({ ...a, user_id: user.id, id: undefined })));
+        
+        if (insertError) throw insertError;
       }
-      console.log("Activities saved");
+      
+      console.log("Activities saved successfully");
+      toast.success("Activité enregistrée");
     } catch (error) {
       console.error('Error saving activities:', error);
       toast.error("Erreur lors de l'enregistrement des activités");
@@ -146,13 +189,25 @@ const Constraints = () => {
   const saveRoutineMoments = async (moments: RoutineMoment[]) => {
     if (!user) return;
     try {
-      await supabase.from('routine_moments').delete().eq('user_id', user.id);
+      console.log("Saving routine moments:", moments);
+      
+      const { error: deleteError } = await supabase
+        .from('routine_moments')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) throw deleteError;
+      
       if (moments.length > 0) {
-        await supabase.from('routine_moments').insert(
-          moments.map(m => ({ ...m, user_id: user.id, id: undefined }))
-        );
+        const { error: insertError } = await supabase
+          .from('routine_moments')
+          .insert(moments.map(m => ({ ...m, user_id: user.id, id: undefined })));
+        
+        if (insertError) throw insertError;
       }
-      console.log("Routine moments saved");
+      
+      console.log("Routine moments saved successfully");
+      toast.success("Routine enregistrée");
     } catch (error) {
       console.error('Error saving routine moments:', error);
       toast.error("Erreur lors de l'enregistrement de la routine");
