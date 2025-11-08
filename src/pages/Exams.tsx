@@ -466,57 +466,20 @@ const Exams = () => {
             </div>
 
             <div>
-              <Label htmlFor="location">Lieu</Label>
-              <Input
-                id="location"
-                placeholder="Ex: Amphi A, Salle 204..."
-                value={newExam.location}
-                onChange={(e) => setNewExam({ ...newExam, location: e.target.value })}
-                className="mt-1.5"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="coefficient">Coefficient</Label>
-                <Input
-                  id="coefficient"
-                  type="number"
-                  step="0.5"
-                  placeholder="Ex: 2"
-                  value={newExam.coefficient}
-                  onChange={(e) => setNewExam({ ...newExam, coefficient: e.target.value })}
-                  className="mt-1.5"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="difficulty">Difficulté</Label>
-                <Select
-                  value={newExam.difficulty}
-                  onValueChange={(value) => setNewExam({ ...newExam, difficulty: value })}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="facile">😊 Facile</SelectItem>
-                    <SelectItem value="moyen">😐 Moyen</SelectItem>
-                    <SelectItem value="difficile">😰 Difficile</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="notes">Notes personnelles</Label>
-              <Textarea
-                id="notes"
-                placeholder="Chapitres, sujets importants, conseils..."
-                value={newExam.notes}
-                onChange={(e) => setNewExam({ ...newExam, notes: e.target.value })}
-                className="mt-1.5 min-h-[100px]"
-              />
+              <Label htmlFor="difficulty">Difficulté</Label>
+              <Select
+                value={newExam.difficulty}
+                onValueChange={(value) => setNewExam({ ...newExam, difficulty: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="facile">😊 Facile</SelectItem>
+                  <SelectItem value="moyen">😐 Moyen</SelectItem>
+                  <SelectItem value="difficile">😰 Difficile</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Button onClick={handleAddExam} className="w-full" size="lg">
