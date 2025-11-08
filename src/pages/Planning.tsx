@@ -55,7 +55,7 @@ const Planning = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [editingEvent, setEditingEvent] = useState<{
-    type: 'calendar' | 'revision' | 'work';
+    type: 'calendar' | 'revision' | 'work' | 'exam';
     data: any;
   } | null>(null);
 
@@ -377,6 +377,31 @@ const Planning = () => {
 
         if (error) throw error;
         await loadRevisionSessions();
+      } else if (editingEvent.type === 'work') {
+        const { error } = await supabase
+          .from('work_schedules')
+          .update({
+            title: editingEvent.data.title,
+            start_time: editingEvent.data.start_time,
+            end_time: editingEvent.data.end_time,
+            location: editingEvent.data.location,
+          })
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+      } else if (editingEvent.type === 'exam') {
+        const { error } = await supabase
+          .from('exams')
+          .update({
+            subject: editingEvent.data.subject,
+            date: editingEvent.data.date,
+            type: editingEvent.data.type,
+            location: editingEvent.data.location,
+          })
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadDayExams();
       }
 
       refetchAll();
@@ -523,13 +548,20 @@ const Planning = () => {
           {/* Exams Section - Above the time grid */}
           {dayExams.length > 0 && (
             <div className="mb-4 space-y-2 px-2 py-3">
-              {dayExams.map((exam: { id: string; subject: string }) => (
+              {dayExams.map((exam: { id: string; subject: string; type: string; location: string; date: string }) => (
                 <div
                   key={exam.id}
-                  className="bg-primary/10 border-l-4 border-primary rounded px-3 py-2 flex items-center gap-2"
+                  className="bg-primary/10 border-l-4 border-primary rounded px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-primary/20 transition-colors"
+                  onClick={() => {
+                    setEditingEvent({
+                      type: 'exam',
+                      data: { ...exam }
+                    });
+                  }}
                 >
                   <span className="text-sm">📚</span>
                   <span className="text-sm font-semibold truncate">{exam.subject}</span>
+                  {exam.type && <span className="text-xs text-muted-foreground">({exam.type})</span>}
                 </div>
               ))}
             </div>
@@ -632,9 +664,14 @@ const Planning = () => {
                       return (
                         <div
                           key={`work-${schedule.id}-${index}`}
-                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-not-allowed"
+                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-pointer hover:opacity-90 transition-opacity"
                           style={style}
-                          title="Les horaires de travail ne peuvent pas être modifiés ici"
+                          onClick={() => {
+                            setEditingEvent({
+                              type: 'work',
+                              data: { ...schedule }
+                            });
+                          }}
                         >
                           <div className="text-xs font-semibold truncate">
                             {typeEmoji} {schedule.title || 'Travail'}
@@ -726,6 +763,8 @@ const Planning = () => {
             <DrawerTitle>
               {editingEvent?.type === 'calendar' && 'Modifier l\'événement'}
               {editingEvent?.type === 'revision' && 'Modifier la session de révision'}
+              {editingEvent?.type === 'work' && 'Modifier l\'horaire de travail'}
+              {editingEvent?.type === 'exam' && 'Modifier l\'examen'}
             </DrawerTitle>
             <DrawerDescription>
               Modifie les informations de cet événement
@@ -824,6 +863,109 @@ const Planning = () => {
                       })}
                     />
                   </div>
+                </div>
+              </>
+            )}
+
+            {editingEvent?.type === 'work' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-work-title">Titre</Label>
+                  <Input
+                    id="edit-work-title"
+                    value={editingEvent.data.title || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, title: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="edit-work-start">Début</Label>
+                    <Input
+                      id="edit-work-start"
+                      type="time"
+                      value={editingEvent.data.start_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, start_time: e.target.value }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-work-end">Fin</Label>
+                    <Input
+                      id="edit-work-end"
+                      type="time"
+                      value={editingEvent.data.end_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, end_time: e.target.value }
+                      })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-work-location">Lieu</Label>
+                  <Input
+                    id="edit-work-location"
+                    value={editingEvent.data.location || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, location: e.target.value }
+                    })}
+                  />
+                </div>
+              </>
+            )}
+
+            {editingEvent?.type === 'exam' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-exam-subject">Matière</Label>
+                  <Input
+                    id="edit-exam-subject"
+                    value={editingEvent.data.subject || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, subject: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-exam-date">Date</Label>
+                  <Input
+                    id="edit-exam-date"
+                    type="date"
+                    value={editingEvent.data.date || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, date: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-exam-type">Type</Label>
+                  <Input
+                    id="edit-exam-type"
+                    value={editingEvent.data.type || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, type: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-exam-location">Lieu</Label>
+                  <Input
+                    id="edit-exam-location"
+                    value={editingEvent.data.location || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, location: e.target.value }
+                    })}
+                  />
                 </div>
               </>
             )}
