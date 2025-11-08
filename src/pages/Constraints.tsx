@@ -42,7 +42,8 @@ const Constraints = () => {
     constraintsProfile, 
     workSchedules: dataWorkSchedules, 
     activities: dataActivities, 
-    routineMoments: dataRoutineMoments 
+    routineMoments: dataRoutineMoments,
+    refetchAll
   } = useData();
   
   const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
@@ -136,7 +137,8 @@ const Constraints = () => {
         }
       }
       
-      
+      // Recharger les données depuis Supabase
+      refetchAll();
     } catch (error) {
       console.error('Error saving work schedules:', error);
       toast.error("Erreur lors de l'enregistrement du travail");
@@ -179,7 +181,8 @@ const Constraints = () => {
         }
       }
       
-      
+      // Recharger les données depuis Supabase
+      refetchAll();
     } catch (error) {
       console.error('Error saving activities:', error);
       toast.error("Erreur lors de l'enregistrement des activités");
@@ -220,7 +223,8 @@ const Constraints = () => {
         }
       }
       
-      
+      // Recharger les données depuis Supabase
+      refetchAll();
     } catch (error) {
       console.error('Error saving routine moments:', error);
       toast.error("Erreur lors de l'enregistrement de la routine");
@@ -251,7 +255,8 @@ const Constraints = () => {
         return;
       }
       
-      
+      // Recharger les données depuis Supabase
+      refetchAll();
     } catch (error) {
       console.error('Error saving profile:', error);
       toast.error("Erreur lors de l'enregistrement du profil");
