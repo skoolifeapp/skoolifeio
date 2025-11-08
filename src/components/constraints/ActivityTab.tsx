@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -31,6 +33,8 @@ interface ActivityTabProps {
 }
 
 export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const addActivity = () => {
     const newActivity: Activity = {
       type: 'sport',
@@ -41,6 +45,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
       location: '',
     };
     onActivitiesChange([...activities, newActivity]);
+    setIsDialogOpen(false);
   };
 
   const updateActivity = (index: number, updates: Partial<Activity>) => {
@@ -69,10 +74,26 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
             <Label className="text-base">As-tu des activités régulières ?</Label>
             <p className="text-xs text-muted-foreground">Sport, assos, cours, projets perso...</p>
           </div>
-          <Button onClick={addActivity} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Ajouter une activité</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Une activité sera ajoutée. Tu pourras ensuite la configurer ci-dessous.
+                </p>
+                <Button onClick={addActivity} className="w-full">
+                  Confirmer
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {activities.length === 0 ? (

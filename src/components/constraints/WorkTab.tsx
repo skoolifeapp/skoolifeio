@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -31,22 +30,17 @@ interface WorkSchedule {
 }
 
 interface WorkTabProps {
-  hasAlternance: boolean;
-  hasJob: boolean;
-  onAlternanceChange: (value: boolean) => void;
-  onJobChange: (value: boolean) => void;
   workSchedules: WorkSchedule[];
   onWorkSchedulesChange: (schedules: WorkSchedule[]) => void;
 }
 
 export const WorkTab = ({
-  hasAlternance,
-  hasJob,
-  onAlternanceChange,
-  onJobChange,
   workSchedules,
   onWorkSchedulesChange,
 }: WorkTabProps) => {
+  const [isAlternanceDialogOpen, setIsAlternanceDialogOpen] = useState(false);
+  const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
+  const [isOtherDialogOpen, setIsOtherDialogOpen] = useState(false);
   const alternanceSchedules = workSchedules.filter(s => s.type === 'alternance');
   const jobSchedules = workSchedules.filter(s => s.type === 'job');
   const otherSchedules = workSchedules.filter(s => s.type === 'other');
@@ -62,6 +56,10 @@ export const WorkTab = ({
       ...(type === 'job' && { hours_per_week: 0 }),
     };
     onWorkSchedulesChange([...workSchedules, newSchedule]);
+    
+    if (type === 'alternance') setIsAlternanceDialogOpen(false);
+    else if (type === 'job') setIsJobDialogOpen(false);
+    else setIsOtherDialogOpen(false);
   };
 
   const updateSchedule = (index: number, updates: Partial<WorkSchedule>) => {
@@ -92,10 +90,29 @@ export const WorkTab = ({
               <Label className="text-base">As-tu une alternance ?</Label>
               <p className="text-xs text-muted-foreground">École + entreprise</p>
             </div>
-            <Switch checked={hasAlternance} onCheckedChange={onAlternanceChange} />
+            <Dialog open={isAlternanceDialogOpen} onOpenChange={setIsAlternanceDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter une alternance</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Une alternance sera ajoutée. Tu pourras ensuite la configurer ci-dessous.
+                  </p>
+                  <Button onClick={() => addSchedule('alternance')} className="w-full">
+                    Confirmer
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
-          {hasAlternance && (
+          {alternanceSchedules.length > 0 && (
             <div className="space-y-4 pt-4 border-t">
               {alternanceSchedules.map((schedule, idx) => {
                 const globalIdx = workSchedules.indexOf(schedule);
@@ -181,16 +198,6 @@ export const WorkTab = ({
                   </div>
                 );
               })}
-
-              <Button
-                onClick={() => addSchedule('alternance')}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un planning d'alternance
-              </Button>
             </div>
           )}
         </CardContent>
@@ -204,10 +211,29 @@ export const WorkTab = ({
               <Label className="text-base">As-tu un job étudiant ?</Label>
               <p className="text-xs text-muted-foreground">En parallèle de tes études</p>
             </div>
-            <Switch checked={hasJob} onCheckedChange={onJobChange} />
+            <Dialog open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un job étudiant</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Un job étudiant sera ajouté. Tu pourras ensuite le configurer ci-dessous.
+                  </p>
+                  <Button onClick={() => addSchedule('job')} className="w-full">
+                    Confirmer
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
-          {hasJob && (
+          {jobSchedules.length > 0 && (
             <div className="space-y-4 pt-4 border-t">
               {jobSchedules.map((schedule, idx) => {
                 const globalIdx = workSchedules.indexOf(schedule);
@@ -288,16 +314,6 @@ export const WorkTab = ({
                   </div>
                 );
               })}
-
-              <Button
-                onClick={() => addSchedule('job')}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un job
-              </Button>
             </div>
           )}
         </CardContent>
@@ -308,10 +324,26 @@ export const WorkTab = ({
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-base">Autres engagements réguliers</Label>
-            <Button onClick={() => addSchedule('other')} variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter
-            </Button>
+            <Dialog open={isOtherDialogOpen} onOpenChange={setIsOtherDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un engagement</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Un engagement sera ajouté. Tu pourras ensuite le configurer ci-dessous.
+                  </p>
+                  <Button onClick={() => addSchedule('other')} className="w-full">
+                    Confirmer
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {otherSchedules.length > 0 && (

@@ -57,7 +57,6 @@ const Constraints = () => {
   const [noStudyAfter, setNoStudyAfter] = useState('22:00');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
-  const [otherConstraintsNotes, setOtherConstraintsNotes] = useState('');
   const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
   
   // Commute data
@@ -89,7 +88,6 @@ const Constraints = () => {
       setNoStudyAfter(profileData.no_study_after || '22:00');
       setSleepHoursNeeded(profileData.sleep_hours_needed || 8);
       setMinPersonalTimePerWeek(profileData.min_personal_time_per_week || 5);
-      setOtherConstraintsNotes(profileData.other_constraints_notes || '');
       setCommuteHomeSchool(profileData.commute_home_school || 0);
       setCommuteHomeJob(profileData.commute_home_job || 0);
       setCommuteHomeActivity(profileData.commute_home_activity || 0);
@@ -134,7 +132,6 @@ const Constraints = () => {
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
-          other_constraints_notes: otherConstraintsNotes,
           commute_home_school: commuteHomeSchool,
           commute_home_job: commuteHomeJob,
           commute_home_activity: commuteHomeActivity,
@@ -218,10 +215,6 @@ const Constraints = () => {
         {/* Tab content */}
         {activeTab === 'travail' && (
           <WorkTab
-            hasAlternance={hasAlternance}
-            hasJob={hasJob}
-            onAlternanceChange={setHasAlternance}
-            onJobChange={setHasJob}
             workSchedules={workSchedules}
             onWorkSchedulesChange={setWorkSchedules}
           />
@@ -237,13 +230,11 @@ const Constraints = () => {
             noStudyAfter={noStudyAfter}
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
-            otherConstraintsNotes={otherConstraintsNotes}
             routineMoments={routineMoments}
             onWakeUpTimeChange={setWakeUpTime}
             onNoStudyAfterChange={setNoStudyAfter}
             onSleepHoursNeededChange={setSleepHoursNeeded}
             onMinPersonalTimePerWeekChange={setMinPersonalTimePerWeek}
-            onOtherConstraintsNotesChange={setOtherConstraintsNotes}
             onRoutineMomentsChange={setRoutineMoments}
           />
         )}

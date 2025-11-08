@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -29,13 +30,11 @@ interface RoutineTabProps {
   noStudyAfter: string;
   sleepHoursNeeded: number;
   minPersonalTimePerWeek: number;
-  otherConstraintsNotes: string;
   routineMoments: RoutineMoment[];
   onWakeUpTimeChange: (value: string) => void;
   onNoStudyAfterChange: (value: string) => void;
   onSleepHoursNeededChange: (value: number) => void;
   onMinPersonalTimePerWeekChange: (value: number) => void;
-  onOtherConstraintsNotesChange: (value: string) => void;
   onRoutineMomentsChange: (moments: RoutineMoment[]) => void;
 }
 
@@ -44,15 +43,15 @@ export const RoutineTab = ({
   noStudyAfter,
   sleepHoursNeeded,
   minPersonalTimePerWeek,
-  otherConstraintsNotes,
   routineMoments,
   onWakeUpTimeChange,
   onNoStudyAfterChange,
   onSleepHoursNeededChange,
   onMinPersonalTimePerWeekChange,
-  onOtherConstraintsNotesChange,
   onRoutineMomentsChange,
 }: RoutineTabProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const addRoutineMoment = () => {
     const newMoment: RoutineMoment = {
       title: '',
@@ -61,6 +60,7 @@ export const RoutineTab = ({
       end_time: '13:00',
     };
     onRoutineMomentsChange([...routineMoments, newMoment]);
+    setIsDialogOpen(false);
   };
 
   const updateRoutineMoment = (index: number, updates: Partial<RoutineMoment>) => {
@@ -132,10 +132,26 @@ export const RoutineTab = ({
               <Label className="text-base">Moments réguliers importants</Label>
               <p className="text-xs text-muted-foreground">Famille, couple, religion, etc.</p>
             </div>
-            <Button onClick={addRoutineMoment} variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" className="rounded-full h-8 w-8 bg-yellow-500 hover:bg-yellow-600 text-white">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un moment important</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Un moment régulier sera ajouté. Tu pourras ensuite le configurer ci-dessous.
+                  </p>
+                  <Button onClick={addRoutineMoment} className="w-full">
+                    Confirmer
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {routineMoments.length > 0 && (
@@ -224,23 +240,6 @@ export const RoutineTab = ({
             <p className="text-xs text-muted-foreground mt-2">
               Pour souffler, voir des potes, sortir...
             </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Autres contraintes */}
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <div>
-            <Label className="text-base">Autres contraintes</Label>
-            <p className="text-xs text-muted-foreground mb-2">Tout ce qu'on devrait savoir d'autre</p>
-            <Textarea
-              value={otherConstraintsNotes}
-              onChange={(e) => onOtherConstraintsNotesChange(e.target.value)}
-              placeholder="Ex: Je dois m'occuper de mon petit frère le mercredi après-midi..."
-              rows={4}
-              className="resize-none"
-            />
           </div>
         </CardContent>
       </Card>
