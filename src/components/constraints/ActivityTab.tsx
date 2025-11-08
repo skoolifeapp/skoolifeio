@@ -112,7 +112,7 @@ export const ActivityTab = ({ activities, onActivitiesChange }: ActivityTabProps
           </CollapsibleTrigger>
 
           {activities.length > 0 && (
-            <CollapsibleContent className="space-y-3 animate-accordion-down">
+            <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
               {activities.map((activity, index) => (
                 <div key={index} className="space-y-3 p-4 border rounded-lg">
                 <div className="grid grid-cols-2 gap-3">

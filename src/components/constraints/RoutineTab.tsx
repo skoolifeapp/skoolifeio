@@ -168,7 +168,7 @@ export const RoutineTab = ({
             </CollapsibleTrigger>
 
             {routineMoments.length > 0 && (
-              <CollapsibleContent className="space-y-3 animate-accordion-down">
+              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
                 {routineMoments.map((moment, index) => (
                   <div key={index} className="space-y-3 p-4 border rounded-lg">
                   <div>

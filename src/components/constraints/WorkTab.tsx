@@ -181,7 +181,7 @@ export const WorkTab = ({
             </CollapsibleTrigger>
 
             {alternanceSchedules.length > 0 && (
-              <CollapsibleContent className="space-y-4 pt-4 border-t animate-accordion-down">
+              <CollapsibleContent className="space-y-4 pt-4 animate-accordion-down">
                 {alternanceSchedules.map((schedule, idx) => {
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
@@ -299,7 +299,7 @@ export const WorkTab = ({
             </CollapsibleTrigger>
 
             {jobSchedules.length > 0 && (
-              <CollapsibleContent className="space-y-4 pt-4 border-t animate-accordion-down">
+              <CollapsibleContent className="space-y-4 pt-4 animate-accordion-down">
                 {jobSchedules.map((schedule, idx) => {
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
