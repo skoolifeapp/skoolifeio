@@ -55,6 +55,7 @@ const DAYS = [
 const Constraints = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'rythme' | 'off' | 'autres'>('rythme');
   const [profile, setProfile] = useState<UserProfile>({
     is_alternant: false,
     has_student_job: false,
@@ -203,8 +204,29 @@ const Constraints = () => {
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Onglets */}
+        <div className="flex justify-center gap-2">
+          {[
+            { key: 'rythme', label: 'Rythme' },
+            { key: 'off', label: 'Off' },
+            { key: 'autres', label: 'Autres' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* Bloc 1 – Profil & rythme */}
+        {activeTab === 'rythme' && (
         <Card>
           <CardContent className="p-6 space-y-6">
             <div>
@@ -322,8 +344,10 @@ const Constraints = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Bloc 2 – Jours & plages protégées */}
+        {activeTab === 'off' && (
         <Card>
           <CardContent className="p-6 space-y-6">
             <div>
@@ -444,8 +468,10 @@ const Constraints = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Bloc 3 – Créneaux fixes */}
+        {activeTab === 'autres' && (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -553,6 +579,7 @@ const Constraints = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
       </div>
     </div>
