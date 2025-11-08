@@ -42,7 +42,7 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
-  const { refetchAll, workSchedules } = useData();
+  const { refetchAll, workSchedules, activities, routineMoments } = useData();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -55,7 +55,7 @@ const Planning = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [editingEvent, setEditingEvent] = useState<{
-    type: 'calendar' | 'revision' | 'work' | 'exam';
+    type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine';
     data: any;
     isRecurring?: boolean;
     selectedDate?: Date;
@@ -400,6 +400,72 @@ const Planning = () => {
   
   console.log('Work schedules after filtering:', dayWorkSchedules.length);
 
+  // Get activities for selected day, en excluant les exceptions
+  const dayActivities = (activities || [])
+    .filter(activity => {
+      const hasDay = activity.days.includes(selectedDayName);
+      if (!hasDay) return false;
+      
+      const hasException = eventExceptions.some(
+        exc => exc.source_type === 'activity' 
+          && exc.source_id === activity.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'deleted'
+      );
+      
+      return !hasException;
+    })
+    .map(activity => {
+      const exception = eventExceptions.find(
+        exc => exc.source_type === 'activity' 
+          && exc.source_id === activity.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'modified'
+      );
+      
+      if (exception && exception.modified_data) {
+        return {
+          ...activity,
+          ...exception.modified_data
+        };
+      }
+      
+      return activity;
+    });
+
+  // Get routine moments for selected day, en excluant les exceptions
+  const dayRoutineMoments = (routineMoments || [])
+    .filter(routine => {
+      const hasDay = routine.days.includes(selectedDayName);
+      if (!hasDay) return false;
+      
+      const hasException = eventExceptions.some(
+        exc => exc.source_type === 'routine_moment' 
+          && exc.source_id === routine.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'deleted'
+      );
+      
+      return !hasException;
+    })
+    .map(routine => {
+      const exception = eventExceptions.find(
+        exc => exc.source_type === 'routine_moment' 
+          && exc.source_id === routine.id 
+          && exc.exception_date === selectedDateStr
+          && exc.exception_type === 'modified'
+      );
+      
+      if (exception && exception.modified_data) {
+        return {
+          ...routine,
+          ...exception.modified_data
+        };
+      }
+      
+      return routine;
+    });
+
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
   const DISPLAY_HOURS = 18; // Total hours displayed
@@ -511,6 +577,74 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
+      } else if (editingEvent.type === 'activity') {
+        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
+          
+          const { error } = await supabase
+            .from('event_exceptions')
+            .upsert({
+              user_id: user.id,
+              source_type: 'activity',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'modified',
+              modified_data: {
+                title: editingEvent.data.title,
+                start_time: editingEvent.data.start_time,
+                end_time: editingEvent.data.end_time,
+                location: editingEvent.data.location,
+              }
+            });
+
+          if (error) throw error;
+          await loadEventExceptions();
+        } else {
+          const { error } = await supabase
+            .from('activities')
+            .update({
+              title: editingEvent.data.title,
+              start_time: editingEvent.data.start_time,
+              end_time: editingEvent.data.end_time,
+              location: editingEvent.data.location,
+            })
+            .eq('id', editingEvent.data.id);
+
+          if (error) throw error;
+        }
+      } else if (editingEvent.type === 'routine') {
+        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
+          
+          const { error } = await supabase
+            .from('event_exceptions')
+            .upsert({
+              user_id: user.id,
+              source_type: 'routine_moment',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'modified',
+              modified_data: {
+                title: editingEvent.data.title,
+                start_time: editingEvent.data.start_time,
+                end_time: editingEvent.data.end_time,
+              }
+            });
+
+          if (error) throw error;
+          await loadEventExceptions();
+        } else {
+          const { error } = await supabase
+            .from('routine_moments')
+            .update({
+              title: editingEvent.data.title,
+              start_time: editingEvent.data.start_time,
+              end_time: editingEvent.data.end_time,
+            })
+            .eq('id', editingEvent.data.id);
+
+          if (error) throw error;
+        }
       }
 
       refetchAll();
@@ -582,6 +716,56 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
+      } else if (editingEvent.type === 'activity') {
+        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
+          
+          const { error } = await supabase
+            .from('event_exceptions')
+            .upsert({
+              user_id: user.id,
+              source_type: 'activity',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'deleted',
+              modified_data: null
+            });
+
+          if (error) throw error;
+          await loadEventExceptions();
+        } else {
+          const { error } = await supabase
+            .from('activities')
+            .delete()
+            .eq('id', editingEvent.data.id);
+
+          if (error) throw error;
+        }
+      } else if (editingEvent.type === 'routine') {
+        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
+          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
+          
+          const { error } = await supabase
+            .from('event_exceptions')
+            .upsert({
+              user_id: user.id,
+              source_type: 'routine_moment',
+              source_id: editingEvent.data.id,
+              exception_date: exceptionDate,
+              exception_type: 'deleted',
+              modified_data: null
+            });
+
+          if (error) throw error;
+          await loadEventExceptions();
+        } else {
+          const { error } = await supabase
+            .from('routine_moments')
+            .delete()
+            .eq('id', editingEvent.data.id);
+
+          if (error) throw error;
+        }
       }
 
       // Recharger toutes les données pour s'assurer que la suppression est visible
@@ -771,9 +955,9 @@ const Planning = () => {
                 <div key={hour} className="h-16 border-t border-border first:border-t-0" />
               ))}
 
-              {/* Events, Work Schedules & Revision Sessions */}
+              {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 ? (
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -874,6 +1058,93 @@ const Planning = () => {
                       );
                     })}
 
+                    {/* Activities */}
+                    {dayActivities.map((activity, index) => {
+                      const [startHours, startMinutes] = activity.start_time.split(':').map(Number);
+                      const [endHours, endMinutes] = activity.end_time.split(':').map(Number);
+                      
+                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                      
+                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
+                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
+                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+                      const duration = Math.round(durationHours * 60);
+
+                      const style = {
+                        top: `${topPercent}%`,
+                        height: `${heightPercent}%`,
+                      };
+
+                      return (
+                        <div
+                          key={`activity-${activity.id}-${index}`}
+                          className="absolute left-2 right-2 bg-green-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-600 cursor-pointer hover:opacity-90 transition-opacity"
+                          style={style}
+                          onClick={() => {
+                            setEditingEvent({
+                              type: 'activity',
+                              data: { ...activity },
+                              isRecurring: true,
+                              selectedDate: selectedDate
+                            });
+                          }}
+                        >
+                          <div className="text-xs font-semibold truncate">
+                            🏃 {activity.title}
+                          </div>
+                          <div className="text-xs opacity-90">
+                            {activity.start_time.substring(0, 5)} - {activity.end_time.substring(0, 5)} ({duration} min)
+                          </div>
+                          {activity.location && (
+                            <div className="text-xs opacity-80 truncate mt-1">{activity.location}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Routine Moments */}
+                    {dayRoutineMoments.map((routine, index) => {
+                      const [startHours, startMinutes] = routine.start_time.split(':').map(Number);
+                      const [endHours, endMinutes] = routine.end_time.split(':').map(Number);
+                      
+                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                      
+                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
+                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
+                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
+                      const duration = Math.round(durationHours * 60);
+
+                      const style = {
+                        top: `${topPercent}%`,
+                        height: `${heightPercent}%`,
+                      };
+
+                      return (
+                        <div
+                          key={`routine-${routine.id}-${index}`}
+                          className="absolute left-2 right-2 bg-purple-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-purple-600 cursor-pointer hover:opacity-90 transition-opacity"
+                          style={style}
+                          onClick={() => {
+                            setEditingEvent({
+                              type: 'routine',
+                              data: { ...routine },
+                              isRecurring: true,
+                              selectedDate: selectedDate
+                            });
+                          }}
+                        >
+                          <div className="text-xs font-semibold truncate">
+                            ⏰ {routine.title}
+                          </div>
+                          <div className="text-xs opacity-90">
+                            {routine.start_time.substring(0, 5)} - {routine.end_time.substring(0, 5)} ({duration} min)
+                          </div>
+                        </div>
+                      );
+                    })}
+
                     {/* Revision Sessions */}
                     {dayRevisionSessions.map((session) => {
                       const start = new Date(session.start_time);
@@ -953,6 +1224,8 @@ const Planning = () => {
               {editingEvent?.type === 'revision' && 'Modifier la session de révision'}
               {editingEvent?.type === 'work' && 'Modifier l\'horaire de travail'}
               {editingEvent?.type === 'exam' && 'Modifier l\'examen'}
+              {editingEvent?.type === 'activity' && 'Modifier l\'activité'}
+              {editingEvent?.type === 'routine' && 'Modifier le moment de routine'}
             </DrawerTitle>
             <DrawerDescription>
               Modifie les informations de cet événement
@@ -961,7 +1234,7 @@ const Planning = () => {
           
           <div className="px-4 space-y-4 pb-6">
             {/* Choix pour événements récurrents */}
-            {editingEvent?.isRecurring && editingEvent.type === 'work' && (
+            {editingEvent?.isRecurring && (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && (
               <div className="bg-muted p-3 rounded-lg space-y-2">
                 <Label>Que veux-tu modifier ?</Label>
                 <RadioGroup value={recurrenceChoice} onValueChange={(v) => setRecurrenceChoice(v as 'this' | 'all')}>
@@ -1175,6 +1448,101 @@ const Planning = () => {
                       data: { ...editingEvent.data, location: e.target.value }
                     })}
                   />
+                </div>
+              </>
+            )}
+
+            {editingEvent?.type === 'activity' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-activity-title">Titre</Label>
+                  <Input
+                    id="edit-activity-title"
+                    value={editingEvent.data.title || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, title: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="edit-activity-start">Début</Label>
+                    <Input
+                      id="edit-activity-start"
+                      type="time"
+                      value={editingEvent.data.start_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, start_time: e.target.value }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-activity-end">Fin</Label>
+                    <Input
+                      id="edit-activity-end"
+                      type="time"
+                      value={editingEvent.data.end_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, end_time: e.target.value }
+                      })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-activity-location">Lieu</Label>
+                  <Input
+                    id="edit-activity-location"
+                    value={editingEvent.data.location || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, location: e.target.value }
+                    })}
+                  />
+                </div>
+              </>
+            )}
+
+            {editingEvent?.type === 'routine' && (
+              <>
+                <div>
+                  <Label htmlFor="edit-routine-title">Titre</Label>
+                  <Input
+                    id="edit-routine-title"
+                    value={editingEvent.data.title || ''}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      data: { ...editingEvent.data, title: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="edit-routine-start">Début</Label>
+                    <Input
+                      id="edit-routine-start"
+                      type="time"
+                      value={editingEvent.data.start_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, start_time: e.target.value }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-routine-end">Fin</Label>
+                    <Input
+                      id="edit-routine-end"
+                      type="time"
+                      value={editingEvent.data.end_time || ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        data: { ...editingEvent.data, end_time: e.target.value }
+                      })}
+                    />
+                  </div>
                 </div>
               </>
             )}
