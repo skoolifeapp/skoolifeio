@@ -78,7 +78,6 @@ const Exams = () => {
     }
 
     setExams(exams.filter(exam => exam.id !== id));
-    toast.success("Examen supprimé");
   };
 
   const toggleDone = async (exam: Exam) => {
@@ -93,7 +92,6 @@ const Exams = () => {
     }
 
     loadData();
-    toast.success(exam.is_done ? "Marqué comme non fait" : "Marqué comme terminé");
   };
 
   const handleAddExam = async () => {
@@ -134,7 +132,6 @@ const Exams = () => {
       notes: "",
     });
     loadData();
-    toast.success("Examen ajouté avec succès");
   };
 
   const getCountdown = (dateStr: string) => {

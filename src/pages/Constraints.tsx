@@ -144,7 +144,6 @@ const Constraints = () => {
         if (eventsError) throw eventsError;
       }
 
-      toast.success("Contraintes enregistrées. Le planning IA est à jour.");
       loadData();
     } catch (error) {
       console.error('Error saving constraints:', error);
