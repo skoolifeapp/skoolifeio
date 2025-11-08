@@ -231,7 +231,7 @@ const Exams = () => {
                   <p className="text-xs uppercase tracking-wider text-primary font-semibold mb-2">Prochain examen</p>
                   <h3 className="text-2xl font-bold mb-2">{nextExam.subject}</h3>
                   <p className="text-muted-foreground mb-3">
-                    {format(new Date(nextExam.date), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}
+                    {format(new Date(nextExam.date), "EEEE d MMMM yyyy", { locale: fr })}
                   </p>
                   <div className="flex items-center gap-2">
                     <Badge className={getPriorityColor(nextExam.priority)}>
@@ -321,7 +321,7 @@ const Exams = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-lg mb-1">{exam.subject}</h3>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {format(new Date(exam.date), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                        {format(new Date(exam.date), "d MMM yyyy", { locale: fr })}
                         {exam.location && ` · ${exam.location}`}
                       </p>
 
