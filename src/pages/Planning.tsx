@@ -10,7 +10,7 @@ import { fr } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -823,65 +823,15 @@ const Planning = () => {
             >
               <Upload className="h-4 w-4" />
             </Button>
-            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="hero" size="icon" disabled={isGenerating}>
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh]">
-                <SheetHeader>
-                  <SheetTitle>Génération du planning IA</SheetTitle>
-                  <SheetDescription>
-                    Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
-                  </SheetDescription>
-                </SheetHeader>
-
-                <div className="mt-6 space-y-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
-                    {examsCount === 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>Intensité de révision</Label>
-                    <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="leger" id="leger" />
-                        <Label htmlFor="leger" className="font-normal">
-                          Léger (1 session/jour, 45-60 min)
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="standard" id="standard" />
-                        <Label htmlFor="standard" className="font-normal">
-                          Standard (2 sessions/jour, 60-90 min)
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="intensif" id="intensif" />
-                        <Label htmlFor="intensif" className="font-normal">
-                          Intensif (3 sessions/jour, 75-120 min)
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <Button 
-                    onClick={handleGeneratePlanning} 
-                    className="w-full"
-                    disabled={isGenerating || examsCount === 0}
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {isGenerating ? 'Génération...' : 'Lancer la génération'}
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button
+              variant="hero"
+              size="icon"
+              onClick={() => setSheetOpen(true)}
+              disabled={isGenerating}
+              title="Générer un planning IA"
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -1679,6 +1629,68 @@ const Planning = () => {
             </div>
             <DrawerClose asChild>
               <Button variant="outline" className="w-full">Annuler</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Drawer pour générer le planning IA */}
+      <Drawer open={sheetOpen} onOpenChange={setSheetOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Génération du planning IA</DrawerTitle>
+            <DrawerDescription>
+              Skoolife va créer un planning de révision personnalisé basé sur tes examens, ton emploi du temps et tes contraintes.
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="px-4 space-y-4 pb-6">
+            <div>
+              <h3 className="font-semibold mb-2">Examens trouvés : {examsCount}</h3>
+              {examsCount === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Ajoute d'abord tes examens dans l'onglet Examens pour générer un planning.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Label>Intensité de révision</Label>
+              <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="leger" id="leger" />
+                  <Label htmlFor="leger" className="font-normal">
+                    Léger (1 session/jour, 45-60 min)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="standard" id="standard" />
+                  <Label htmlFor="standard" className="font-normal">
+                    Standard (2 sessions/jour, 60-90 min)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="intensif" id="intensif" />
+                  <Label htmlFor="intensif" className="font-normal">
+                    Intensif (3 sessions/jour, 75-120 min)
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button 
+              onClick={handleGeneratePlanning} 
+              disabled={isGenerating || examsCount === 0}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Génération...' : 'Lancer la génération'}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">
+                Annuler
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>

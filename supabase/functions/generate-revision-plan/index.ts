@@ -33,20 +33,29 @@ serve(async (req) => {
     const { intensity = 'standard' } = await req.json();
 
     // Fetch user data
-    const [examsRes, eventsRes, constraintEventsRes, profileRes] = await Promise.all([
+    const [examsRes, eventsRes, workSchedulesRes, activitiesRes, routineMomentsRes, exceptionsRes, profileRes] = await Promise.all([
       supabaseClient.from('exams').select('*').eq('user_id', user.id).order('date', { ascending: true }),
       supabaseClient.from('calendar_events').select('*').eq('user_id', user.id),
-      supabaseClient.from('constraint_events').select('*').eq('user_id', user.id),
+      supabaseClient.from('work_schedules').select('*').eq('user_id', user.id),
+      supabaseClient.from('activities').select('*').eq('user_id', user.id),
+      supabaseClient.from('routine_moments').select('*').eq('user_id', user.id),
+      supabaseClient.from('event_exceptions').select('*').eq('user_id', user.id),
       supabaseClient.from('user_constraints_profile').select('*').eq('user_id', user.id).single(),
     ]);
 
     if (examsRes.error) throw examsRes.error;
     if (eventsRes.error) throw eventsRes.error;
-    if (constraintEventsRes.error) throw constraintEventsRes.error;
+    if (workSchedulesRes.error) throw workSchedulesRes.error;
+    if (activitiesRes.error) throw activitiesRes.error;
+    if (routineMomentsRes.error) throw routineMomentsRes.error;
+    if (exceptionsRes.error) throw exceptionsRes.error;
 
     const exams = examsRes.data || [];
     const events = eventsRes.data || [];
-    const constraintEvents = constraintEventsRes.data || [];
+    const workSchedules = workSchedulesRes.data || [];
+    const activities = activitiesRes.data || [];
+    const routineMoments = routineMomentsRes.data || [];
+    const exceptions = exceptionsRes.data || [];
     const profile = profileRes.data || null;
 
     if (exams.length === 0) {
@@ -159,18 +168,160 @@ ${events.length > 0 ? events.map(e => {
 }).join('\n\n') : '✅ Aucun événement - Emploi du temps libre'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 CONTRAINTES FIXES - BLOQUÉES (Ne jamais utiliser ces créneaux)
+🚫 HORAIRES DE TRAVAIL - NE PAS UTILISER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${constraintEvents.length > 0 ? constraintEvents.map(c => {
-  const start = new Date(c.start_time);
-  const end = new Date(c.end_time);
-  const typeEmoji = c.type === 'alternance' ? '💼' : c.type === 'job' ? '💰' : c.type === 'sport' ? '⚽' : c.type === 'rdv' ? '📅' : '⚠️';
-  return `${typeEmoji} ${c.title || c.type.toUpperCase()}
-   Du: ${start.toLocaleString('fr-FR')} 
-   Au: ${end.toLocaleString('fr-FR')}
-   ${c.recurrence_rule ? `Récurrence: ${c.recurrence_rule}` : ''}`;
-}).join('\n\n') : '✅ Aucune contrainte fixe'}
+${workSchedules.length > 0 ? workSchedules.map(w => {
+  // Helper to expand recurring schedules
+  const getOccurrencesForPeriod = (schedule: any, startDate: Date, endDate: Date) => {
+    const occurrences = [];
+    const daysMap: Record<string, number> = { 
+      'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 
+      'friday': 5, 'saturday': 6, 'sunday': 0 
+    };
+    
+    for (const day of schedule.days) {
+      const targetDayNum = daysMap[day.toLowerCase()];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        if (currentDate.getDay() === targetDayNum) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          // Check if there's an exception for this date
+          const exception = exceptions.find((ex: any) => 
+            ex.source_type === 'work_schedule' &&
+            ex.source_id === schedule.id &&
+            ex.exception_date === dateStr
+          );
+          
+          if (!exception || exception.exception_type === 'modified') {
+            const finalData = exception?.exception_type === 'modified' ? exception.modified_data : schedule;
+            occurrences.push({
+              date: dateStr,
+              start_time: finalData.start_time,
+              end_time: finalData.end_time,
+              title: finalData.title || schedule.title,
+            });
+          }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    return occurrences;
+  };
+  
+  const planningStart = new Date();
+  const planningEnd = new Date(lastExamDate);
+  const occurrences = getOccurrencesForPeriod(w, planningStart, planningEnd);
+  const typeEmoji = w.type === 'alternance' ? '💼' : w.type === 'job' ? '🏢' : '📋';
+  
+  return occurrences.map(occ => `${typeEmoji} ${occ.title || w.type.toUpperCase()}
+   Le: ${occ.date} de ${occ.start_time} à ${occ.end_time}
+   ${w.location ? `Lieu: ${w.location}` : ''}`).join('\n\n');
+}).join('\n\n') : '✅ Aucun horaire de travail'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 ACTIVITÉS RÉGULIÈRES - NE PAS UTILISER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${activities.length > 0 ? activities.map(a => {
+  const getOccurrencesForPeriod = (activity: any, startDate: Date, endDate: Date) => {
+    const occurrences = [];
+    const daysMap: Record<string, number> = { 
+      'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 
+      'friday': 5, 'saturday': 6, 'sunday': 0 
+    };
+    
+    for (const day of activity.days) {
+      const targetDayNum = daysMap[day.toLowerCase()];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        if (currentDate.getDay() === targetDayNum) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          const exception = exceptions.find((ex: any) => 
+            ex.source_type === 'activity' &&
+            ex.source_id === activity.id &&
+            ex.exception_date === dateStr
+          );
+          
+          if (!exception || exception.exception_type === 'modified') {
+            const finalData = exception?.exception_type === 'modified' ? exception.modified_data : activity;
+            occurrences.push({
+              date: dateStr,
+              start_time: finalData.start_time,
+              end_time: finalData.end_time,
+              title: finalData.title,
+            });
+          }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    return occurrences;
+  };
+  
+  const planningStart = new Date();
+  const planningEnd = new Date(lastExamDate);
+  const occurrences = getOccurrencesForPeriod(a, planningStart, planningEnd);
+  
+  return occurrences.map(occ => `🏃 ${occ.title}
+   Le: ${occ.date} de ${occ.start_time} à ${occ.end_time}
+   ${a.location ? `Lieu: ${a.location}` : ''}`).join('\n\n');
+}).join('\n\n') : '✅ Aucune activité régulière'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 MOMENTS DE ROUTINE - NE PAS UTILISER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${routineMoments.length > 0 ? routineMoments.map(r => {
+  const getOccurrencesForPeriod = (routine: any, startDate: Date, endDate: Date) => {
+    const occurrences = [];
+    const daysMap: Record<string, number> = { 
+      'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 
+      'friday': 5, 'saturday': 6, 'sunday': 0 
+    };
+    
+    for (const day of routine.days) {
+      const targetDayNum = daysMap[day.toLowerCase()];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        if (currentDate.getDay() === targetDayNum) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          const exception = exceptions.find((ex: any) => 
+            ex.source_type === 'routine_moment' &&
+            ex.source_id === routine.id &&
+            ex.exception_date === dateStr
+          );
+          
+          if (!exception || exception.exception_type === 'modified') {
+            const finalData = exception?.exception_type === 'modified' ? exception.modified_data : routine;
+            occurrences.push({
+              date: dateStr,
+              start_time: finalData.start_time,
+              end_time: finalData.end_time,
+              title: finalData.title,
+            });
+          }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    return occurrences;
+  };
+  
+  const planningStart = new Date();
+  const planningEnd = new Date(lastExamDate);
+  const occurrences = getOccurrencesForPeriod(r, planningStart, planningEnd);
+  
+  return occurrences.map(occ => `⏰ ${occ.title}
+   Le: ${occ.date} de ${occ.start_time} à ${occ.end_time}`).join('\n\n');
+}).join('\n\n') : '✅ Aucun moment de routine'}
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 PRÉFÉRENCES & SOFT CONSTRAINTS
