@@ -1080,40 +1080,53 @@ const Planning = () => {
                       // Sort events by start time
                       allEvents.sort((a, b) => a.startMinutes - b.startMinutes);
 
-                      // Detect overlaps and assign columns
-                      const eventsWithColumns = allEvents.map(event => {
-                        // Find all events that overlap with this one
-                        const overlapping = allEvents.filter(other => 
-                          other !== event &&
-                          ((other.startMinutes < event.endMinutes && other.endMinutes > event.startMinutes))
-                        );
-
-                        // Find events that started before this one and overlap
-                        const previousOverlapping = overlapping.filter(other => 
-                          other.startMinutes <= event.startMinutes
-                        );
-
-                        // Assign column (position from left)
-                        const usedColumns = previousOverlapping.map(other => {
-                          const otherIndex = eventsWithColumns.findIndex(e => e.event === other);
-                          return otherIndex >= 0 ? eventsWithColumns[otherIndex].column : 0;
-                        });
-
-                        let column = 0;
-                        while (usedColumns.includes(column)) {
-                          column++;
+                      // Detect overlaps and assign columns properly
+                      const columnAssignments: number[] = []; // Store column for each event by index
+                      
+                      allEvents.forEach((event, eventIdx) => {
+                        // Find which columns are occupied by overlapping earlier events
+                        const occupiedColumns = new Set<number>();
+                        
+                        for (let i = 0; i < eventIdx; i++) {
+                          const other = allEvents[i];
+                          // Check if they overlap
+                          if (other.startMinutes < event.endMinutes && other.endMinutes > event.startMinutes) {
+                            occupiedColumns.add(columnAssignments[i]);
+                          }
                         }
+                        
+                        // Find first available column
+                        let targetColumn = 0;
+                        while (occupiedColumns.has(targetColumn)) {
+                          targetColumn++;
+                        }
+                        
+                        columnAssignments[eventIdx] = targetColumn;
+                      });
 
-                        const totalColumns = Math.max(...overlapping.map(other => {
-                          const otherIndex = eventsWithColumns.findIndex(e => e.event === other);
-                          return otherIndex >= 0 ? eventsWithColumns[otherIndex].column + 1 : 1;
-                        }), column + 1);
-
-                        return { event, column, totalColumns: overlapping.length > 0 ? totalColumns : 1 };
+                      // Build final events with columns and calculate totalColumns
+                      const finalEventsWithColumns = allEvents.map((event, eventIdx) => {
+                        const column = columnAssignments[eventIdx];
+                        
+                        // Find all overlapping events to determine totalColumns
+                        const overlappingColumns = new Set<number>();
+                        overlappingColumns.add(column);
+                        
+                        allEvents.forEach((other, otherIdx) => {
+                          if (eventIdx !== otherIdx && 
+                              event.startMinutes < other.endMinutes && 
+                              event.endMinutes > other.startMinutes) {
+                            overlappingColumns.add(columnAssignments[otherIdx]);
+                          }
+                        });
+                        
+                        const totalColumns = overlappingColumns.size;
+                        
+                        return { event, column, totalColumns };
                       });
 
                       // Render all events
-                      return eventsWithColumns.map(({ event, column, totalColumns }, idx) => {
+                      return finalEventsWithColumns.map(({ event, column, totalColumns }, idx) => {
                         const topPercent = (event.startMinutes / (DISPLAY_HOURS * 60)) * 100;
                         const heightPercent = ((event.endMinutes - event.startMinutes) / (DISPLAY_HOURS * 60)) * 100;
                         
