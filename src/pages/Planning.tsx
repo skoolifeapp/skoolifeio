@@ -973,250 +973,340 @@ const Planning = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Calendar Events */}
-                    {dayEvents.map((event, index) => {
-                      const style = getEventStyle(event);
-                      const start = new Date(event.startDate);
-                      const end = new Date(event.endDate);
-                      const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
+                    {/* All events with overlap detection */}
+                    {(() => {
+                      // Collect all events with their time info
+                      const allEvents: Array<{
+                        type: 'calendar' | 'revision' | 'work' | 'activity' | 'routine';
+                        data: any;
+                        startMinutes: number;
+                        endMinutes: number;
+                        index: number;
+                      }> = [];
 
-                      // Find the original event with id from calendar_events
-                      const originalEvent = importedEvents.find(e => 
-                        e.summary === event.summary && 
-                        e.startDate === event.startDate
-                      );
+                      // Add calendar events
+                      dayEvents.forEach((event, index) => {
+                        const start = new Date(event.startDate);
+                        const end = new Date(event.endDate);
+                        const startHour = start.getHours();
+                        const startMinute = start.getMinutes();
+                        const endHour = end.getHours();
+                        const endMinute = end.getMinutes();
+                        
+                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
+                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'calendar',
+                          data: event,
+                          startMinutes: (adjustedStartHour * 60) + startMinute,
+                          endMinutes: (adjustedEndHour * 60) + endMinute,
+                          index
+                        });
+                      });
 
-                      return (
-                        <div
-                          key={`event-${index}`}
-                          className="absolute left-2 right-2 bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md cursor-pointer hover:opacity-90 transition-opacity"
-                          style={style}
-                          onClick={async () => {
-                            // Fetch the full event data with id
-                            const { data } = await supabase
-                              .from('calendar_events')
-                              .select('*')
-                              .eq('user_id', user?.id)
-                              .eq('summary', event.summary)
-                              .eq('start_date', event.startDate)
-                              .maybeSingle();
+                      // Add work schedules
+                      dayWorkSchedules.forEach((schedule, index) => {
+                        const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
+                        const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
+                        
+                        const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                        const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'work',
+                          data: schedule,
+                          startMinutes: (adjustedStartHour * 60) + startMinutes,
+                          endMinutes: (adjustedEndHour * 60) + endMinutes,
+                          index
+                        });
+                      });
 
-                            if (data) {
-                              setEditingEvent({
-                                type: 'calendar',
-                                data: { ...data }
-                              });
-                            }
-                          }}
-                        >
-                          <div className="text-xs font-semibold truncate">{event.summary}</div>
-                          <div className="text-xs opacity-90">
-                            {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
-                          </div>
-                          {event.location && (
-                            <div className="text-xs opacity-80 truncate mt-1">{event.location}</div>
-                          )}
-                        </div>
-                      );
-                    })}
+                      // Add activities
+                      dayActivities.forEach((activity, index) => {
+                        const [startHours, startMinutes] = activity.start_time.split(':').map(Number);
+                        const [endHours, endMinutes] = activity.end_time.split(':').map(Number);
+                        
+                        const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                        const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'activity',
+                          data: activity,
+                          startMinutes: (adjustedStartHour * 60) + startMinutes,
+                          endMinutes: (adjustedEndHour * 60) + endMinutes,
+                          index
+                        });
+                      });
 
-                    {/* Work Schedules */}
-                    {dayWorkSchedules.map((schedule, index) => {
-                      const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
-                      const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
-                      
-                      // Adjust hours relative to 7am start
-                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
-                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
-                      
-                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
-                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
-                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
-                      const duration = Math.round(durationHours * 60);
+                      // Add routine moments
+                      dayRoutineMoments.forEach((routine, index) => {
+                        const [startHours, startMinutes] = routine.start_time.split(':').map(Number);
+                        const [endHours, endMinutes] = routine.end_time.split(':').map(Number);
+                        
+                        const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
+                        const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'routine',
+                          data: routine,
+                          startMinutes: (adjustedStartHour * 60) + startMinutes,
+                          endMinutes: (adjustedEndHour * 60) + endMinutes,
+                          index
+                        });
+                      });
 
-                      const style = {
-                        top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
-                      };
+                      // Add revision sessions
+                      dayRevisionSessions.forEach((session) => {
+                        const start = new Date(session.start_time);
+                        const end = new Date(session.end_time);
+                        const startHour = start.getHours();
+                        const startMinute = start.getMinutes();
+                        const endHour = end.getHours();
+                        const endMinute = end.getMinutes();
+                        
+                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
+                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'revision',
+                          data: session,
+                          startMinutes: (adjustedStartHour * 60) + startMinute,
+                          endMinutes: (adjustedEndHour * 60) + endMinute,
+                          index: 0
+                        });
+                      });
 
-                      const typeEmoji = schedule.type === 'alternance' ? '💼' : schedule.type === 'job' ? '🏢' : '📋';
+                      // Sort events by start time
+                      allEvents.sort((a, b) => a.startMinutes - b.startMinutes);
 
-                      return (
-                        <div
-                          key={`work-${schedule.id}-${index}`}
-                          className="absolute left-2 right-2 bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-pointer hover:opacity-90 transition-opacity"
-                          style={style}
-                          onClick={() => {
-                            setEditingEvent({
-                              type: 'work',
-                              data: { ...schedule },
-                              isRecurring: true,
-                              selectedDate: selectedDate
-                            });
-                          }}
-                        >
-                          <div className="text-xs font-semibold truncate">
-                            {typeEmoji} {schedule.title || 'Travail'}
-                          </div>
-                          <div className="text-xs opacity-90">
-                            {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} ({duration} min)
-                          </div>
-                          {schedule.location && (
-                            <div className="text-xs opacity-80 truncate mt-1">{schedule.location}</div>
-                          )}
-                        </div>
-                      );
-                    })}
+                      // Detect overlaps and assign columns
+                      const eventsWithColumns = allEvents.map(event => {
+                        // Find all events that overlap with this one
+                        const overlapping = allEvents.filter(other => 
+                          other !== event &&
+                          ((other.startMinutes < event.endMinutes && other.endMinutes > event.startMinutes))
+                        );
 
-                    {/* Activities */}
-                    {dayActivities.map((activity, index) => {
-                      const [startHours, startMinutes] = activity.start_time.split(':').map(Number);
-                      const [endHours, endMinutes] = activity.end_time.split(':').map(Number);
-                      
-                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
-                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
-                      
-                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
-                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
-                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
-                      const duration = Math.round(durationHours * 60);
+                        // Find events that started before this one and overlap
+                        const previousOverlapping = overlapping.filter(other => 
+                          other.startMinutes <= event.startMinutes
+                        );
 
-                      const style = {
-                        top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
-                      };
+                        // Assign column (position from left)
+                        const usedColumns = previousOverlapping.map(other => {
+                          const otherIndex = eventsWithColumns.findIndex(e => e.event === other);
+                          return otherIndex >= 0 ? eventsWithColumns[otherIndex].column : 0;
+                        });
 
-                      return (
-                        <div
-                          key={`activity-${activity.id}-${index}`}
-                          className="absolute left-2 right-2 bg-green-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-600 cursor-pointer hover:opacity-90 transition-opacity"
-                          style={style}
-                          onClick={() => {
-                            setEditingEvent({
-                              type: 'activity',
-                              data: { ...activity },
-                              isRecurring: true,
-                              selectedDate: selectedDate
-                            });
-                          }}
-                        >
-                          <div className="text-xs font-semibold truncate">
-                            🏃 {activity.title}
-                          </div>
-                          <div className="text-xs opacity-90">
-                            {activity.start_time.substring(0, 5)} - {activity.end_time.substring(0, 5)} ({duration} min)
-                          </div>
-                          {activity.location && (
-                            <div className="text-xs opacity-80 truncate mt-1">{activity.location}</div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        let column = 0;
+                        while (usedColumns.includes(column)) {
+                          column++;
+                        }
 
-                    {/* Routine Moments */}
-                    {dayRoutineMoments.map((routine, index) => {
-                      const [startHours, startMinutes] = routine.start_time.split(':').map(Number);
-                      const [endHours, endMinutes] = routine.end_time.split(':').map(Number);
-                      
-                      const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
-                      const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
-                      
-                      const topPercent = ((adjustedStartHour + startMinutes / 60) / DISPLAY_HOURS) * 100;
-                      const durationHours = (adjustedEndHour + endMinutes / 60) - (adjustedStartHour + startMinutes / 60);
-                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
-                      const duration = Math.round(durationHours * 60);
+                        const totalColumns = Math.max(...overlapping.map(other => {
+                          const otherIndex = eventsWithColumns.findIndex(e => e.event === other);
+                          return otherIndex >= 0 ? eventsWithColumns[otherIndex].column + 1 : 1;
+                        }), column + 1);
 
-                      const style = {
-                        top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
-                      };
+                        return { event, column, totalColumns: overlapping.length > 0 ? totalColumns : 1 };
+                      });
 
-                      return (
-                        <div
-                          key={`routine-${routine.id}-${index}`}
-                          className="absolute left-2 right-2 bg-purple-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-purple-600 cursor-pointer hover:opacity-90 transition-opacity"
-                          style={style}
-                          onClick={() => {
-                            setEditingEvent({
-                              type: 'routine',
-                              data: { ...routine },
-                              isRecurring: true,
-                              selectedDate: selectedDate
-                            });
-                          }}
-                        >
-                          <div className="text-xs font-semibold truncate">
-                            ⏰ {routine.title}
-                          </div>
-                          <div className="text-xs opacity-90">
-                            {routine.start_time.substring(0, 5)} - {routine.end_time.substring(0, 5)} ({duration} min)
-                          </div>
-                        </div>
-                      );
-                    })}
+                      // Render all events
+                      return eventsWithColumns.map(({ event, column, totalColumns }, idx) => {
+                        const topPercent = (event.startMinutes / (DISPLAY_HOURS * 60)) * 100;
+                        const heightPercent = ((event.endMinutes - event.startMinutes) / (DISPLAY_HOURS * 60)) * 100;
+                        
+                        const widthPercent = 100 / totalColumns;
+                        const leftPercent = (column * widthPercent);
 
-                    {/* Revision Sessions */}
-                    {dayRevisionSessions.map((session) => {
-                      const start = new Date(session.start_time);
-                      const end = new Date(session.end_time);
-                      const startHour = start.getHours();
-                      const startMinute = start.getMinutes();
-                      const endHour = end.getHours();
-                      const endMinute = end.getMinutes();
-                      
-                      // Adjust hours relative to 7am start
-                      const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
-                      const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
-                      
-                      const topPercent = ((adjustedStartHour + startMinute / 60) / DISPLAY_HOURS) * 100;
-                      const durationHours = (adjustedEndHour + endMinute / 60) - (adjustedStartHour + startMinute / 60);
-                      const heightPercent = (durationHours / DISPLAY_HOURS) * 100;
-                      const duration = Math.round(durationHours * 60);
+                        const style = {
+                          top: `${topPercent}%`,
+                          height: `${heightPercent}%`,
+                          left: `${leftPercent}%`,
+                          width: `${widthPercent}%`,
+                        };
 
-                      const style = {
-                        top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
-                      };
+                        // Render based on type
+                        if (event.type === 'calendar') {
+                          const evt = event.data;
+                          const start = new Date(evt.startDate);
+                          const end = new Date(evt.endDate);
+                          const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
 
-                      return (
-                        <div
-                          key={`session-${session.id}`}
-                          className="absolute left-2 right-2 bg-primary/90 text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary cursor-pointer hover:opacity-90 transition-opacity"
-                          style={style}
-                          onClick={() => {
-                            setEditingEvent({
-                              type: 'revision',
-                              data: { ...session }
-                            });
-                          }}
-                        >
-                          <div className="flex items-start justify-between gap-1">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-semibold truncate">📚 {session.subject}</div>
-                              <div className="text-xs opacity-90">
-                                {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
-                              </div>
-                              {session.difficulty && (
-                                <div className="text-xs opacity-80 mt-1">
-                                  Niveau: {session.difficulty}
-                                </div>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteRevisionSession(session.id);
+                          return (
+                            <div
+                              key={`event-${event.index}-${idx}`}
+                              className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
+                              onClick={async () => {
+                                const { data } = await supabase
+                                  .from('calendar_events')
+                                  .select('*')
+                                  .eq('user_id', user?.id)
+                                  .eq('summary', evt.summary)
+                                  .eq('start_date', evt.startDate)
+                                  .maybeSingle();
+
+                                if (data) {
+                                  setEditingEvent({
+                                    type: 'calendar',
+                                    data: { ...data }
+                                  });
+                                }
                               }}
                             >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                              <div className="text-xs font-semibold truncate">{evt.summary}</div>
+                              <div className="text-xs opacity-90">
+                                {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
+                              </div>
+                              {evt.location && (
+                                <div className="text-xs opacity-80 truncate mt-1">{evt.location}</div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        if (event.type === 'work') {
+                          const schedule = event.data;
+                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
+                          const typeEmoji = schedule.type === 'alternance' ? '💼' : schedule.type === 'job' ? '🏢' : '📋';
+
+                          return (
+                            <div
+                              key={`work-${schedule.id}-${idx}`}
+                              className="absolute bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
+                              onClick={() => {
+                                setEditingEvent({
+                                  type: 'work',
+                                  data: { ...schedule },
+                                  isRecurring: true,
+                                  selectedDate: selectedDate
+                                });
+                              }}
+                            >
+                              <div className="text-xs font-semibold truncate">
+                                {typeEmoji} {schedule.title || 'Travail'}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} ({duration} min)
+                              </div>
+                              {schedule.location && (
+                                <div className="text-xs opacity-80 truncate mt-1">{schedule.location}</div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        if (event.type === 'activity') {
+                          const activity = event.data;
+                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
+
+                          return (
+                            <div
+                              key={`activity-${activity.id}-${idx}`}
+                              className="absolute bg-green-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
+                              onClick={() => {
+                                setEditingEvent({
+                                  type: 'activity',
+                                  data: { ...activity },
+                                  isRecurring: true,
+                                  selectedDate: selectedDate
+                                });
+                              }}
+                            >
+                              <div className="text-xs font-semibold truncate">
+                                🏃 {activity.title}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                {activity.start_time.substring(0, 5)} - {activity.end_time.substring(0, 5)} ({duration} min)
+                              </div>
+                              {activity.location && (
+                                <div className="text-xs opacity-80 truncate mt-1">{activity.location}</div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        if (event.type === 'routine') {
+                          const routine = event.data;
+                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
+
+                          return (
+                            <div
+                              key={`routine-${routine.id}-${idx}`}
+                              className="absolute bg-purple-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-purple-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
+                              onClick={() => {
+                                setEditingEvent({
+                                  type: 'routine',
+                                  data: { ...routine },
+                                  isRecurring: true,
+                                  selectedDate: selectedDate
+                                });
+                              }}
+                            >
+                              <div className="text-xs font-semibold truncate">
+                                ⏰ {routine.title}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                {routine.start_time.substring(0, 5)} - {routine.end_time.substring(0, 5)} ({duration} min)
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (event.type === 'revision') {
+                          const session = event.data;
+                          const start = new Date(session.start_time);
+                          const end = new Date(session.end_time);
+                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
+
+                          return (
+                            <div
+                              key={`session-${session.id}-${idx}`}
+                              className="absolute bg-primary/90 text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
+                              onClick={() => {
+                                setEditingEvent({
+                                  type: 'revision',
+                                  data: { ...session }
+                                });
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-1">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-semibold truncate">📚 {session.subject}</div>
+                                  <div className="text-xs opacity-90">
+                                    {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
+                                  </div>
+                                  {session.difficulty && (
+                                    <div className="text-xs opacity-80 mt-1">
+                                      Niveau: {session.difficulty}
+                                    </div>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteRevisionSession(session.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return null;
+                      });
+                    })()}
                   </>
                 )}
               </div>
