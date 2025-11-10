@@ -1,7 +1,4 @@
 project_id = "lvhvzxfqjzfcwbwyixuo"
 
-[functions.Generation_planning]
-verify_jwt = true
-
 [functions.clean-cancelled-events]
 verify_jwt = true

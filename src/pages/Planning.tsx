@@ -19,7 +19,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { useNavigationState } from "@/contexts/NavigationStateContext";
-import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
 
@@ -52,7 +51,7 @@ const Planning = () => {
   const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [intensity, setIntensity] = useState<IntensityLevel>('standard');
+  const [intensity, setIntensity] = useState<'leger' | 'standard' | 'intensif'>('standard');
   const [examsCount, setExamsCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
@@ -233,34 +232,9 @@ const Planning = () => {
   };
 
   const handleGeneratePlanning = async () => {
-    if (examsCount === 0) {
-      toast.error("Aucun examen", {
-        description: "Ajoute d'abord tes examens pour générer ton planning IA.",
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-    setSheetOpen(false);
-
-    toast.loading("Skoolife prépare ton planning de révision personnalisé…", {
-      id: 'generating-plan',
+    toast.error("Fonction en cours de développement", {
+      description: "La génération automatique de planning sera bientôt disponible.",
     });
-
-    const result = await generateRevisionPlanning({ intensity });
-
-    toast.dismiss('generating-plan');
-    setIsGenerating(false);
-
-    if (result.success) {
-      await loadRevisionSessions();
-      // Recharger depuis Supabase
-      refetchAll();
-    } else {
-      toast.error("Erreur", {
-        description: result.error || "Impossible de générer le planning.",
-      });
-    }
   };
 
   const deleteRevisionSession = async (sessionId: string) => {
@@ -1900,7 +1874,7 @@ const Planning = () => {
 
             <div className="space-y-3">
               <Label>Intensité de révision</Label>
-              <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
+              <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as 'leger' | 'standard' | 'intensif')}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="leger" id="leger" />
                   <Label htmlFor="leger" className="font-normal">
