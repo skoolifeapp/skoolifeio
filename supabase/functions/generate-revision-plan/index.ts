@@ -37,10 +37,10 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const openaiKey = Deno.env.get('OPENAI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!openaiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     // Extraire le JWT du header Authorization
@@ -253,14 +253,14 @@ ${JSON.stringify(context, null, 2)}
 
 Crée des sessions de révision optimales qui maximisent l'apprentissage tout en respectant TOUTES les contraintes.`;
 
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -309,22 +309,29 @@ Crée des sessions de révision optimales qui maximisent l'apprentissage tout en
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('[OpenAI Error]', openaiResponse.status, errorText);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('[Lovable AI Error]', aiResponse.status, errorText);
       
-      if (openaiResponse.status === 429) {
+      if (aiResponse.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Trop de requêtes. Réessaye dans quelques instants.' }),
+          JSON.stringify({ error: 'Trop de requêtes AI. Réessaye dans quelques instants.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Crédits AI insuffisants. Ajoute des crédits dans les paramètres Lovable.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
-      throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorText}`);
+      throw new Error(`Lovable AI error: ${aiResponse.status} - ${errorText}`);
     }
 
-    const aiResult = await openaiResponse.json();
-    console.log(`[${user.id}] Réponse OpenAI reçue`);
+    const aiResult = await aiResponse.json();
+    console.log(`[${user.id}] Réponse Lovable AI reçue`);
 
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
