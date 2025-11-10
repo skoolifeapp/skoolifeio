@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useData } from "@/contexts/DataContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInDays, isPast, isFuture, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -32,9 +32,8 @@ interface Exam {
 
 const Exams = () => {
   const { user } = useAuth();
-  const { exams: dataExams, refetchAll } = useData();
+  const queryClient = useQueryClient();
   const { state, setExamsFilter } = useNavigationState();
-  const [exams, setExams] = useState<Exam[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'upcoming' | 'all' | 'past' | 'high'>(state.exams.activeFilter);
   const [newExam, setNewExam] = useState({
@@ -48,40 +47,30 @@ const Exams = () => {
     notes: "",
   });
 
-  // Synchroniser les examens locaux avec le DataContext
-  useEffect(() => {
-    console.log('DataContext exams updated:', dataExams);
-    if (dataExams) {
-      const transformedExams = dataExams.map(exam => ({
-        ...exam,
-        priority: typeof exam.priority === 'string' ? parseInt(exam.priority) || 3 : exam.priority,
-        difficulty: typeof exam.difficulty === 'string' ? parseInt(exam.difficulty) || 3 : exam.difficulty,
-      }));
-      console.log('Transformed exams:', transformedExams);
-      setExams(transformedExams);
-    }
-  }, [dataExams]);
+  // Charger les examens directement avec React Query
+  const { data: exams = [], isLoading } = useQuery({
+    queryKey: ["exams", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("exams")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: true });
 
-  const loadData = async () => {
-    if (!user) return;
+      if (error) {
+        console.error('Error loading exams:', error);
+        toast.error("Erreur lors du chargement des examens");
+        return [];
+      }
 
-    const { data: examsData, error: examsError } = await supabase
-      .from('exams')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: true });
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
-    if (examsError) {
-      console.error('Error loading exams:', examsError);
-      toast.error("Erreur lors du chargement des examens");
-    } else {
-      const transformedExams = (examsData || []).map(exam => ({
-        ...exam,
-        priority: typeof exam.priority === 'string' ? parseInt(exam.priority) || 3 : exam.priority,
-        difficulty: typeof exam.difficulty === 'string' ? parseInt(exam.difficulty) || 3 : exam.difficulty,
-      }));
-      setExams(transformedExams);
-    }
+  const refetchExams = () => {
+    queryClient.invalidateQueries({ queryKey: ["exams", user?.id] });
   };
 
   const removeExam = async (id: string) => {
@@ -95,8 +84,7 @@ const Exams = () => {
       return;
     }
 
-    // Recharger depuis Supabase
-    refetchAll();
+    refetchExams();
   };
 
   const toggleDone = async (exam: Exam) => {
@@ -110,8 +98,7 @@ const Exams = () => {
       return;
     }
 
-    // Recharger depuis Supabase
-    refetchAll();
+    refetchExams();
   };
 
   const handleAddExam = async () => {
@@ -152,8 +139,7 @@ const Exams = () => {
       notes: "",
     });
     
-    // Recharger depuis Supabase
-    refetchAll();
+    refetchExams();
   };
 
   const getCountdown = (dateStr: string) => {
@@ -223,7 +209,16 @@ const Exams = () => {
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
-      {/* Header Sticky */}
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <p className="text-muted-foreground">Chargement des examens...</p>
+        </div>
+      )}
+
+      {!isLoading && (
+        <>
+          {/* Header Sticky */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
         <div className="flex items-start justify-between">
           <div>
@@ -490,6 +485,8 @@ const Exams = () => {
           </div>
         </DrawerContent>
       </Drawer>
+        </>
+      )}
     </div>
   );
 };
