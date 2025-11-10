@@ -130,12 +130,12 @@ export type Database = {
           coefficient: number | null
           created_at: string
           date: string
-          difficulty: string | null
+          difficulty: number | null
           id: string
           is_done: boolean | null
           location: string | null
           notes: string | null
-          priority: string
+          priority: number
           subject: string
           type: string | null
           updated_at: string
@@ -145,12 +145,12 @@ export type Database = {
           coefficient?: number | null
           created_at?: string
           date: string
-          difficulty?: string | null
+          difficulty?: number | null
           id?: string
           is_done?: boolean | null
           location?: string | null
           notes?: string | null
-          priority: string
+          priority: number
           subject: string
           type?: string | null
           updated_at?: string
@@ -160,12 +160,12 @@ export type Database = {
           coefficient?: number | null
           created_at?: string
           date?: string
-          difficulty?: string | null
+          difficulty?: number | null
           id?: string
           is_done?: boolean | null
           location?: string | null
           notes?: string | null
-          priority?: string
+          priority?: number
           subject?: string
           type?: string | null
           updated_at?: string

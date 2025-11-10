@@ -74,12 +74,29 @@ export const useMigrateLocalStorageToSupabase = () => {
 
             // Only migrate if no exams exist in Supabase
             if (count === 0) {
-              const examsToInsert = exams.map(exam => ({
-                user_id: user.id,
-                subject: exam.subject,
-                date: exam.date,
-                priority: exam.priority,
-              }));
+              const examsToInsert = exams.map(exam => {
+                // Convert priority string to number if needed
+                let priorityNum = 3; // default
+                if (typeof exam.priority === 'string') {
+                  const priorityMap: Record<string, number> = {
+                    'low': 1, 'faible': 1, 'bas': 1,
+                    'medium-low': 2,
+                    'medium': 3, 'moyen': 3,
+                    'medium-high': 4,
+                    'high': 5, 'élevé': 5, 'haut': 5, 'haute': 5
+                  };
+                  priorityNum = priorityMap[exam.priority.toLowerCase()] || parseInt(exam.priority) || 3;
+                } else {
+                  priorityNum = exam.priority || 3;
+                }
+
+                return {
+                  user_id: user.id,
+                  subject: exam.subject,
+                  date: exam.date,
+                  priority: priorityNum,
+                };
+              });
 
               const { error, data } = await supabase
                 .from('exams')

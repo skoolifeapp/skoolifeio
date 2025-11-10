@@ -124,11 +124,11 @@ const Exams = () => {
         user_id: user.id,
         subject: newExam.subject,
         date: newExam.date,
-        priority: newExam.priority.toString(),
+        priority: newExam.priority,
         type: newExam.type,
         location: newExam.location || null,
         coefficient: newExam.coefficient ? parseFloat(newExam.coefficient) : null,
-        difficulty: newExam.difficulty.toString(),
+        difficulty: newExam.difficulty,
         notes: newExam.notes || null,
       });
 
