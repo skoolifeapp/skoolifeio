@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Calendar, AlertTriangle, TrendingUp, CheckCircle2, Clock, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,9 +33,10 @@ interface Exam {
 const Exams = () => {
   const { user } = useAuth();
   const { exams: dataExams, refetchAll } = useData();
+  const { state, setExamsFilter } = useNavigationState();
   const [exams, setExams] = useState<Exam[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'upcoming' | 'all' | 'past' | 'high'>('upcoming');
+  const [activeFilter, setActiveFilter] = useState<'upcoming' | 'all' | 'past' | 'high'>(state.exams.activeFilter);
   const [newExam, setNewExam] = useState({
     subject: "",
     date: "",
@@ -274,7 +276,11 @@ const Exams = () => {
           ].map((filter) => (
             <button
               key={filter.key}
-              onClick={() => setActiveFilter(filter.key as any)}
+              onClick={() => {
+                const filterKey = filter.key as 'upcoming' | 'all' | 'past' | 'high';
+                setActiveFilter(filterKey);
+                setExamsFilter(filterKey);
+              }}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 activeFilter === filter.key
                   ? 'bg-primary text-primary-foreground'

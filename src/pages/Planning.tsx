@@ -18,6 +18,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
+import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
@@ -43,9 +44,10 @@ interface RevisionSession {
 const Planning = () => {
   const { user } = useAuth();
   const { refetchAll, workSchedules, activities, routineMoments } = useData();
+  const { state, setPlanningDate } = useNavigationState();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(state.planning.selectedDate);
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
   const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -849,11 +851,15 @@ const Planning = () => {
   };
 
   const goToPreviousDay = () => {
-    setSelectedDate(prev => addDays(prev, -1));
+    const newDate = addDays(selectedDate, -1);
+    setSelectedDate(newDate);
+    setPlanningDate(newDate);
   }
 
   const goToNextDay = () => {
-    setSelectedDate(prev => addDays(prev, 1));
+    const newDate = addDays(selectedDate, 1);
+    setSelectedDate(newDate);
+    setPlanningDate(newDate);
   };
 
   const handleAddEvent = async () => {
@@ -950,7 +956,12 @@ const Planning = () => {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    setPlanningDate(date);
+                  }
+                }}
                 initialFocus
               />
             </PopoverContent>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
+import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { WorkTab } from "@/components/constraints/WorkTab";
@@ -45,8 +46,9 @@ const Constraints = () => {
     routineMoments: dataRoutineMoments,
     refetchAll
   } = useData();
+  const { state, setConstraintsTab } = useNavigationState();
   
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>('travail');
+  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>(state.constraints.activeTab);
   
   // Work data
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
@@ -334,7 +336,11 @@ const Constraints = () => {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => {
+                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'trajet';
+                setActiveTab(tabKey);
+                setConstraintsTab(tabKey);
+              }}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'bg-primary text-primary-foreground'

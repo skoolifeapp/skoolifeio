@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
+import { NavigationStateProvider } from "@/contexts/NavigationStateContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { DesktopLayout } from "@/components/layout/DesktopLayout";
 import { ScrollReset } from "@/components/layout/ScrollReset";
@@ -93,7 +94,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <DataProvider>
-            <AppContent />
+            <NavigationStateProvider>
+              <AppContent />
+            </NavigationStateProvider>
           </DataProvider>
         </AuthProvider>
       </BrowserRouter>
