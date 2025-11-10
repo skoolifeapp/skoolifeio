@@ -461,9 +461,26 @@ Crée des sessions de révision optimales qui maximisent l'apprentissage en remp
       return true;
     });
 
-    console.log(`[${user.id}] ${validSessions.length} sessions valides après validation`);
+    // Vérifier le respect de l'intensité (nombre max de sessions par jour)
+    const sessionsByDay = new Map<string, number>();
+    const finalValidSessions = validSessions.filter((s: any) => {
+      const start = new Date(s.start_time);
+      const dateKey = start.toISOString().split('T')[0];
+      
+      const currentCount = sessionsByDay.get(dateKey) || 0;
+      
+      if (currentCount >= intensityConfig.sessionsPerDay.max) {
+        console.warn(`Session rejetée (max sessions/jour atteint):`, s.subject, dateKey, `(${currentCount}/${intensityConfig.sessionsPerDay.max})`);
+        return false;
+      }
+      
+      sessionsByDay.set(dateKey, currentCount + 1);
+      return true;
+    });
 
-    if (validSessions.length === 0) {
+    console.log(`[${user.id}] ${finalValidSessions.length} sessions valides après validation complète (intensité: ${intensity})`);
+
+    if (finalValidSessions.length === 0) {
       return new Response(
         JSON.stringify({ 
           error: 'Aucune session valide générée. Vérifie tes contraintes et réessaye.',
@@ -484,7 +501,7 @@ Crée des sessions de révision optimales qui maximisent l'apprentissage en remp
     }
 
     // Insertion des nouvelles sessions
-    const sessionsToInsert = validSessions.map((s: any) => ({
+    const sessionsToInsert = finalValidSessions.map((s: any) => ({
       user_id: user.id,
       exam_id: s.exam_id,
       subject: s.subject,
