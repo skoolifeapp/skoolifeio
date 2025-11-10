@@ -217,29 +217,43 @@ Deno.serve(async (req) => {
 
     console.log(`[${user.id}] Contexte préparé - ${exams.length} examens, ${context.busy_slots.calendar_events.length} événements calendrier`);
 
-    // Appel OpenAI avec extraction structurée
-    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants. Ta mission est de créer un planning de révision optimal et personnalisé.
+    // Appel Lovable AI avec extraction structurée
+    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants. Ta mission est de créer un planning de révision optimal et personnalisé qui MAXIMISE l'utilisation du temps disponible.
+
+OBJECTIF PRINCIPAL :
+- Générer des sessions de révision jusqu'au JOUR MÊME de chaque examen (inclus)
+- MAXIMISER l'occupation des créneaux disponibles pour optimiser le temps de l'étudiant
+- Utiliser TOUS les créneaux libres possibles dans les limites définies
+- Plus de sessions = meilleure préparation
 
 RÈGLES ABSOLUES :
 1. JAMAIS de chevauchement entre sessions de révision et créneaux occupés (travail, activités, routine, événements)
 2. TOUJOURS respecter les limites de temps d'étude (heures/jour, heures/semaine)
 3. TOUJOURS respecter les pauses repas si activées
 4. TOUJOURS respecter les jours sans révision
-5. Les sessions doivent être dans la fenêtre de planning (du maintenant au dernier examen)
+5. Les sessions doivent être dans la fenêtre de planning (du maintenant jusqu'au JOUR DE L'EXAMEN INCLUS)
 6. Durée des sessions : entre ${intensityConfig.sessionDuration.min} et ${intensityConfig.sessionDuration.max} minutes
 7. Sessions par jour : entre ${intensityConfig.sessionsPerDay.min} et ${intensityConfig.sessionsPerDay.max}
+8. REMPLIR AU MAXIMUM les journées disponibles (viser le max de sessions/jour autorisé)
 
 STRATÉGIE DE RÉVISION :
 - Prioriser les examens selon : (priorité × difficulté × coefficient) / jours_restants
-- Espacer les révisions (répétition espacée) : première révision → révision intermédiaire → révision finale
+- Espacer les révisions (répétition espacée) : première révision → révisions intermédiaires → révisions finales intensives
 - Plus un examen est proche, plus il faut de sessions courtes et fréquentes
 - Alterner les matières pour éviter la fatigue cognitive
 - Placer les matières difficiles aux moments de productivité optimale
+- CRITQUE : Générer des sessions jusqu'au matin même de l'examen pour une révision de dernière minute
 
 GESTION DES CRÉNEAUX RÉCURRENTS :
 - Les work_schedules, activities, routine_moments se répètent selon leurs "days"
 - Vérifier les exceptions : type "deleted" = créneau annulé ce jour-là, type "modified" = créneau modifié (utiliser modified_data)
 - Ne JAMAIS placer de session sur un créneau occupé (même récurrent)
+
+OPTIMISATION DU TEMPS :
+- Identifier TOUS les créneaux libres disponibles chaque jour
+- Remplir ces créneaux avec des sessions de révision
+- Viser le nombre MAX de sessions par jour autorisé
+- Chaque minute libre est une opportunité de révision
 
 FORMAT DE SORTIE :
 - Chaque session doit avoir : subject, start_time (ISO), end_time (ISO), exam_id, difficulty (low/medium/high), weight (0-1), type (first_pass/review/final_review), reasoning
@@ -248,10 +262,12 @@ FORMAT DE SORTIE :
 
     const userPrompt = `Génère un planning de révision personnalisé pour cet étudiant.
 
+IMPORTANT : Tu dois MAXIMISER le nombre de sessions de révision en utilisant TOUS les créneaux disponibles jusqu'au jour de l'examen INCLUS.
+
 CONTEXTE COMPLET :
 ${JSON.stringify(context, null, 2)}
 
-Crée des sessions de révision optimales qui maximisent l'apprentissage tout en respectant TOUTES les contraintes.`;
+Crée des sessions de révision optimales qui maximisent l'apprentissage en remplissant AU MAXIMUM les créneaux libres, tout en respectant TOUTES les contraintes.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
