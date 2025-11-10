@@ -911,14 +911,6 @@ const Planning = () => {
             />
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => setIsAddingEvent(true)}
-              title="Ajouter un événement"
-            >
-              Ajouter
-            </Button>
-            <Button
-              variant="outline"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               title="Importer un fichier .ics"
