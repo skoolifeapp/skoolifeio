@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,16 +42,13 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
-  const { refetchAll, workSchedules, activities, routineMoments } = useData();
+  const { refetchAll, workSchedules, activities, routineMoments, calendarEvents, exams, revisionSessions: contextRevisionSessions } = useData();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
-  const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intensity, setIntensity] = useState<IntensityLevel>('standard');
-  const [examsCount, setExamsCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [editingEvent, setEditingEvent] = useState<{
@@ -73,12 +70,25 @@ const Planning = () => {
     color: '#3b82f6'
   });
 
+  // Utiliser les données du contexte transformées
+  const importedEvents = useMemo(() => {
+    return (calendarEvents || []).map(event => ({
+      summary: event.summary,
+      startDate: event.start_date,
+      endDate: event.end_date,
+      location: event.location || '',
+      description: event.description || '',
+    }));
+  }, [calendarEvents]);
+
+  const revisionSessions = useMemo(() => contextRevisionSessions || [], [contextRevisionSessions]);
+  const examsCount = useMemo(() => (exams || []).length, [exams]);
+
   useEffect(() => {
     // Check if running on native platform
     setIsNative(Capacitor.isNativePlatform());
     
     if (user) {
-      loadCalendarEvents();
       loadEventExceptions();
       loadPlannedEvents();
       checkNotificationStatus();
@@ -132,59 +142,7 @@ const Planning = () => {
     setPlannedEvents(data || []);
   };
 
-  const loadCalendarEvents = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading calendar events:', error);
-      return;
-    }
-
-    // Transform Supabase data to match the expected format
-    const events = (data || []).map(event => ({
-      summary: event.summary,
-      startDate: event.start_date,
-      endDate: event.end_date,
-      location: event.location || '',
-      description: event.description || '',
-    }));
-
-    setImportedEvents(events);
-  };
-
-  useEffect(() => {
-    if (user) {
-      loadRevisionSessions();
-      loadExamsCount();
-    }
-  }, [user]);
-
-  const loadRevisionSessions = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('revision_sessions')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading revision sessions:', error);
-      return;
-    }
-
-    const sessions = data || [];
-    setRevisionSessions(sessions);
-    
-    // Schedule notifications for all upcoming sessions
-    if (isNative && notificationsEnabled) {
-      await notificationService.scheduleSessionReminders(sessions);
-    }
-  };
+  // Plus besoin de loadCalendarEvents, loadRevisionSessions, loadExamsCount
 
   const checkNotificationStatus = async () => {
     if (!isNative) return;
@@ -217,19 +175,6 @@ const Planning = () => {
     }
   };
 
-  const loadExamsCount = async () => {
-    if (!user) return;
-    
-    const { count, error } = await supabase
-      .from('exams')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (!error && count !== null) {
-      setExamsCount(count);
-    }
-  };
-
   const handleGeneratePlanning = async () => {
     if (examsCount === 0) {
       toast.error("Aucun examen", {
@@ -251,7 +196,6 @@ const Planning = () => {
     setIsGenerating(false);
 
     if (result.success) {
-      await loadRevisionSessions();
       // Recharger depuis Supabase
       refetchAll();
     } else {
@@ -272,7 +216,6 @@ const Planning = () => {
       return;
     }
 
-    await loadRevisionSessions();
     // Recharger depuis Supabase
     refetchAll();
   };
@@ -322,7 +265,6 @@ const Planning = () => {
 
         if (error) throw error;
 
-        await loadCalendarEvents();
         // Recharger depuis Supabase
         refetchAll();
       } catch (error) {
@@ -338,165 +280,148 @@ const Planning = () => {
     }
   };
 
-  // Get exams for selected day from Supabase (not localStorage)
-  const [dayExams, setDayExams] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (user) {
-      loadDayExams();
-    }
-  }, [user, selectedDate]);
-
-  const loadDayExams = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('exams')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading exams:', error);
-      return;
-    }
-
-    const filtered = (data || []).filter((exam: { date: string }) => 
+  // Get exams for selected day using memoized data
+  const dayExams = useMemo(() => {
+    return (exams || []).filter((exam: { date: string }) => 
       isSameDay(new Date(exam.date), selectedDate)
     );
-    setDayExams(filtered);
-  };
+  }, [exams, selectedDate]);
 
-  // Get events for selected day
-  const dayEvents = importedEvents.filter(event => 
-    isSameDay(new Date(event.startDate), selectedDate)
+  // Get events for selected day - memoized
+  const dayEvents = useMemo(() => 
+    importedEvents.filter(event => 
+      isSameDay(new Date(event.startDate), selectedDate)
+    ), [importedEvents, selectedDate]);
+
+  // Get revision sessions for selected day - memoized
+  const dayRevisionSessions = useMemo(() => 
+    revisionSessions.filter(session => 
+      isSameDay(new Date(session.start_time), selectedDate)
+    ), [revisionSessions, selectedDate]);
+
+  // Get planned events for selected day - memoized
+  const dayPlannedEvents = useMemo(() => 
+    plannedEvents.filter(event => 
+      isSameDay(new Date(event.start_time), selectedDate)
+    ), [plannedEvents, selectedDate]);
+
+  // Get work schedules for selected day - memoized
+  const selectedDayName = useMemo(() => 
+    format(selectedDate, 'EEEE', { locale: fr }).toLowerCase(), 
+    [selectedDate]
   );
-
-  // Get revision sessions for selected day
-  const dayRevisionSessions = revisionSessions.filter(session => 
-    isSameDay(new Date(session.start_time), selectedDate)
-  );
-
-  // Get planned events for selected day
-  const dayPlannedEvents = plannedEvents.filter(event => 
-    isSameDay(new Date(event.start_time), selectedDate)
-  );
-
-  // Get work schedules for selected day, en excluant les exceptions
-  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
-  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
-  console.log('Filtering work schedules for:', selectedDateStr, 'Exceptions:', eventExceptions.length);
+  const selectedDateStr = useMemo(() => 
+    format(selectedDate, 'yyyy-MM-dd'), 
+    [selectedDate]
+  );
   
-  const dayWorkSchedules = (workSchedules || [])
-    .filter(schedule => {
-      const hasDay = schedule.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      // Vérifier si cette occurrence a une exception "deleted"
-      const hasException = eventExceptions.some(
-        exc => {
-          const match = exc.source_type === 'work_schedule' 
+  const dayWorkSchedules = useMemo(() => {
+    return (workSchedules || [])
+      .filter(schedule => {
+        const hasDay = schedule.days.includes(selectedDayName);
+        if (!hasDay) return false;
+        
+        // Vérifier si cette occurrence a une exception "deleted"
+        const hasException = eventExceptions.some(
+          exc => exc.source_type === 'work_schedule' 
             && exc.source_id === schedule.id 
             && exc.exception_date === selectedDateStr
-            && exc.exception_type === 'deleted';
-          
-          if (match) {
-            console.log('Exception trouvée pour:', schedule.id, 'date:', selectedDateStr);
-          }
-          
-          return match;
+            && exc.exception_type === 'deleted'
+        );
+        
+        return !hasException;
+      })
+      .map(schedule => {
+        // Vérifier si cette occurrence a une exception "modified"
+        const exception = eventExceptions.find(
+          exc => exc.source_type === 'work_schedule' 
+            && exc.source_id === schedule.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'modified'
+        );
+        
+        // Si une exception existe, utiliser les données modifiées
+        if (exception && exception.modified_data) {
+          return {
+            ...schedule,
+            ...exception.modified_data
+          };
         }
-      );
-      
-      return !hasException;
-    })
-    .map(schedule => {
-      // Vérifier si cette occurrence a une exception "modified"
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'work_schedule' 
-          && exc.source_id === schedule.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      // Si une exception existe, utiliser les données modifiées
-      if (exception && exception.modified_data) {
-        return {
-          ...schedule,
-          ...exception.modified_data
-        };
-      }
-      
-      return schedule;
-    });
-  
-  console.log('Work schedules after filtering:', dayWorkSchedules.length);
+        
+        return schedule;
+      });
+  }, [workSchedules, selectedDayName, selectedDateStr, eventExceptions]);
 
-  // Get activities for selected day, en excluant les exceptions
-  const dayActivities = (activities || [])
-    .filter(activity => {
-      const hasDay = activity.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      const hasException = eventExceptions.some(
-        exc => exc.source_type === 'activity' 
-          && exc.source_id === activity.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'deleted'
-      );
-      
-      return !hasException;
-    })
-    .map(activity => {
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'activity' 
-          && exc.source_id === activity.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      if (exception && exception.modified_data) {
-        return {
-          ...activity,
-          ...exception.modified_data
-        };
-      }
-      
-      return activity;
-    });
+  // Get activities for selected day - memoized
+  const dayActivities = useMemo(() => {
+    return (activities || [])
+      .filter(activity => {
+        const hasDay = activity.days.includes(selectedDayName);
+        if (!hasDay) return false;
+        
+        const hasException = eventExceptions.some(
+          exc => exc.source_type === 'activity' 
+            && exc.source_id === activity.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'deleted'
+        );
+        
+        return !hasException;
+      })
+      .map(activity => {
+        const exception = eventExceptions.find(
+          exc => exc.source_type === 'activity' 
+            && exc.source_id === activity.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'modified'
+        );
+        
+        if (exception && exception.modified_data) {
+          return {
+            ...activity,
+            ...exception.modified_data
+          };
+        }
+        
+        return activity;
+      });
+  }, [activities, selectedDayName, selectedDateStr, eventExceptions]);
 
-  // Get routine moments for selected day, en excluant les exceptions
-  const dayRoutineMoments = (routineMoments || [])
-    .filter(routine => {
-      const hasDay = routine.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      const hasException = eventExceptions.some(
-        exc => exc.source_type === 'routine_moment' 
-          && exc.source_id === routine.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'deleted'
-      );
-      
-      return !hasException;
-    })
-    .map(routine => {
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'routine_moment' 
-          && exc.source_id === routine.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      if (exception && exception.modified_data) {
-        return {
-          ...routine,
-          ...exception.modified_data
-        };
-      }
-      
-      return routine;
-    });
+  // Get routine moments for selected day - memoized
+  const dayRoutineMoments = useMemo(() => {
+    return (routineMoments || [])
+      .filter(routine => {
+        const hasDay = routine.days.includes(selectedDayName);
+        if (!hasDay) return false;
+        
+        const hasException = eventExceptions.some(
+          exc => exc.source_type === 'routine_moment' 
+            && exc.source_id === routine.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'deleted'
+        );
+        
+        return !hasException;
+      })
+      .map(routine => {
+        const exception = eventExceptions.find(
+          exc => exc.source_type === 'routine_moment' 
+            && exc.source_id === routine.id 
+            && exc.exception_date === selectedDateStr
+            && exc.exception_type === 'modified'
+        );
+        
+        if (exception && exception.modified_data) {
+          return {
+            ...routine,
+            ...exception.modified_data
+          };
+        }
+        
+        return routine;
+      });
+  }, [routineMoments, selectedDayName, selectedDateStr, eventExceptions]);
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
@@ -543,7 +468,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadCalendarEvents();
+        refetchAll();
       } else if (editingEvent.type === 'revision') {
         const { error } = await supabase
           .from('revision_sessions')
@@ -555,7 +480,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadRevisionSessions();
+        refetchAll();
       } else if (editingEvent.type === 'work') {
         // Si c'est récurrent et qu'on modifie seulement cette occurrence
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
@@ -608,7 +533,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadDayExams();
+        refetchAll();
       } else if (editingEvent.type === 'planned') {
         const { error } = await supabase
           .from('planned_events')
@@ -717,7 +642,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadCalendarEvents();
+        refetchAll();
       } else if (editingEvent.type === 'revision') {
         const { error } = await supabase
           .from('revision_sessions')
@@ -725,7 +650,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadRevisionSessions();
+        refetchAll();
       } else if (editingEvent.type === 'work') {
         // Si c'est récurrent et qu'on supprime seulement cette occurrence
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
@@ -768,7 +693,7 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadDayExams();
+        refetchAll();
       } else if (editingEvent.type === 'planned') {
         const { error } = await supabase
           .from('planned_events')
@@ -833,13 +758,7 @@ const Planning = () => {
         }
       }
 
-      // Recharger toutes les données pour s'assurer que la suppression est visible
-      await Promise.all([
-        loadCalendarEvents(),
-        loadRevisionSessions(),
-        loadDayExams()
-      ]);
-      
+      // Recharger toutes les données
       refetchAll();
       setEditingEvent(null);
     } catch (error) {
