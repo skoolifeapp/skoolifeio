@@ -96,21 +96,21 @@ export const DashboardStats = () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
         <Card
           key={index}
           className="border border-border shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-medium)] transition-all"
         >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-secondary rounded-lg text-foreground">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 bg-secondary rounded-xl text-foreground">
                 {stat.icon}
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-3xl font-bold text-foreground">{stat.value}</p>
             </div>
           </CardContent>
         </Card>

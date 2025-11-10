@@ -3,15 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { MobileNav } from "@/components/layout/MobileNav";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { DesktopLayout } from "@/components/layout/DesktopLayout";
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { useMigrateLocalStorageToSupabase } from "@/hooks/useMigrateLocalStorageToSupabase";
 import Index from "./pages/Index";
 import Exams from "./pages/Exams";
-
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import Constraints from "./pages/Constraints";
@@ -23,7 +22,6 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { user } = useAuth();
   
-  // Automatically migrate localStorage data to Supabase on first load
   useMigrateLocalStorageToSupabase();
   
   return (
@@ -31,15 +29,58 @@ const AppContent = () => {
       <ScrollReset />
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-        <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
-        
-        <Route path="/constraints" element={<ProtectedRoute><Constraints /></ProtectedRoute>} />
-        <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DesktopLayout>
+                <Index />
+              </DesktopLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/exams"
+          element={
+            <ProtectedRoute>
+              <DesktopLayout>
+                <Exams />
+              </DesktopLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/constraints"
+          element={
+            <ProtectedRoute>
+              <DesktopLayout>
+                <Constraints />
+              </DesktopLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/planning"
+          element={
+            <ProtectedRoute>
+              <DesktopLayout>
+                <Planning />
+              </DesktopLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <DesktopLayout>
+                <Profile />
+              </DesktopLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {user && <MobileNav />}
     </div>
   );
 };
