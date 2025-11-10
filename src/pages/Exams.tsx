@@ -252,33 +252,6 @@ const Exams = () => {
           </Card>
         )}
 
-        {/* Stats Pills */}
-        <div className="grid grid-cols-4 gap-3">
-          <Card className="rounded-2xl border shadow-sm">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-              <p className="text-xs text-muted-foreground mt-1">Total</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border shadow-sm">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.upcoming}</p>
-              <p className="text-xs text-muted-foreground mt-1">À venir</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border shadow-sm">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats.high}</p>
-              <p className="text-xs text-muted-foreground mt-1">Priorité haute</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl border shadow-sm">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats.done}</p>
-              <p className="text-xs text-muted-foreground mt-1">Terminés</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Filtres */}
         <div className="flex gap-2 overflow-x-auto pb-2">
