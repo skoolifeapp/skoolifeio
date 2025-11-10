@@ -33,13 +33,14 @@ serve(async (req) => {
     const { intensity = 'standard' } = await req.json();
 
     // Fetch user data
-    const [examsRes, eventsRes, workSchedulesRes, activitiesRes, routineMomentsRes, exceptionsRes, profileRes] = await Promise.all([
+    const [examsRes, eventsRes, workSchedulesRes, activitiesRes, routineMomentsRes, exceptionsRes, plannedEventsRes, profileRes] = await Promise.all([
       supabaseClient.from('exams').select('*').eq('user_id', user.id).order('date', { ascending: true }),
       supabaseClient.from('calendar_events').select('*').eq('user_id', user.id),
       supabaseClient.from('work_schedules').select('*').eq('user_id', user.id),
       supabaseClient.from('activities').select('*').eq('user_id', user.id),
       supabaseClient.from('routine_moments').select('*').eq('user_id', user.id),
       supabaseClient.from('event_exceptions').select('*').eq('user_id', user.id),
+      supabaseClient.from('planned_events').select('*').eq('user_id', user.id),
       supabaseClient.from('user_constraints_profile').select('*').eq('user_id', user.id).single(),
     ]);
 
@@ -49,6 +50,7 @@ serve(async (req) => {
     if (activitiesRes.error) throw activitiesRes.error;
     if (routineMomentsRes.error) throw routineMomentsRes.error;
     if (exceptionsRes.error) throw exceptionsRes.error;
+    if (plannedEventsRes.error) throw plannedEventsRes.error;
 
     const exams = examsRes.data || [];
     const events = eventsRes.data || [];
@@ -56,6 +58,7 @@ serve(async (req) => {
     const activities = activitiesRes.data || [];
     const routineMoments = routineMomentsRes.data || [];
     const exceptions = exceptionsRes.data || [];
+    const plannedEvents = plannedEventsRes.data || [];
     const profile = profileRes.data || null;
 
     if (exams.length === 0) {
@@ -318,9 +321,24 @@ ${routineMoments.length > 0 ? routineMoments.map(r => {
   const planningEnd = new Date(lastExamDate);
   const occurrences = getOccurrencesForPeriod(r, planningStart, planningEnd);
   
-  return occurrences.map(occ => `⏰ ${occ.title}
+   return occurrences.map(occ => `⏰ ${occ.title}
    Le: ${occ.date} de ${occ.start_time} à ${occ.end_time}`).join('\n\n');
 }).join('\n\n') : '✅ Aucun moment de routine'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 ÉVÉNEMENTS PLANIFIÉS MANUELLEMENT - NE PAS UTILISER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${plannedEvents.length > 0 ? plannedEvents.map(p => {
+  const start = new Date(p.start_time);
+  const end = new Date(p.end_time);
+  return `📅 ${p.title}
+   Le: ${start.toISOString().split('T')[0]} 
+   De: ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} 
+   À: ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+   ${p.location ? `Lieu: ${p.location}` : ''}
+   ${p.description ? `Description: ${p.description}` : ''}`;
+}).join('\n\n') : '✅ Aucun événement planifié manuellement'}
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -55,13 +55,23 @@ const Planning = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [editingEvent, setEditingEvent] = useState<{
-    type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine';
+    type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine' | 'planned';
     data: any;
     isRecurring?: boolean;
     selectedDate?: Date;
   } | null>(null);
   const [recurrenceChoice, setRecurrenceChoice] = useState<'this' | 'all'>('this');
   const [eventExceptions, setEventExceptions] = useState<any[]>([]);
+  const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    start_time: '',
+    end_time: '',
+    location: '',
+    color: '#3b82f6'
+  });
 
   useEffect(() => {
     // Check if running on native platform
@@ -70,6 +80,7 @@ const Planning = () => {
     if (user) {
       loadCalendarEvents();
       loadEventExceptions();
+      loadPlannedEvents();
       checkNotificationStatus();
       cleanCancelledEvents();
     }
@@ -103,6 +114,22 @@ const Planning = () => {
     }
 
     setEventExceptions(data || []);
+  };
+
+  const loadPlannedEvents = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('planned_events')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading planned events:', error);
+      return;
+    }
+
+    setPlannedEvents(data || []);
   };
 
   const loadCalendarEvents = async () => {
@@ -349,6 +376,11 @@ const Planning = () => {
     isSameDay(new Date(session.start_time), selectedDate)
   );
 
+  // Get planned events for selected day
+  const dayPlannedEvents = plannedEvents.filter(event => 
+    isSameDay(new Date(event.start_time), selectedDate)
+  );
+
   // Get work schedules for selected day, en excluant les exceptions
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -577,6 +609,21 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
+      } else if (editingEvent.type === 'planned') {
+        const { error } = await supabase
+          .from('planned_events')
+          .update({
+            title: editingEvent.data.title,
+            start_time: editingEvent.data.start_time,
+            end_time: editingEvent.data.end_time,
+            location: editingEvent.data.location,
+            description: editingEvent.data.description,
+            color: editingEvent.data.color,
+          })
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadPlannedEvents();
       } else if (editingEvent.type === 'activity') {
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
           const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
@@ -722,6 +769,14 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
+      } else if (editingEvent.type === 'planned') {
+        const { error } = await supabase
+          .from('planned_events')
+          .delete()
+          .eq('id', editingEvent.data.id);
+
+        if (error) throw error;
+        await loadPlannedEvents();
       } else if (editingEvent.type === 'activity') {
         if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
           const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
@@ -801,6 +856,45 @@ const Planning = () => {
     setSelectedDate(prev => addDays(prev, 1));
   };
 
+  const handleAddEvent = async () => {
+    if (!user || !newEvent.title || !newEvent.start_time || !newEvent.end_time) {
+      toast.error("Remplis tous les champs obligatoires");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('planned_events')
+        .insert({
+          user_id: user.id,
+          title: newEvent.title,
+          description: newEvent.description,
+          start_time: newEvent.start_time,
+          end_time: newEvent.end_time,
+          location: newEvent.location,
+          color: newEvent.color,
+        });
+
+      if (error) throw error;
+
+      await loadPlannedEvents();
+      refetchAll();
+      setIsAddingEvent(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        start_time: '',
+        end_time: '',
+        location: '',
+        color: '#3b82f6'
+      });
+      toast.error("Événement ajouté");
+    } catch (error) {
+      console.error('Error adding event:', error);
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
   return (
     <div className="h-[100dvh] flex flex-col">
       {/* Fixed Header Section */}
@@ -815,6 +909,14 @@ const Planning = () => {
               onChange={handleFileUpload}
               className="hidden"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddingEvent(true)}
+              title="Ajouter un événement"
+            >
+              Ajouter
+            </Button>
             <Button
               variant="outline"
               size="icon"
@@ -917,7 +1019,7 @@ const Planning = () => {
 
               {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 ? (
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -927,7 +1029,7 @@ const Planning = () => {
                     {(() => {
                       // Collect all events with their time info
                       const allEvents: Array<{
-                        type: 'calendar' | 'revision' | 'work' | 'activity' | 'routine';
+                        type: 'calendar' | 'revision' | 'work' | 'activity' | 'routine' | 'planned';
                         data: any;
                         startMinutes: number;
                         endMinutes: number;
@@ -1021,6 +1123,27 @@ const Planning = () => {
                         allEvents.push({
                           type: 'revision',
                           data: session,
+                          startMinutes: (adjustedStartHour * 60) + startMinute,
+                          endMinutes: (adjustedEndHour * 60) + endMinute,
+                          index: 0
+                        });
+                      });
+
+                      // Add planned events
+                      dayPlannedEvents.forEach((event) => {
+                        const start = new Date(event.start_time);
+                        const end = new Date(event.end_time);
+                        const startHour = start.getHours();
+                        const startMinute = start.getMinutes();
+                        const endHour = end.getHours();
+                        const endMinute = end.getMinutes();
+                        
+                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
+                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
+                        
+                        allEvents.push({
+                          type: 'planned',
+                          data: event,
                           startMinutes: (adjustedStartHour * 60) + startMinute,
                           endMinutes: (adjustedEndHour * 60) + endMinute,
                           index: 0
@@ -1267,6 +1390,41 @@ const Planning = () => {
                           );
                         }
 
+                        if (event.type === 'planned') {
+                          const plannedEvent = event.data;
+                          const start = new Date(plannedEvent.start_time);
+                          const end = new Date(plannedEvent.end_time);
+                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
+
+                          return (
+                            <div
+                              key={`planned-${plannedEvent.id}-${idx}`}
+                              className="absolute text-white rounded-lg p-2 overflow-hidden shadow-md border-2 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={{
+                                ...style,
+                                backgroundColor: plannedEvent.color || '#3b82f6',
+                                borderColor: plannedEvent.color || '#3b82f6',
+                              }}
+                              onClick={() => {
+                                setEditingEvent({
+                                  type: 'planned',
+                                  data: { ...plannedEvent }
+                                });
+                              }}
+                            >
+                              <div className="text-xs font-semibold truncate">
+                                📅 {plannedEvent.title}
+                              </div>
+                              <div className="text-xs opacity-90">
+                                {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
+                              </div>
+                              {plannedEvent.location && (
+                                <div className="text-xs opacity-80 truncate mt-1">{plannedEvent.location}</div>
+                              )}
+                            </div>
+                          );
+                        }
+
                         return null;
                       });
                     })()}
@@ -1277,6 +1435,88 @@ const Planning = () => {
           </div>
         </div>
       </div>
+
+      {/* Drawer pour ajouter un événement */}
+      <Drawer open={isAddingEvent} onOpenChange={setIsAddingEvent}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Ajouter un événement</DrawerTitle>
+            <DrawerDescription>
+              Crée un nouvel événement dans ton planning
+            </DrawerDescription>
+          </DrawerHeader>
+          
+          <div className="px-4 space-y-4 pb-6">
+            <div>
+              <Label htmlFor="new-title">Titre *</Label>
+              <Input
+                id="new-title"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                placeholder="Titre de l'événement"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="new-description">Description</Label>
+              <Input
+                id="new-description"
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                placeholder="Description (optionnel)"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="new-start">Début *</Label>
+                <Input
+                  id="new-start"
+                  type="datetime-local"
+                  value={newEvent.start_time}
+                  onChange={(e) => setNewEvent({ ...newEvent, start_time: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-end">Fin *</Label>
+                <Input
+                  id="new-end"
+                  type="datetime-local"
+                  value={newEvent.end_time}
+                  onChange={(e) => setNewEvent({ ...newEvent, end_time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="new-location">Lieu</Label>
+              <Input
+                id="new-location"
+                value={newEvent.location}
+                onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                placeholder="Lieu (optionnel)"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="new-color">Couleur</Label>
+              <Input
+                id="new-color"
+                type="color"
+                value={newEvent.color}
+                onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button onClick={handleAddEvent}>Ajouter</Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* Drawer pour éditer les événements */}
       <Drawer open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
@@ -1289,6 +1529,7 @@ const Planning = () => {
               {editingEvent?.type === 'exam' && 'Modifier l\'examen'}
               {editingEvent?.type === 'activity' && 'Modifier l\'activité'}
               {editingEvent?.type === 'routine' && 'Modifier le moment de routine'}
+              {editingEvent?.type === 'planned' && 'Modifier l\'événement'}
             </DrawerTitle>
             <DrawerDescription>
               Modifie les informations de cet événement
