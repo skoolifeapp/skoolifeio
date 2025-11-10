@@ -1353,7 +1353,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`session-${session.id}-${idx}`}
-                              className="absolute bg-primary/90 text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-indigo-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-indigo-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({

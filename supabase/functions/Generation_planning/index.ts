@@ -457,7 +457,7 @@ Ne renvoie aucun texte hors de cet objet JSON.
       );
     }
 
-    // Validation locale des sessions
+    // Validation locale des sessions avec vérification des chevauchements
     const validSessions = sessions.filter((s: any) => {
       if (!s.subject || !s.start_time || !s.end_time) return false;
 
@@ -473,6 +473,21 @@ Ne renvoie aucun texte hors de cet objet JSON.
         duration > config.maxDuration
       ) {
         return false;
+      }
+
+      // Vérifier qu'il n'y a pas de chevauchement avec les busy_slots
+      const sessionStart = start.toISOString();
+      const sessionEnd = end.toISOString();
+      
+      for (const slot of busySlots) {
+        const slotStart = new Date(slot.start);
+        const slotEnd = new Date(slot.end);
+        
+        // Vérifier le chevauchement : si session commence avant la fin du slot ET se termine après le début du slot
+        if (start < slotEnd && end > slotStart) {
+          console.log(`Session rejected: overlap with ${slot.type} (${slot.start} - ${slot.end})`);
+          return false;
+        }
       }
 
       return true;
