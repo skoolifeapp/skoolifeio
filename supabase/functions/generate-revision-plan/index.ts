@@ -359,27 +359,106 @@ Crée des sessions de révision optimales qui maximisent l'apprentissage en remp
 
     console.log(`[${user.id}] ${sessions.length} sessions générées par l'IA`);
 
-    // Validation des sessions
+    // Fonction pour vérifier le chevauchement entre 2 créneaux
+    const hasOverlap = (start1: Date, end1: Date, start2: Date, end2: Date): boolean => {
+      return start1 < end2 && start2 < end1;
+    };
+
+    // Fonction pour expanser les créneaux récurrents en occurrences concrètes
+    const expandRecurringSlots = (recurring: any[], type: string) => {
+      const slots: Array<{start: Date, end: Date}> = [];
+      const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+      
+      for (const item of recurring) {
+        for (let d = new Date(now); d <= lastExamDate; d.setDate(d.getDate() + 1)) {
+          const dayName = dayNames[d.getDay()];
+          if (!item.days.includes(dayName)) continue;
+          
+          const dateStr = d.toISOString().split('T')[0];
+          
+          // Vérifier les exceptions
+          const hasDeleteException = (exceptionsRes.data || []).some(
+            (exc: any) => exc.source_type === type && exc.source_id === item.id && 
+            exc.exception_date === dateStr && exc.exception_type === 'deleted'
+          );
+          if (hasDeleteException) continue;
+          
+          // Vérifier si modifié
+          const modException = (exceptionsRes.data || []).find(
+            (exc: any) => exc.source_type === type && exc.source_id === item.id && 
+            exc.exception_date === dateStr && exc.exception_type === 'modified'
+          );
+          
+          const startTime = modException?.modified_data?.start_time || item.start_time;
+          const endTime = modException?.modified_data?.end_time || item.end_time;
+          
+          const [startH, startM] = startTime.split(':').map(Number);
+          const [endH, endM] = endTime.split(':').map(Number);
+          
+          const slotStart = new Date(d);
+          slotStart.setHours(startH, startM, 0, 0);
+          const slotEnd = new Date(d);
+          slotEnd.setHours(endH, endM, 0, 0);
+          
+          slots.push({ start: slotStart, end: slotEnd });
+        }
+      }
+      return slots;
+    };
+
+    // Collecter TOUS les créneaux occupés
+    const allBusySlots: Array<{start: Date, end: Date}> = [
+      // Événements calendrier
+      ...(calendarRes.data || []).map(e => ({
+        start: new Date(e.start_date),
+        end: new Date(e.end_date)
+      })),
+      // Événements planifiés
+      ...(plannedRes.data || []).map(e => ({
+        start: new Date(e.start_time),
+        end: new Date(e.end_time)
+      })),
+      // Work schedules récurrents
+      ...expandRecurringSlots(workRes.data || [], 'work_schedule'),
+      // Activities récurrentes
+      ...expandRecurringSlots(activitiesRes.data || [], 'activity'),
+      // Routine moments récurrents
+      ...expandRecurringSlots(routineRes.data || [], 'routine_moment'),
+    ];
+
+    console.log(`[${user.id}] ${allBusySlots.length} créneaux occupés identifiés`);
+
+    // Validation stricte des sessions avec vérification des chevauchements
     const validSessions = sessions.filter((s: any) => {
       const start = new Date(s.start_time);
       const end = new Date(s.end_time);
       const durationMin = (end.getTime() - start.getTime()) / 60000;
 
-      const isValid = 
+      // Vérifications de base
+      const basicValid = 
         start >= now &&
         end <= lastExamDate &&
         start < end &&
         durationMin >= intensityConfig.sessionDuration.min &&
-        durationMin <= intensityConfig.sessionDuration.max * 1.2 && // 20% de marge
+        durationMin <= intensityConfig.sessionDuration.max * 1.2 &&
         s.subject &&
         s.exam_id &&
         exams.some(e => e.id === s.exam_id);
 
-      if (!isValid) {
-        console.warn(`Session invalide ignorée:`, s);
+      if (!basicValid) {
+        console.warn(`Session invalide (contraintes de base):`, s.subject, s.start_time);
+        return false;
       }
 
-      return isValid;
+      // Vérifier les chevauchements avec les créneaux occupés
+      const hasConflict = allBusySlots.some(busy => hasOverlap(start, end, busy.start, busy.end));
+      
+      if (hasConflict) {
+        console.warn(`Session rejetée (chevauchement):`, s.subject, s.start_time);
+        return false;
+      }
+
+      return true;
     });
 
     console.log(`[${user.id}] ${validSessions.length} sessions valides après validation`);
