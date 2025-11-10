@@ -218,17 +218,22 @@ serve(async (req) => {
     // Créneaux occupés (busy_slots)
     let busySlots: { start: string; end: string; type: string }[] = [];
 
+    console.log('Building busy slots from events:', events.length);
+    
     // Événements calendrier
     for (const ev of events) {
       if (!ev.start_date || !ev.end_date) continue;
       const start = new Date(ev.start_date);
       const end = new Date(ev.end_date);
       if (end < planningStart || start > planningEnd) continue;
-      busySlots.push({
+      
+      const slot = {
         start: start.toISOString(),
         end: end.toISOString(),
         type: "calendar_event",
-      });
+      };
+      busySlots.push(slot);
+      console.log('Added calendar event slot:', slot);
     }
 
     // Événements planifiés manuellement
@@ -290,9 +295,15 @@ serve(async (req) => {
     busySlots.sort((a, b) =>
       a.start < b.start ? -1 : a.start > b.start ? 1 : 0
     );
+    
+    console.log('Total busy slots before trimming:', busySlots.length);
+    
     if (busySlots.length > MAX_BUSY_SLOTS) {
+      console.log(`Trimming busy slots from ${busySlots.length} to ${MAX_BUSY_SLOTS}`);
       busySlots = busySlots.slice(0, MAX_BUSY_SLOTS);
     }
+    
+    console.log('Final busy slots count:', busySlots.length);
 
     // Contexte compact envoyé à l'IA
     const context = {
@@ -458,40 +469,49 @@ Ne renvoie aucun texte hors de cet objet JSON.
     }
 
     // Validation locale des sessions avec vérification des chevauchements
-    const validSessions = sessions.filter((s: any) => {
-      if (!s.subject || !s.start_time || !s.end_time) return false;
+    console.log('Starting validation of', sessions.length, 'sessions');
+    console.log('Checking against', busySlots.length, 'busy slots');
+    
+    const validSessions = sessions.filter((s: any, idx: number) => {
+      if (!s.subject || !s.start_time || !s.end_time) {
+        console.log(`Session ${idx} rejected: missing required fields`);
+        return false;
+      }
 
       const start = new Date(s.start_time);
       const end = new Date(s.end_time);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
-      if (end <= start) return false;
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.log(`Session ${idx} rejected: invalid dates`);
+        return false;
+      }
+      if (end <= start) {
+        console.log(`Session ${idx} rejected: end before start`);
+        return false;
+      }
 
-      const duration =
-        (end.getTime() - start.getTime()) / (1000 * 60);
-      if (
-        duration < config.minDuration ||
-        duration > config.maxDuration
-      ) {
+      const duration = (end.getTime() - start.getTime()) / (1000 * 60);
+      if (duration < config.minDuration || duration > config.maxDuration) {
+        console.log(`Session ${idx} rejected: duration ${duration}min outside range ${config.minDuration}-${config.maxDuration}`);
         return false;
       }
 
       // Vérifier qu'il n'y a pas de chevauchement avec les busy_slots
-      const sessionStart = start.toISOString();
-      const sessionEnd = end.toISOString();
-      
       for (const slot of busySlots) {
         const slotStart = new Date(slot.start);
         const slotEnd = new Date(slot.end);
         
         // Vérifier le chevauchement : si session commence avant la fin du slot ET se termine après le début du slot
         if (start < slotEnd && end > slotStart) {
-          console.log(`Session rejected: overlap with ${slot.type} (${slot.start} - ${slot.end})`);
+          console.log(`Session ${idx} "${s.subject}" (${s.start_time} - ${s.end_time}) REJECTED: overlaps with ${slot.type} (${slot.start} - ${slot.end})`);
           return false;
         }
       }
 
+      console.log(`Session ${idx} "${s.subject}" (${s.start_time} - ${s.end_time}) VALID`);
       return true;
     });
+    
+    console.log('Valid sessions after filtering:', validSessions.length);
 
     if (!validSessions.length) {
       return new Response(
