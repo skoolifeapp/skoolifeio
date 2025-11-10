@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, Pause, RotateCcw, Settings } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -144,17 +144,17 @@ export const PomodoroTimer = () => {
     <Card className="border border-border shadow-[var(--shadow-medium)]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-center flex-1">Pomodoro</CardTitle>
-        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-          <DialogTrigger asChild>
+        <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DrawerTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Settings className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Paramètres du Pomodoro</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Paramètres du Pomodoro</DrawerTitle>
+            </DrawerHeader>
+            <div className="space-y-4 px-4 pb-4">
               <div className="space-y-2">
                 <Label htmlFor="pomodoro-time">Durée Focus (minutes)</Label>
                 <Input
@@ -188,12 +188,19 @@ export const PomodoroTimer = () => {
                   onChange={(e) => setTempLongBreakMinutes(Number(e.target.value))}
                 />
               </div>
+            </div>
+            <DrawerFooter>
               <Button onClick={saveSettings} className="w-full">
                 Enregistrer
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-full">
+                  Annuler
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Mode Selector */}
