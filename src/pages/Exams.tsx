@@ -50,12 +50,14 @@ const Exams = () => {
 
   // Synchroniser les examens locaux avec le DataContext
   useEffect(() => {
+    console.log('DataContext exams updated:', dataExams);
     if (dataExams) {
       const transformedExams = dataExams.map(exam => ({
         ...exam,
         priority: typeof exam.priority === 'string' ? parseInt(exam.priority) || 3 : exam.priority,
         difficulty: typeof exam.difficulty === 'string' ? parseInt(exam.difficulty) || 3 : exam.difficulty,
       }));
+      console.log('Transformed exams:', transformedExams);
       setExams(transformedExams);
     }
   }, [dataExams]);

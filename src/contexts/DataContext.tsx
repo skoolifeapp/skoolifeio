@@ -26,15 +26,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     queryKey: ["exams", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase
+      console.log('Fetching exams for user:', user.id);
+      const { data, error } = await supabase
         .from("exams")
         .select("*")
         .eq("user_id", user.id)
         .order("date", { ascending: true });
+      
+      console.log('Exams fetched:', data, 'Error:', error);
       return data || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Désactiver le cache temporairement pour debug
   });
 
   // Précharger les événements du calendrier
