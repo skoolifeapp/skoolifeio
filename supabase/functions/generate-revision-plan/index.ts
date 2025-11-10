@@ -480,17 +480,58 @@ Génère maintenant le planning optimal.`;
 
     const aiData = await aiResponse.json();
     const aiContent = aiData.choices[0].message.content;
-    console.log('AI raw response length:', aiContent?.length || 0);
+    console.log('AI raw response:', aiContent);
 
     let parsed;
     try {
+      // Try to parse directly first
       parsed = JSON.parse(aiContent);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', aiContent);
-      throw new Error('Invalid AI response format');
+      console.warn('Direct JSON parse failed, trying to extract JSON from response');
+      
+      // Try to extract JSON from markdown code blocks or text
+      const jsonMatch = aiContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || 
+                       aiContent.match(/(\{[\s\S]*"sessions"[\s\S]*\})/);
+      
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          parsed = JSON.parse(jsonMatch[1]);
+          console.log('Successfully extracted JSON from response');
+        } catch (extractError) {
+          console.error('Failed to parse extracted JSON:', jsonMatch[1]);
+          console.error('Extract error:', extractError);
+          return new Response(JSON.stringify({ 
+            error: 'L\'IA a retourné une réponse invalide. Réessaye dans quelques instants.',
+            details: 'JSON parsing failed after extraction attempt'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } else {
+        console.error('No JSON found in AI response:', aiContent);
+        return new Response(JSON.stringify({ 
+          error: 'L\'IA a retourné une réponse invalide. Réessaye avec des contraintes différentes.',
+          details: 'No JSON object found in response'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
-    const sessions = parsed.sessions || [];
+    if (!parsed || typeof parsed !== 'object') {
+      console.error('Parsed result is not an object:', parsed);
+      return new Response(JSON.stringify({ 
+        error: 'Format de réponse invalide. Réessaye.',
+        details: 'Parsed result is not a valid object'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const sessions = Array.isArray(parsed.sessions) ? parsed.sessions : [];
     console.log('Parsed sessions count:', sessions.length);
 
     if (sessions.length === 0) {
