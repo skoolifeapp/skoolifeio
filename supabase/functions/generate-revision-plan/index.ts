@@ -14,17 +14,17 @@ interface IntensityConfig {
 const INTENSITY_CONFIGS: Record<string, IntensityConfig> = {
   leger: {
     sessionDuration: { min: 45, max: 90 },
-    sessionsPerDay: { min: 1, max: 2 },
+    sessionsPerDay: { min: 1, max: 1 },  // STRICTEMENT 1 session par jour max
     totalHoursTarget: 20,
   },
   standard: {
     sessionDuration: { min: 60, max: 120 },
-    sessionsPerDay: { min: 2, max: 4 },
+    sessionsPerDay: { min: 1, max: 2 },  // STRICTEMENT 2 sessions par jour max
     totalHoursTarget: 40,
   },
   intensif: {
     sessionDuration: { min: 90, max: 150 },
-    sessionsPerDay: { min: 3, max: 6 },
+    sessionsPerDay: { min: 1, max: 3 },  // STRICTEMENT 3 sessions par jour max
     totalHoursTarget: 60,
   },
 };
@@ -218,42 +218,41 @@ Deno.serve(async (req) => {
     console.log(`[${user.id}] Contexte préparé - ${exams.length} examens, ${context.busy_slots.calendar_events.length} événements calendrier`);
 
     // Appel Lovable AI avec extraction structurée
-    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants. Ta mission est de créer un planning de révision optimal et personnalisé qui MAXIMISE l'utilisation du temps disponible.
+    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants. Ta mission est de créer un planning de révision optimal et personnalisé.
 
 OBJECTIF PRINCIPAL :
 - Générer des sessions de révision jusqu'au JOUR MÊME de chaque examen (inclus)
-- MAXIMISER l'occupation des créneaux disponibles pour optimiser le temps de l'étudiant
-- Utiliser TOUS les créneaux libres possibles dans les limites définies
-- Plus de sessions = meilleure préparation
+- Placer les sessions UNIQUEMENT dans les créneaux totalement libres
+- Optimiser l'apprentissage dans les limites strictes de l'intensité choisie
 
-RÈGLES ABSOLUES :
-1. JAMAIS de chevauchement entre sessions de révision et créneaux occupés (travail, activités, routine, événements)
-2. TOUJOURS respecter les limites de temps d'étude (heures/jour, heures/semaine)
-3. TOUJOURS respecter les pauses repas si activées
-4. TOUJOURS respecter les jours sans révision
-5. Les sessions doivent être dans la fenêtre de planning (du maintenant jusqu'au JOUR DE L'EXAMEN INCLUS)
-6. Durée des sessions : entre ${intensityConfig.sessionDuration.min} et ${intensityConfig.sessionDuration.max} minutes
-7. Sessions par jour : entre ${intensityConfig.sessionsPerDay.min} et ${intensityConfig.sessionsPerDay.max}
-8. REMPLIR AU MAXIMUM les journées disponibles (viser le max de sessions/jour autorisé)
+RÈGLES ABSOLUES - RESPECT STRICT :
+1. ZÉRO chevauchement entre sessions et créneaux occupés (travail, activités, routine, événements, repas)
+2. STRICTEMENT ${intensityConfig.sessionsPerDay.max} session(s) MAXIMUM par jour - JAMAIS plus
+3. Durée des sessions : STRICTEMENT entre ${intensityConfig.sessionDuration.min} et ${intensityConfig.sessionDuration.max} minutes
+4. TOUJOURS respecter les limites de temps d'étude (heures/jour, heures/semaine)
+5. TOUJOURS respecter les pauses repas si activées
+6. TOUJOURS respecter les jours sans révision
+7. Les sessions doivent être dans la fenêtre de planning (maintenant → jour de l'examen INCLUS)
+8. Placer les sessions UNIQUEMENT sur des créneaux TOTALEMENT libres
 
 STRATÉGIE DE RÉVISION :
 - Prioriser les examens selon : (priorité × difficulté × coefficient) / jours_restants
-- Espacer les révisions (répétition espacée) : première révision → révisions intermédiaires → révisions finales intensives
-- Plus un examen est proche, plus il faut de sessions courtes et fréquentes
+- Espacer les révisions (répétition espacée) : première révision → révisions intermédiaires → révisions finales
+- Plus un examen est proche, plus il faut de sessions fréquentes
 - Alterner les matières pour éviter la fatigue cognitive
 - Placer les matières difficiles aux moments de productivité optimale
-- CRITQUE : Générer des sessions jusqu'au matin même de l'examen pour une révision de dernière minute
+- Générer des sessions jusqu'au matin de l'examen pour révision de dernière minute
 
 GESTION DES CRÉNEAUX RÉCURRENTS :
 - Les work_schedules, activities, routine_moments se répètent selon leurs "days"
-- Vérifier les exceptions : type "deleted" = créneau annulé ce jour-là, type "modified" = créneau modifié (utiliser modified_data)
+- Vérifier les exceptions : type "deleted" = créneau annulé, type "modified" = créneau modifié (utiliser modified_data)
 - Ne JAMAIS placer de session sur un créneau occupé (même récurrent)
 
-OPTIMISATION DU TEMPS :
-- Identifier TOUS les créneaux libres disponibles chaque jour
-- Remplir ces créneaux avec des sessions de révision
-- Viser le nombre MAX de sessions par jour autorisé
-- Chaque minute libre est une opportunité de révision
+OPTIMISATION DANS LES LIMITES :
+- Identifier les créneaux libres disponibles chaque jour
+- Respecter STRICTEMENT le MAX de ${intensityConfig.sessionsPerDay.max} session(s) par jour
+- Ne JAMAIS dépasser cette limite même s'il y a des créneaux libres
+- Qualité > Quantité : mieux vaut ${intensityConfig.sessionsPerDay.max} session(s) bien placée(s) que plus de sessions qui violent les règles
 
 FORMAT DE SORTIE :
 - Chaque session doit avoir : subject, start_time (ISO), end_time (ISO), exam_id, difficulty (low/medium/high), weight (0-1), type (first_pass/review/final_review), reasoning
@@ -262,12 +261,17 @@ FORMAT DE SORTIE :
 
     const userPrompt = `Génère un planning de révision personnalisé pour cet étudiant.
 
-IMPORTANT : Tu dois MAXIMISER le nombre de sessions de révision en utilisant TOUS les créneaux disponibles jusqu'au jour de l'examen INCLUS.
+⚠️ CRITÈRE ABSOLU : MAXIMUM ${intensityConfig.sessionsPerDay.max} SESSION(S) PAR JOUR - JAMAIS PLUS ⚠️
+⚠️ ZÉRO CHEVAUCHEMENT AVEC LES CRÉNEAUX OCCUPÉS ⚠️
 
 CONTEXTE COMPLET :
 ${JSON.stringify(context, null, 2)}
 
-Crée des sessions de révision optimales qui maximisent l'apprentissage en remplissant AU MAXIMUM les créneaux libres, tout en respectant TOUTES les contraintes.`;
+Crée des sessions de révision optimales en respectant STRICTEMENT :
+- Maximum ${intensityConfig.sessionsPerDay.max} session(s) par jour
+- Durée entre ${intensityConfig.sessionDuration.min}-${intensityConfig.sessionDuration.max} min
+- Aucun chevauchement avec événements/travail/activités/routine/repas
+- Placement uniquement sur créneaux totalement libres`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
