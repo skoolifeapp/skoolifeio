@@ -1,4 +1,7 @@
 project_id = "lvhvzxfqjzfcwbwyixuo"
 
-[functions.generate-revision-plan]
+[functions.Generation_planning]
+verify_jwt = true
+
+[functions.clean-cancelled-events]
 verify_jwt = true
