@@ -18,6 +18,9 @@ interface WorkSchedule {
   location?: string;
   frequency?: 'weekly' | 'biweekly';
   hours_per_week?: number;
+  alternance_rhythm?: '2j_3j' | '3j_2j' | '1sem_1sem' | '1sem_2sem';
+  start_date?: string;
+  company_name?: string;
 }
 
 interface Activity {
@@ -129,6 +132,9 @@ const Constraints = () => {
             location: s.location || null,
             frequency: s.frequency,
             hours_per_week: s.hours_per_week,
+            alternance_rhythm: s.alternance_rhythm || null,
+            start_date: s.start_date || null,
+            company_name: s.company_name || null,
             user_id: userId,
           })));
         

@@ -1357,7 +1357,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`routine-${routine.id}-${idx}`}
-                              className="absolute bg-purple-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-purple-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-red-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-red-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({

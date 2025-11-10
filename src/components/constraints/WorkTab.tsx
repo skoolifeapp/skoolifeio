@@ -28,6 +28,9 @@ interface WorkSchedule {
   location?: string;
   frequency?: 'weekly' | 'biweekly';
   hours_per_week?: number;
+  alternance_rhythm?: '2j_3j' | '3j_2j' | '1sem_1sem' | '1sem_2sem';
+  start_date?: string;
+  company_name?: string;
 }
 
 interface WorkTabProps {
@@ -53,6 +56,9 @@ export const WorkTab = ({
     end_time: '17:00',
     location: '',
     frequency: 'weekly',
+    alternance_rhythm: '1sem_1sem',
+    start_date: '',
+    company_name: '',
   });
 
   const [newJob, setNewJob] = useState<Partial<WorkSchedule>>({
@@ -81,10 +87,13 @@ export const WorkTab = ({
       end_time: newAlternance.end_time || '17:00',
       location: newAlternance.location,
       frequency: newAlternance.frequency || 'weekly',
+      alternance_rhythm: newAlternance.alternance_rhythm || '1sem_1sem',
+      start_date: newAlternance.start_date,
+      company_name: newAlternance.company_name,
     };
     onWorkSchedulesChange([...workSchedules, schedule]);
     setIsAlternanceDialogOpen(false);
-    setNewAlternance({ days: [], start_time: '09:00', end_time: '17:00', location: '', frequency: 'weekly' });
+    setNewAlternance({ days: [], start_time: '09:00', end_time: '17:00', location: '', frequency: 'weekly', alternance_rhythm: '1sem_1sem', start_date: '', company_name: '' });
   };
 
   const addJob = async () => {
@@ -186,6 +195,48 @@ export const WorkTab = ({
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
                     <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+                    {schedule.company_name && (
+                      <div>
+                        <Label className="text-sm">Entreprise</Label>
+                        <Input
+                          value={schedule.company_name || ''}
+                          onChange={(e) => updateSchedule(globalIdx, { company_name: e.target.value })}
+                          placeholder="Nom de l'entreprise"
+                          className="mt-1.5"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <Label className="text-sm">Rythme d'alternance</Label>
+                      <Select
+                        value={schedule.alternance_rhythm || '1sem_1sem'}
+                        onValueChange={(value: '2j_3j' | '3j_2j' | '1sem_1sem' | '1sem_2sem') => updateSchedule(globalIdx, { alternance_rhythm: value })}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2j_3j">2j école / 3j entreprise</SelectItem>
+                          <SelectItem value="3j_2j">3j école / 2j entreprise</SelectItem>
+                          <SelectItem value="1sem_1sem">1 sem école / 1 sem entreprise</SelectItem>
+                          <SelectItem value="1sem_2sem">1 sem école / 2 sem entreprise</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {schedule.start_date && (
+                      <div>
+                        <Label className="text-sm">Date de départ</Label>
+                        <Input
+                          type="date"
+                          value={schedule.start_date || ''}
+                          onChange={(e) => updateSchedule(globalIdx, { start_date: e.target.value })}
+                          className="mt-1.5"
+                        />
+                      </div>
+                    )}
+
                     <div>
                       <Label className="text-sm">Jours travaillés</Label>
                       <div className="flex gap-1 mt-2">
@@ -537,6 +588,45 @@ export const WorkTab = ({
                 placeholder="Ville ou 'télétravail'"
                 className="mt-1.5"
               />
+            </div>
+
+            <div>
+              <Label className="text-sm">Rythme d'alternance</Label>
+              <Select
+                value={newAlternance.alternance_rhythm || '1sem_1sem'}
+                onValueChange={(value: '2j_3j' | '3j_2j' | '1sem_1sem' | '1sem_2sem') => setNewAlternance({ ...newAlternance, alternance_rhythm: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2j_3j">2 jours école / 3 jours entreprise</SelectItem>
+                  <SelectItem value="3j_2j">3 jours école / 2 jours entreprise</SelectItem>
+                  <SelectItem value="1sem_1sem">1 semaine école / 1 semaine entreprise</SelectItem>
+                  <SelectItem value="1sem_2sem">1 semaine école / 2 semaines entreprise</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Date de départ (optionnel)</Label>
+                <Input
+                  type="date"
+                  value={newAlternance.start_date || ''}
+                  onChange={(e) => setNewAlternance({ ...newAlternance, start_date: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Nom entreprise (optionnel)</Label>
+                <Input
+                  value={newAlternance.company_name || ''}
+                  onChange={(e) => setNewAlternance({ ...newAlternance, company_name: e.target.value })}
+                  placeholder="Ex: Acme Corp"
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
             <div>

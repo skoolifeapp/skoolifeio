@@ -365,6 +365,8 @@ export type Database = {
       }
       user_constraints_profile: {
         Row: {
+          breakfast_end: string | null
+          breakfast_start: string | null
           commute_home_activity: number | null
           commute_home_job: number | null
           commute_home_school: number | null
@@ -392,6 +394,8 @@ export type Database = {
           wake_up_time: string | null
         }
         Insert: {
+          breakfast_end?: string | null
+          breakfast_start?: string | null
           commute_home_activity?: number | null
           commute_home_job?: number | null
           commute_home_school?: number | null
@@ -419,6 +423,8 @@ export type Database = {
           wake_up_time?: string | null
         }
         Update: {
+          breakfast_end?: string | null
+          breakfast_start?: string | null
           commute_home_activity?: number | null
           commute_home_job?: number | null
           commute_home_school?: number | null
@@ -539,6 +545,8 @@ export type Database = {
       }
       work_schedules: {
         Row: {
+          alternance_rhythm: string | null
+          company_name: string | null
           created_at: string
           days: string[]
           end_time: string
@@ -546,6 +554,7 @@ export type Database = {
           hours_per_week: number | null
           id: string
           location: string | null
+          start_date: string | null
           start_time: string
           title: string | null
           type: string
@@ -553,6 +562,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alternance_rhythm?: string | null
+          company_name?: string | null
           created_at?: string
           days?: string[]
           end_time: string
@@ -560,6 +571,7 @@ export type Database = {
           hours_per_week?: number | null
           id?: string
           location?: string | null
+          start_date?: string | null
           start_time: string
           title?: string | null
           type: string
@@ -567,6 +579,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alternance_rhythm?: string | null
+          company_name?: string | null
           created_at?: string
           days?: string[]
           end_time?: string
@@ -574,6 +588,7 @@ export type Database = {
           hours_per_week?: number | null
           id?: string
           location?: string | null
+          start_date?: string | null
           start_time?: string
           title?: string | null
           type?: string
