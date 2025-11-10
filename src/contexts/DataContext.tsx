@@ -34,8 +34,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity, // Cache permanent jusqu'à invalidation manuelle
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Précharger les événements du calendrier
@@ -50,8 +49,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Précharger les sessions de révision
@@ -66,8 +64,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Précharger le profil de contraintes
@@ -83,8 +80,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data;
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Précharger les work schedules
@@ -99,8 +95,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Précharger les activités
@@ -115,8 +110,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Précharger les routine moments
@@ -131,8 +125,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   });
 
   const refetchAll = () => {

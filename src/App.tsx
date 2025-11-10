@@ -17,18 +17,7 @@ import Constraints from "./pages/Constraints";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes - données considérées fraîches
-      gcTime: 1000 * 60 * 30, // 30 minutes - garde en cache
-      refetchOnWindowFocus: false, // Pas de refetch au focus
-      refetchOnMount: false, // Utilise le cache si disponible
-      retry: 1, // Une seule tentative en cas d'erreur
-      networkMode: 'offlineFirst', // Utilise le cache en priorité
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user } = useAuth();
