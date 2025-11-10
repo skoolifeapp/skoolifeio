@@ -224,8 +224,6 @@ const Planning = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    toast.loading("Import du fichier en cours...", { id: 'import-ics' });
-
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -267,15 +265,10 @@ const Planning = () => {
 
         if (error) throw error;
 
-        toast.dismiss('import-ics');
-        toast.success("Calendrier importé avec succès");
-
         // Recharger depuis Supabase
         refetchAll();
       } catch (error) {
         console.error('Error importing calendar:', error);
-        toast.dismiss('import-ics');
-        toast.error("Erreur lors de l'import du fichier");
       }
     };
 
