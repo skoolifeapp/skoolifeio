@@ -80,61 +80,95 @@ serve(async (req) => {
 
     const config = intensityConfig[intensity as keyof typeof intensityConfig] || intensityConfig.standard;
 
-    const systemPrompt = `Tu es Skoolife, un assistant IA qui génère des plannings de révision pour étudiants.
+    const systemPrompt = `Tu es Skoolife, un assistant IA spécialisé dans la génération de plannings de révision intelligents pour étudiants.
 
-RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE :
+🎯 MISSION : Générer un planning optimal qui respecte ABSOLUMENT toutes les contraintes
 
-1. CONTRAINTES HORAIRES :
-   - Les sessions doivent durer entre ${config.minDuration} et ${config.maxDuration} minutes
-   - Maximum ${config.sessionsPerDay} sessions par jour
-   - JAMAIS de sessions entre ${profile?.no_study_after || '22:00'} et ${profile?.no_study_before || '08:00'}
-   ${profile?.no_study_days && profile.no_study_days.length > 0 ? `- JAMAIS de sessions les jours suivants : ${profile.no_study_days.join(', ')}` : '- JAMAIS le dimanche (jour de repos)'}
-   ${profile?.max_daily_revision_hours ? `- Maximum ${profile.max_daily_revision_hours}h de révision par jour` : ''}
-   ${profile?.max_weekly_revision_hours ? `- Maximum ${profile.max_weekly_revision_hours}h de révision par semaine` : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 RÈGLES STRICTES - RESPECT ABSOLU OBLIGATOIRE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2. RESPECT DE L'EMPLOI DU TEMPS :
-   - NE JAMAIS créer de session qui chevauche un événement existant (cours, TD, etc.)
-   - NE JAMAIS créer de session qui chevauche une contrainte fixe (alternance, job, sport, rdv)
-   - Vérifier pour CHAQUE session que le créneau horaire est totalement libre
-   - Laisser au minimum 30 minutes de marge avant/après chaque événement
-   ${profile?.respect_meal_times ? `- RESPECTER les heures de repas : déjeuner ${profile.lunch_break_start}-${profile.lunch_break_end}, dîner ${profile.dinner_break_start}-${profile.dinner_break_end}` : ''}
+1️⃣ CONTRAINTES HORAIRES STRICTES :
+   ⏰ Durée sessions : ENTRE ${config.minDuration} et ${config.maxDuration} minutes exactement
+   📊 Maximum ${config.sessionsPerDay} session(s) par jour
+   🌙 JAMAIS entre ${profile?.no_study_after || '22:00'} et ${profile?.no_study_before || '08:00'}
+   ${profile?.no_study_days && profile.no_study_days.length > 0 ? `🚫 JOURS INTERDITS : ${profile.no_study_days.join(', ')} - AUCUNE session ces jours-là` : '🚫 JAMAIS le dimanche (repos obligatoire)'}
+   ${profile?.max_daily_revision_hours ? `⏱️ Maximum ${profile.max_daily_revision_hours}h de révision PAR JOUR (cumul total)` : ''}
+   ${profile?.max_weekly_revision_hours ? `📅 Maximum ${profile.max_weekly_revision_hours}h de révision PAR SEMAINE (cumul total)` : ''}
 
-3. RESPECT DES TRAJETS & PRÉFÉRENCES :
-   ${profile?.commute_home_school ? `- Temps trajet école : ${profile.commute_home_school} min (aller simple) - Éviter de placer sessions juste avant/après un événement école` : ''}
-   ${profile?.commute_home_job ? `- Temps trajet job : ${profile.commute_home_job} min - Prévoir marge suffisante` : ''}
-   ${profile?.commute_home_sport ? `- Temps trajet sport : ${profile.commute_home_sport} min - Prévoir marge suffisante` : ''}
-   ${profile?.preferred_productivity === 'morning' ? '- PRIVILÉGIER les créneaux du matin (7h-12h) pour les sessions' : ''}
-   ${profile?.preferred_productivity === 'afternoon' ? '- PRIVILÉGIER les créneaux de l\'après-midi (12h-18h) pour les sessions' : ''}
-   ${profile?.preferred_productivity === 'evening' ? '- PRIVILÉGIER les créneaux du soir (18h-22h) pour les sessions' : ''}
-   ${profile?.min_free_evenings_per_week ? `- Garantir au moins ${profile.min_free_evenings_per_week} soirée(s) libre(s) par semaine (après 18h)` : ''}
+2️⃣ ZÉRO CONFLIT - VÉRIFICATION OBLIGATOIRE :
+   ❌ NE JAMAIS chevaucher un événement du calendrier
+   ❌ NE JAMAIS chevaucher un horaire de travail
+   ❌ NE JAMAIS chevaucher une activité régulière
+   ❌ NE JAMAIS chevaucher un moment de routine
+   ❌ NE JAMAIS chevaucher un événement planifié manuellement
+   ⚠️ Laisser MINIMUM 30 minutes de marge avant ET après chaque événement existant
+   ${profile?.respect_meal_times ? `🍽️ RESPECTER ABSOLUMENT les repas : 
+      - Déjeuner : ${profile.lunch_break_start} à ${profile.lunch_break_end}
+      - Dîner : ${profile.dinner_break_start} à ${profile.dinner_break_end}` : ''}
 
-4. COUVERTURE COMPLÈTE DES EXAMENS :
-   - Tu DOIS créer des sessions pour TOUS les examens listés, pas juste un seul
-   - Répartir équitablement entre toutes les matières selon priorité et date
-   - Prioriser les examens proches et difficiles (haute priorité)
-   - Augmenter l'intensité à l'approche de chaque examen
+3️⃣ TRAJETS & OPTIMISATIONS :
+   ${profile?.commute_home_school ? `🚗 Trajet école : ${profile.commute_home_school} min → Prévoir ${Math.ceil(profile.commute_home_school * 1.2)} min de marge totale` : ''}
+   ${profile?.commute_home_job ? `🚗 Trajet job : ${profile.commute_home_job} min → Prévoir ${Math.ceil(profile.commute_home_job * 1.2)} min de marge totale` : ''}
+   ${profile?.commute_home_sport ? `🚗 Trajet sport : ${profile.commute_home_sport} min → Prévoir ${Math.ceil(profile.commute_home_sport * 1.2)} min de marge totale` : ''}
+   ${profile?.commute_home_activity ? `🚗 Trajet activités : ${profile.commute_home_activity} min → Prévoir ${Math.ceil(profile.commute_home_activity * 1.2)} min de marge totale` : ''}
+   ${profile?.preferred_productivity === 'morning' ? '🌅 PRIVILÉGIER FORTEMENT les créneaux MATIN (7h-12h) - meilleure productivité' : ''}
+   ${profile?.preferred_productivity === 'afternoon' ? '☀️ PRIVILÉGIER FORTEMENT les créneaux APRÈS-MIDI (12h-18h) - meilleure productivité' : ''}
+   ${profile?.preferred_productivity === 'evening' ? '🌆 PRIVILÉGIER FORTEMENT les créneaux SOIR (18h-22h) - meilleure productivité' : ''}
+   ${profile?.min_free_evenings_per_week ? `🎯 Garantir AU MOINS ${profile.min_free_evenings_per_week} soirée(s) COMPLÈTEMENT libre(s) par semaine (18h-minuit sans révisions)` : ''}
 
-5. STRATÉGIE DE RÉPARTITION :
-   - Alterner entre les matières pour éviter la monotonie
-   - Concentrer les révisions dans les 2 semaines avant chaque examen
-   - Privilégier plusieurs sessions courtes plutôt qu'une longue
-   - Varier les horaires selon les préférences utilisateur
+4️⃣ COUVERTURE TOTALE DES EXAMENS :
+   📚 Tu DOIS créer des sessions pour TOUS LES ${exams.length} EXAMENS listés
+   🎯 Chaque examen doit avoir AU MINIMUM ${Math.max(3, Math.ceil(10 / exams.length))} sessions dédiées
+   🔴 Prioriser les examens : high > medium > low ET proches > lointains
+   📈 Intensifier les révisions dans les 10-14 jours avant CHAQUE examen
+   ⚖️ Coefficients : Donner plus de sessions aux matières à fort coefficient
 
-⚠️ EN CAS DE DOUTE SUR UN CRÉNEAU : NE PAS CRÉER LA SESSION ⚠️
+5️⃣ STRATÉGIE INTELLIGENTE :
+   🔄 Alterner les matières pour éviter saturation cognitive
+   📆 Répartition équilibrée sur toute la période jusqu'au dernier examen
+   ⏰ Préférer 2-3 sessions courtes plutôt qu'1 longue (meilleure rétention)
+   🎲 Varier les horaires selon préférences productivité utilisateur
+   💪 Session difficile = matin, Session facile = soir (si pas de préférence spécifique)
 
-RETOURNE UNIQUEMENT un JSON valide avec ce format exact :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ MÉTHODE DE VALIDATION POUR CHAQUE SESSION ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Avant de créer une session, tu DOIS vérifier :
+✅ Le créneau est dans les heures autorisées
+✅ Le jour n'est pas interdit
+✅ Aucun conflit avec événements, travail, activités, routines, plannedEvents
+✅ Marges de 30min respectées avant/après chaque événement
+✅ Pas pendant les repas (si respect_meal_times = true)
+✅ Durée entre ${config.minDuration} et ${config.maxDuration} minutes
+✅ Respect des limites quotidiennes et hebdomadaires
+
+🚫 SI LE MOINDRE DOUTE : NE PAS CRÉER LA SESSION 🚫
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📤 FORMAT DE SORTIE OBLIGATOIRE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RETOURNE UNIQUEMENT un objet JSON valide avec ce format EXACT :
 {
   "sessions": [
     {
-      "subject": "nom de la matière",
-      "exam_id": "uuid de l'examen",
-      "start_time": "ISO 8601 timestamp avec fuseau horaire",
-      "end_time": "ISO 8601 timestamp avec fuseau horaire",
+      "subject": "Nom exact de la matière",
+      "exam_id": "UUID de l'examen correspondant",
+      "start_time": "2025-11-15T09:00:00+01:00",
+      "end_time": "2025-11-15T10:30:00+01:00",
       "difficulty": "facile|moyen|difficile",
-      "weight": nombre entre 0 et 1
+      "weight": 0.75
     }
   ]
-}`;
+}
+
+Notes importantes :
+- start_time et end_time : Format ISO 8601 AVEC fuseau horaire (+01:00 pour France)
+- difficulty : Basé sur la difficulté de l'examen ou "moyen" par défaut
+- weight : Entre 0 et 1 (importance de la session, calculée selon priorité/coeff/date)
+- subject : EXACTEMENT le même nom que dans la liste des examens`;
 
     const userPrompt = `Génère un planning de révision du ${now} au ${lastExamDate}.
 
@@ -390,7 +424,17 @@ Vérifie CHAQUE session générée pour t'assurer qu'elle :
 
 Génère maintenant le planning optimal.`;
 
-    console.log('Calling Lovable AI...');
+    console.log('Calling Lovable AI with optimized prompt...');
+    console.log('User has:', {
+      examsCount: exams.length,
+      eventsCount: events.length,
+      workSchedulesCount: workSchedules.length,
+      activitiesCount: activities.length,
+      routineMomentsCount: routineMoments.length,
+      plannedEventsCount: plannedEvents.length,
+      exceptionsCount: exceptions.length,
+      hasProfile: !!profile,
+    });
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -405,24 +449,95 @@ Génère maintenant le planning optimal.`;
           { role: 'user', content: userPrompt },
         ],
         response_format: { type: 'json_object' },
+        temperature: 1,
       }),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI error:', aiResponse.status, errorText);
-      throw new Error(`AI request failed: ${aiResponse.status}`);
+      console.error('AI Gateway error:', aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'Limite de requêtes atteinte. Réessaye dans quelques instants.' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ 
+          error: 'Crédits insuffisants. Contacte le support.' 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI request failed: ${aiResponse.status} - ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
     const aiContent = aiData.choices[0].message.content;
-    console.log('AI response:', aiContent);
+    console.log('AI raw response length:', aiContent?.length || 0);
 
-    const parsed = JSON.parse(aiContent);
+    let parsed;
+    try {
+      parsed = JSON.parse(aiContent);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', aiContent);
+      throw new Error('Invalid AI response format');
+    }
+
     const sessions = parsed.sessions || [];
+    console.log('Parsed sessions count:', sessions.length);
 
     if (sessions.length === 0) {
-      return new Response(JSON.stringify({ error: 'Aucun créneau libre trouvé avec tes contraintes actuelles.' }), {
+      console.warn('No sessions generated by AI');
+      return new Response(JSON.stringify({ 
+        error: 'Aucun créneau libre trouvé avec tes contraintes actuelles. Essaye de réduire tes contraintes ou de vérifier ton emploi du temps.' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate sessions before inserting
+    const validSessions = sessions.filter((s: any) => {
+      if (!s.subject || !s.start_time || !s.end_time) {
+        console.warn('Invalid session missing required fields:', s);
+        return false;
+      }
+      
+      const startTime = new Date(s.start_time);
+      const endTime = new Date(s.end_time);
+      
+      if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        console.warn('Invalid session with bad timestamps:', s);
+        return false;
+      }
+      
+      if (endTime <= startTime) {
+        console.warn('Invalid session with end_time before start_time:', s);
+        return false;
+      }
+      
+      const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+      if (durationMinutes < config.minDuration || durationMinutes > config.maxDuration) {
+        console.warn(`Invalid session duration ${durationMinutes}min (expected ${config.minDuration}-${config.maxDuration}):`, s);
+        return false;
+      }
+      
+      return true;
+    });
+
+    console.log('Valid sessions after filtering:', validSessions.length);
+
+    if (validSessions.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Les sessions générées ne respectent pas les contraintes. Réessaye avec d\'autres paramètres.' 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -443,29 +558,42 @@ Génère maintenant le planning optimal.`;
     console.log('Old sessions deleted successfully');
 
     // Insert new sessions
-    const sessionsToInsert = sessions.map((s: any) => ({
+    const sessionsToInsert = validSessions.map((s: any) => ({
       user_id: user.id,
-      exam_id: s.exam_id,
+      exam_id: s.exam_id || null,
       subject: s.subject,
       start_time: s.start_time,
       end_time: s.end_time,
-      difficulty: s.difficulty,
-      weight: s.weight,
+      difficulty: s.difficulty || 'moyen',
+      weight: s.weight || 0.5,
     }));
+
+    console.log('Inserting sessions:', sessionsToInsert.length);
 
     const { data: insertedSessions, error: insertError } = await supabaseClient
       .from('revision_sessions')
       .insert(sessionsToInsert)
       .select();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error('Insert error:', insertError);
+      throw insertError;
+    }
 
-    console.log(`Generated ${insertedSessions.length} revision sessions`);
+    console.log(`✅ Successfully generated ${insertedSessions.length} revision sessions`);
+
+    // Log session distribution by subject
+    const sessionsBySubject = insertedSessions.reduce((acc: Record<string, number>, s: any) => {
+      acc[s.subject] = (acc[s.subject] || 0) + 1;
+      return acc;
+    }, {});
+    console.log('Sessions by subject:', sessionsBySubject);
 
     return new Response(JSON.stringify({ 
       success: true, 
       count: insertedSessions.length,
       sessions: insertedSessions,
+      distribution: sessionsBySubject,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
