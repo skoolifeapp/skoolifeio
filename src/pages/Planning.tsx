@@ -245,29 +245,14 @@ const Planning = () => {
           };
         });
 
-        // Récupérer les événements existants pour éviter les doublons
-        const { data: existingEvents } = await supabase
+        // Supprimer les événements existants
+        await supabase
           .from('calendar_events')
-          .select('*')
+          .delete()
           .eq('user_id', user.id);
 
-        // Filtrer les nouveaux événements (éviter les doublons exacts)
-        const newEvents = events.filter(event => {
-          return !(existingEvents || []).some(existing => 
-            existing.summary === event.summary &&
-            existing.start_date === event.startDate &&
-            existing.end_date === event.endDate
-          );
-        });
-
-        if (newEvents.length === 0) {
-          toast.dismiss('import-ics');
-          toast.info("Aucun nouvel événement à importer");
-          return;
-        }
-
-        // Insérer uniquement les nouveaux événements
-        const eventsToInsert = newEvents.map(event => ({
+        // Insérer les nouveaux événements
+        const eventsToInsert = events.map(event => ({
           user_id: user.id,
           summary: event.summary,
           start_date: event.startDate,
@@ -283,9 +268,7 @@ const Planning = () => {
         if (error) throw error;
 
         toast.dismiss('import-ics');
-        toast.success(`${newEvents.length} événement(s) importé(s)`, {
-          description: `${events.length - newEvents.length} doublon(s) ignoré(s)`
-        });
+        toast.success("Calendrier importé avec succès");
 
         // Recharger depuis Supabase
         refetchAll();
