@@ -1,27 +1,39 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Play, Pause, RotateCcw } from "lucide-react";
+import { Play, Pause, RotateCcw, Settings } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const POMODORO_TIME = 25 * 60; // 25 minutes
-const SHORT_BREAK = 5 * 60; // 5 minutes
-const LONG_BREAK = 15 * 60; // 15 minutes
+const DEFAULT_POMODORO_TIME = 25 * 60; // 25 minutes
+const DEFAULT_SHORT_BREAK = 5 * 60; // 5 minutes
+const DEFAULT_LONG_BREAK = 15 * 60; // 15 minutes
 
 type TimerMode = "pomodoro" | "shortBreak" | "longBreak";
 
 export const PomodoroTimer = () => {
   const [mode, setMode] = useState<TimerMode>("pomodoro");
-  const [timeLeft, setTimeLeft] = useState(POMODORO_TIME);
+  const [pomodoroTime, setPomodoroTime] = useState(DEFAULT_POMODORO_TIME);
+  const [shortBreakTime, setShortBreakTime] = useState(DEFAULT_SHORT_BREAK);
+  const [longBreakTime, setLongBreakTime] = useState(DEFAULT_LONG_BREAK);
+  const [timeLeft, setTimeLeft] = useState(pomodoroTime);
   const [isRunning, setIsRunning] = useState(false);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Temporary settings for the dialog
+  const [tempPomodoroMinutes, setTempPomodoroMinutes] = useState(pomodoroTime / 60);
+  const [tempShortBreakMinutes, setTempShortBreakMinutes] = useState(shortBreakTime / 60);
+  const [tempLongBreakMinutes, setTempLongBreakMinutes] = useState(longBreakTime / 60);
 
   const totalTime = mode === "pomodoro" 
-    ? POMODORO_TIME 
+    ? pomodoroTime 
     : mode === "shortBreak" 
-    ? SHORT_BREAK 
-    : LONG_BREAK;
+    ? shortBreakTime 
+    : longBreakTime;
 
   const progressPercentage = ((totalTime - timeLeft) / totalTime) * 100;
 
@@ -71,12 +83,35 @@ export const PomodoroTimer = () => {
     setIsRunning(false);
     
     if (newMode === "pomodoro") {
-      setTimeLeft(POMODORO_TIME);
+      setTimeLeft(pomodoroTime);
     } else if (newMode === "shortBreak") {
-      setTimeLeft(SHORT_BREAK);
+      setTimeLeft(shortBreakTime);
     } else {
-      setTimeLeft(LONG_BREAK);
+      setTimeLeft(longBreakTime);
     }
+  };
+  
+  const saveSettings = () => {
+    const newPomodoroTime = tempPomodoroMinutes * 60;
+    const newShortBreakTime = tempShortBreakMinutes * 60;
+    const newLongBreakTime = tempLongBreakMinutes * 60;
+    
+    setPomodoroTime(newPomodoroTime);
+    setShortBreakTime(newShortBreakTime);
+    setLongBreakTime(newLongBreakTime);
+    
+    // Update current timer if not running
+    if (!isRunning) {
+      if (mode === "pomodoro") {
+        setTimeLeft(newPomodoroTime);
+      } else if (mode === "shortBreak") {
+        setTimeLeft(newShortBreakTime);
+      } else {
+        setTimeLeft(newLongBreakTime);
+      }
+    }
+    
+    setIsSettingsOpen(false);
   };
 
   const toggleTimer = () => {
@@ -107,8 +142,58 @@ export const PomodoroTimer = () => {
 
   return (
     <Card className="border border-border shadow-[var(--shadow-medium)]">
-      <CardHeader>
-        <CardTitle className="text-center">Pomodoro</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="text-center flex-1">Pomodoro</CardTitle>
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Paramètres du Pomodoro</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="pomodoro-time">Durée Focus (minutes)</Label>
+                <Input
+                  id="pomodoro-time"
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={tempPomodoroMinutes}
+                  onChange={(e) => setTempPomodoroMinutes(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="short-break">Pause courte (minutes)</Label>
+                <Input
+                  id="short-break"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={tempShortBreakMinutes}
+                  onChange={(e) => setTempShortBreakMinutes(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="long-break">Pause longue (minutes)</Label>
+                <Input
+                  id="long-break"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={tempLongBreakMinutes}
+                  onChange={(e) => setTempLongBreakMinutes(Number(e.target.value))}
+                />
+              </div>
+              <Button onClick={saveSettings} className="w-full">
+                Enregistrer
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Mode Selector */}
