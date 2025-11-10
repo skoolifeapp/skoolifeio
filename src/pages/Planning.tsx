@@ -928,6 +928,32 @@ const Planning = () => {
             >
               <Upload className="h-4 w-4" />
             </Button>
+            {revisionSessions.length > 0 && (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={async () => {
+                  if (!user) return;
+                  
+                  const { error } = await supabase
+                    .from('revision_sessions')
+                    .delete()
+                    .eq('user_id', user.id);
+                  
+                  if (error) {
+                    toast.error("Erreur lors de la suppression");
+                    return;
+                  }
+                  
+                  await loadRevisionSessions();
+                  refetchAll();
+                  toast.success("Toutes les sessions supprimées");
+                }}
+                title="Supprimer toutes les sessions de révisions"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="hero"
               size="icon"
