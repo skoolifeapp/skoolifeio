@@ -7,6 +7,7 @@ import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
 import { CommuteTab } from "@/components/constraints/CommuteTab";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WorkSchedule {
   id?: string;
@@ -39,6 +40,7 @@ interface RoutineMoment {
 }
 
 const Constraints = () => {
+  const isMobile = useIsMobile();
   const { 
     constraintsProfile, 
     workSchedules: dataWorkSchedules, 
@@ -317,7 +319,17 @@ const Constraints = () => {
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
-      <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header - affichage conditionnel selon mobile/desktop */}
+      {isMobile && (
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Mes contraintes</h1>
+            <p className="text-sm text-muted-foreground">Dis-nous comment tu vis. On protège ton temps, l'IA fait le reste.</p>
+          </div>
+        </div>
+      )}
+
+      <div className={isMobile ? "max-w-4xl mx-auto space-y-6" : "max-w-6xl mx-auto space-y-6"}>
         {/* Tabs */}
         <div className="flex justify-center gap-2 overflow-x-auto pb-2">
           {[
