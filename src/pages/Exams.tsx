@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Plus, Calendar, AlertTriangle, TrendingUp, CheckCircle2, Clock, Save } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -32,7 +31,6 @@ interface Exam {
 }
 
 const Exams = () => {
-  const isMobile = useIsMobile();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { state, setExamsFilter } = useNavigationState();
@@ -220,72 +218,24 @@ const Exams = () => {
 
       {!isLoading && (
         <>
-          {/* Header - Mobile */}
-          {isMobile && (
-            <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-1">Mes examens</h1>
-                  <p className="text-sm text-muted-foreground">Visualise, priorise et prépare chaque épreuve sans stress.</p>
-                </div>
-                <Button
-                  onClick={() => setIsDialogOpen(true)}
-                  size="icon"
-                  className="rounded-full shadow-lg"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-      <div className={isMobile ? "max-w-4xl mx-auto space-y-6" : "max-w-6xl mx-auto space-y-6"}>
-        {/* Header Desktop avec Stats */}
-        {!isMobile && (
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-1">Mes examens</h1>
-              <p className="text-sm text-muted-foreground">Visualise, priorise et prépare chaque épreuve sans stress.</p>
-              
-              {/* Stats Cards */}
-              <div className="grid grid-cols-4 gap-4 mt-6">
-                <Card className="border-border/50">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Total</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">À venir</p>
-                    <p className="text-2xl font-bold text-primary">{stats.upcoming}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Haute priorité</p>
-                    <p className="text-2xl font-bold text-destructive">{stats.high}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/50">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Révisés</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.done}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-            
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              size="lg"
-              className="rounded-full shadow-lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Ajouter un examen
-            </Button>
+          {/* Header Sticky */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-4 mb-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Mes examens</h1>
+            <p className="text-sm text-muted-foreground">Visualise, priorise et prépare chaque épreuve sans stress.</p>
           </div>
-        )}
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            size="icon"
+            className="rounded-full shadow-lg"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Prochain examen */}
         {nextExam && (
           <Card className="bg-gradient-to-br from-primary/10 to-background border-primary/20 shadow-md">
