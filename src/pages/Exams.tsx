@@ -321,19 +321,13 @@ const Exams = () => {
                         <Badge variant="outline" className="text-xs">
                           {exam.type || 'Partiel'}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          Priorité: {exam.priority || 3}/5
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          Difficulté: {exam.difficulty || 3}/5
-                        </Badge>
                         {exam.coefficient && (
                           <Badge variant="outline" className="text-xs">
                             Coef. {exam.coefficient}
                           </Badge>
                         )}
                         <Badge className={getUrgencyColor(getUrgencyScore(exam))}>
-                          Urgence: {getUrgencyScore(exam).toFixed(1)}/5
+                          Urgence: {Math.round(getUrgencyScore(exam))}/5
                         </Badge>
                         <Badge variant="outline" className="text-xs font-semibold">
                           {getCountdown(exam.date)}
