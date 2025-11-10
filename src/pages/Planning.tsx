@@ -224,6 +224,8 @@ const Planning = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    console.log('🔄 Starting ICS import for file:', file.name);
+
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -231,6 +233,8 @@ const Planning = () => {
         const jcalData = ICAL.parse(text);
         const comp = new ICAL.Component(jcalData);
         const vevents = comp.getAllSubcomponents('vevent');
+
+        console.log('📅 Parsed events from ICS:', vevents.length);
 
         const events = vevents.map((vevent: any) => {
           const event = new ICAL.Event(vevent);
@@ -244,12 +248,20 @@ const Planning = () => {
         });
 
         // Supprimer les événements existants
-        await supabase
+        console.log('🗑️ Deleting existing events...');
+        const { error: deleteError, count } = await supabase
           .from('calendar_events')
           .delete()
           .eq('user_id', user.id);
 
+        if (deleteError) {
+          console.error('❌ Error deleting events:', deleteError);
+        } else {
+          console.log('✅ Deleted existing events');
+        }
+
         // Insérer les nouveaux événements
+        console.log('➕ Inserting new events:', events.length);
         const eventsToInsert = events.map(event => ({
           user_id: user.id,
           summary: event.summary,
@@ -259,16 +271,24 @@ const Planning = () => {
           description: event.description,
         }));
 
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from('calendar_events')
-          .insert(eventsToInsert);
+          .insert(eventsToInsert)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error inserting events:', error);
+          throw error;
+        }
 
+        console.log('✅ Successfully inserted events:', data?.length);
+        
         // Recharger depuis Supabase
+        console.log('🔄 Refetching all data...');
         refetchAll();
+        console.log('✅ Import complete');
       } catch (error) {
-        console.error('Error importing calendar:', error);
+        console.error('❌ Error importing calendar:', error);
       }
     };
 
