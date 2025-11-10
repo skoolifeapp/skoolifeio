@@ -43,29 +43,35 @@ export const DashboardStats = () => {
         setPlannedHours(`${hours}h`);
       }
 
-      // Get sessions this week
+      // Get sessions this week from revision_sessions
       const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Dimanche
       startOfWeek.setHours(0, 0, 0, 0);
 
-      const { data: sessionsData } = await supabase
-        .from('study_sessions')
-        .select('id')
-        .eq('user_id', user.id)
-        .gte('start_time', startOfWeek.toISOString());
-      
-      setWeekSessions(sessionsData?.length || 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 7);
+      endOfWeek.setHours(23, 59, 59, 999);
 
-      // Calculate completion rate
-      const { data: allSessions } = await supabase
-        .from('study_sessions')
-        .select('completed')
-        .eq('user_id', user.id);
+      const sessionsThisWeek = (revisionSessions || []).filter(session => {
+        const sessionDate = new Date(session.start_time);
+        return sessionDate >= startOfWeek && sessionDate < endOfWeek;
+      });
       
-      if (allSessions && allSessions.length > 0) {
-        const completed = allSessions.filter(s => s.completed).length;
-        const rate = Math.round((completed / allSessions.length) * 100);
+      setWeekSessions(sessionsThisWeek.length);
+
+      // Calculate completion rate from revision sessions
+      // Pour l'instant, on affiche 0% car il n'y a pas de champ "completed" dans revision_sessions
+      // On pourrait comparer les sessions passées vs futures
+      const now = new Date();
+      const pastSessions = (revisionSessions || []).filter(s => new Date(s.end_time) < now);
+      const futureSessions = (revisionSessions || []).filter(s => new Date(s.start_time) >= now);
+      
+      if (revisionSessions && revisionSessions.length > 0) {
+        // Taux basé sur les sessions déjà passées
+        const rate = Math.round((pastSessions.length / revisionSessions.length) * 100);
         setCompletionRate(`${rate}%`);
+      } else {
+        setCompletionRate("0%");
       }
     };
 
