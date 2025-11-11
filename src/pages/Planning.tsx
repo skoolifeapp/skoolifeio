@@ -507,8 +507,9 @@ const Planning = () => {
       }
 
       await refetchAll();
+
       setEditingEvent(null);
-      setApplyToAll(false); // Reset pour la prochaine fois
+      setApplyToAll(false);
       toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
@@ -552,6 +553,7 @@ const Planning = () => {
 
         if (error) throw error;
         await loadRevisionSessions();
+        await refetchAll();
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -560,11 +562,11 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
+        await refetchAll();
       }
 
-      await refetchAll();
       setEditingEvent(null);
-      setApplyToAll(false); // Reset pour la prochaine fois
+      setApplyToAll(false);
       toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
