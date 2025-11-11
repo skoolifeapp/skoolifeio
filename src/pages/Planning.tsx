@@ -1010,8 +1010,14 @@ const Planning = () => {
                         // Render based on type
                         if (event.type === 'calendar') {
                           const evt = event.data;
-                          const start = new Date(evt.startDate);
-                          const end = new Date(evt.endDate);
+                          // Handle both imported events (startDate/endDate) and manual events (start_date/end_date)
+                          const startDate = evt.startDate || evt.start_date;
+                          const endDate = evt.endDate || evt.end_date;
+                          
+                          if (!startDate || !endDate) return null;
+                          
+                          const start = new Date(startDate);
+                          const end = new Date(endDate);
                           const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
 
                           return (
@@ -1024,8 +1030,8 @@ const Planning = () => {
                                   .from('calendar_events')
                                   .select('*')
                                   .eq('user_id', user?.id)
-                                  .eq('summary', evt.summary)
-                                  .eq('start_date', evt.startDate)
+                                  .eq('summary', evt.summary || evt.title)
+                                  .eq('start_date', startDate)
                                   .maybeSingle();
 
                                 if (data) {
@@ -1036,7 +1042,7 @@ const Planning = () => {
                                 }
                               }}
                             >
-                              <div className="text-xs font-semibold truncate">{evt.summary}</div>
+                              <div className="text-xs font-semibold truncate">{evt.summary || evt.title}</div>
                               <div className="text-xs opacity-90">
                                 {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
                               </div>
