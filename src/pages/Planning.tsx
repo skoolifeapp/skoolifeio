@@ -464,7 +464,7 @@ const Planning = () => {
             })
             .eq('parent_recurring_id', String(editingEvent.data.parent_recurring_id));
           
-          if (updateErr) console.error('Error updating all:', updateErr);
+          if (updateErr) throw updateErr;
         } else {
           // Modifier uniquement cette occurrence
           const { error: updateErr } = await (supabase as any)
@@ -478,8 +478,9 @@ const Planning = () => {
             })
             .eq('id', String(editingEvent.data.id));
           
-          if (updateErr) console.error('Error updating one:', updateErr);
+          if (updateErr) throw updateErr;
         }
+        await loadCalendarEvents();
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -495,10 +496,12 @@ const Planning = () => {
       }
 
       await loadCalendarEvents();
+      
       setEditingEvent(null);
       setApplyToAll(false);
     } catch (error) {
       console.error('Error updating event:', error);
+      await loadCalendarEvents();
     }
   };
 
@@ -517,7 +520,7 @@ const Planning = () => {
             .delete()
             .eq('parent_recurring_id', parentId);
 
-          if (deleteErr) console.error('Error deleting all:', deleteErr);
+          if (deleteErr) throw deleteErr;
         } else {
           // Supprimer uniquement cette occurrence
           const id = String(editingEvent.data.id);
@@ -526,9 +529,10 @@ const Planning = () => {
             .from('calendar_events')
             .delete()
             .eq('id', id);
-          
-          if (deleteErr) console.error('Error deleting one:', deleteErr);
+
+          if (deleteErr) throw deleteErr;
         }
+        await loadCalendarEvents();
       } else if (editingEvent.type === 'revision') {
         const { error } = await supabase
           .from('revision_sessions')
@@ -546,10 +550,12 @@ const Planning = () => {
       }
 
       await loadCalendarEvents();
+      
       setEditingEvent(null);
       setApplyToAll(false);
     } catch (error) {
       console.error('Error deleting event:', error);
+      await loadCalendarEvents();
     }
   };
 
