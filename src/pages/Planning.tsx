@@ -22,12 +22,6 @@ import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
-import { 
-  createOccurrenceException, 
-  updateAllOccurrences,
-  deleteOccurrence,
-  deleteAllOccurrences 
-} from "@/lib/occurrence-utils";
 
 interface ImportedEvent {
   summary: string;
@@ -455,32 +449,46 @@ const Planning = () => {
         if (error) throw error;
         await loadRevisionSessions();
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
-        if (updateAll) {
-          // Modifier toutes les occurrences - on met à jour l'événement parent
-          await updateAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id, {
-            title: editingEvent.data.title,
-            summary: editingEvent.data.title,
-            location: editingEvent.data.location,
-            start_time: editingEvent.data.start_time,
-            end_time: editingEvent.data.end_time,
-          });
+        if (updateAll && editingEvent.isRecurring && editingEvent.data.parent_recurring_id) {
+          // Modifier toutes les occurrences
+          const parentId = String(editingEvent.data.parent_recurring_id);
+          const title = String(editingEvent.data.title);
+          const location = editingEvent.data.location ? String(editingEvent.data.location) : null;
+          const startTime = editingEvent.data.start_time ? String(editingEvent.data.start_time) : null;
+          const endTime = editingEvent.data.end_time ? String(editingEvent.data.end_time) : null;
+          
+          const { error: updateErr } = await (supabase as any)
+            .from('calendar_events')
+            .update({
+              title,
+              summary: title,
+              location,
+              start_time: startTime,
+              end_time: endTime,
+            })
+            .eq('parent_recurring_id', parentId);
+          
+          if (updateErr) console.error('Error updating all:', updateErr);
         } else {
-          // Modifier uniquement cette occurrence - créer une exception
-          if (editingEvent.occurrenceDate) {
-            await createOccurrenceException(
-              user.id,
-              editingEvent.data.parentEventId || editingEvent.data.id,
-              editingEvent.occurrenceDate,
-              {
-                title: editingEvent.data.title,
-                summary: editingEvent.data.title,
-                start_date: `${editingEvent.occurrenceDate}T${editingEvent.data.start_time}:00`,
-                end_date: `${editingEvent.occurrenceDate}T${editingEvent.data.end_time}:00`,
-                location: editingEvent.data.location,
-                source: editingEvent.data.source,
-              }
-            );
-          }
+          // Modifier uniquement cette occurrence
+          const id = String(editingEvent.data.id);
+          const title = String(editingEvent.data.title);
+          const location = editingEvent.data.location ? String(editingEvent.data.location) : null;
+          const startTime = editingEvent.data.start_time ? String(editingEvent.data.start_time) : null;
+          const endTime = editingEvent.data.end_time ? String(editingEvent.data.end_time) : null;
+          
+          const { error: updateErr } = await (supabase as any)
+            .from('calendar_events')
+            .update({
+              title,
+              summary: title,
+              location,
+              start_time: startTime,
+              end_time: endTime,
+            })
+            .eq('id', id);
+          
+          if (updateErr) console.error('Error updating one:', updateErr);
         }
         await loadCalendarEvents();
       } else if (editingEvent.type === 'exam') {
@@ -514,24 +522,26 @@ const Planning = () => {
 
     try {
       if (editingEvent.type === 'calendar' || editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
-        if (deleteAll) {
-          // Supprimer toutes les occurrences - supprimer l'événement parent
-          await deleteAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id);
-        } else if (editingEvent.occurrenceDate) {
-          // Supprimer uniquement cette occurrence - créer une exception
-          await deleteOccurrence(
-            user.id,
-            editingEvent.data.parentEventId || editingEvent.data.id,
-            editingEvent.occurrenceDate
-          );
-        } else {
-          // Suppression simple pour événements non récurrents
-          const { error } = await supabase
+        if (deleteAll && editingEvent.isRecurring && editingEvent.data.parent_recurring_id) {
+          // Supprimer toutes les occurrences
+          const parentId = String(editingEvent.data.parent_recurring_id);
+          
+          const { error: deleteErr } = await (supabase as any)
             .from('calendar_events')
             .delete()
-            .eq('id', editingEvent.data.id);
+            .eq('parent_recurring_id', parentId);
 
-          if (error) throw error;
+          if (deleteErr) console.error('Error deleting all:', deleteErr);
+        } else {
+          // Supprimer uniquement cette occurrence
+          const id = String(editingEvent.data.id);
+          
+          const { error: deleteErr } = await (supabase as any)
+            .from('calendar_events')
+            .delete()
+            .eq('id', id);
+
+          if (deleteErr) console.error('Error deleting one:', deleteErr);
         }
         await loadCalendarEvents();
       } else if (editingEvent.type === 'revision') {
