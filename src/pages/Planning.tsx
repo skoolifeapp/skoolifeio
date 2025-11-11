@@ -23,7 +23,7 @@ import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionP
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
 import { 
-  createOccurrenceException, 
+  updateOccurrence,
   updateAllOccurrences,
   deleteOccurrence,
   deleteAllOccurrences 
@@ -456,31 +456,23 @@ const Planning = () => {
         await loadRevisionSessions();
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (updateAll) {
-          // Modifier toutes les occurrences - on met à jour l'événement parent
-          await updateAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id, {
+          // Modifier toutes les occurrences ayant le même parent_recurring_id
+          await updateAllOccurrences(editingEvent.data.id, {
             title: editingEvent.data.title,
             summary: editingEvent.data.title,
             location: editingEvent.data.location,
-            start_time: editingEvent.data.start_time,
-            end_time: editingEvent.data.end_time,
+            start_date: editingEvent.data.start_date,
+            end_date: editingEvent.data.end_date,
           });
         } else {
-          // Modifier uniquement cette occurrence - créer une exception
-          if (editingEvent.occurrenceDate) {
-            await createOccurrenceException(
-              user.id,
-              editingEvent.data.parentEventId || editingEvent.data.id,
-              editingEvent.occurrenceDate,
-              {
-                title: editingEvent.data.title,
-                summary: editingEvent.data.title,
-                start_date: `${editingEvent.occurrenceDate}T${editingEvent.data.start_time}:00`,
-                end_date: `${editingEvent.occurrenceDate}T${editingEvent.data.end_time}:00`,
-                location: editingEvent.data.location,
-                source: editingEvent.data.source,
-              }
-            );
-          }
+          // Modifier uniquement cette occurrence
+          await updateOccurrence(editingEvent.data.id, {
+            title: editingEvent.data.title,
+            summary: editingEvent.data.title,
+            location: editingEvent.data.location,
+            start_date: editingEvent.data.start_date,
+            end_date: editingEvent.data.end_date,
+          });
         }
         await loadCalendarEvents();
       } else if (editingEvent.type === 'exam') {
@@ -515,23 +507,11 @@ const Planning = () => {
     try {
       if (editingEvent.type === 'calendar' || editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (deleteAll) {
-          // Supprimer toutes les occurrences - supprimer l'événement parent
-          await deleteAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id);
-        } else if (editingEvent.occurrenceDate) {
-          // Supprimer uniquement cette occurrence - créer une exception
-          await deleteOccurrence(
-            user.id,
-            editingEvent.data.parentEventId || editingEvent.data.id,
-            editingEvent.occurrenceDate
-          );
+          // Supprimer toutes les occurrences ayant le même parent_recurring_id
+          await deleteAllOccurrences(editingEvent.data.id);
         } else {
-          // Suppression simple pour événements non récurrents
-          const { error } = await supabase
-            .from('calendar_events')
-            .delete()
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
+          // Supprimer uniquement cette occurrence
+          await deleteOccurrence(editingEvent.data.id);
         }
         await loadCalendarEvents();
       } else if (editingEvent.type === 'revision') {
@@ -1029,17 +1009,10 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
-                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'work',
-                                  data: { 
-                                    ...schedule,
-                                    parentEventId: schedule.id,
-                                    start_time: format(new Date(schedule.start_date), 'HH:mm'),
-                                    end_time: format(new Date(schedule.end_date), 'HH:mm'),
-                                  },
-                                  occurrenceDate,
-                                  isRecurring: schedule.is_recurring || false,
+                                  data: { ...schedule },
+                                  isRecurring: schedule.parent_recurring_id !== null,
                                 });
                               }}
                             >
@@ -1066,17 +1039,10 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
-                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'activity',
-                                  data: { 
-                                    ...activity,
-                                    parentEventId: activity.id,
-                                    start_time: format(new Date(activity.start_date), 'HH:mm'),
-                                    end_time: format(new Date(activity.end_date), 'HH:mm'),
-                                  },
-                                  occurrenceDate,
-                                  isRecurring: activity.is_recurring || false,
+                                  data: { ...activity },
+                                  isRecurring: activity.parent_recurring_id !== null,
                                 });
                               }}
                             >
@@ -1103,17 +1069,10 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
-                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'routine',
-                                  data: { 
-                                    ...routine,
-                                    parentEventId: routine.id,
-                                    start_time: format(new Date(routine.start_date), 'HH:mm'),
-                                    end_time: format(new Date(routine.end_date), 'HH:mm'),
-                                  },
-                                  occurrenceDate,
-                                  isRecurring: routine.is_recurring || false,
+                                  data: { ...routine },
+                                  isRecurring: routine.parent_recurring_id !== null,
                                 });
                               }}
                             >
