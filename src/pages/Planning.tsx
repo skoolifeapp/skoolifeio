@@ -43,12 +43,13 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
-  const { refetchAll, calendarEvents } = useData();
+  const { refetchAll } = useData();
   const { state, setPlanningDate } = useNavigationState();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(state.planning.selectedDate);
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
+  const [allCalendarEvents, setAllCalendarEvents] = useState<any[]>([]);
   const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -122,27 +123,31 @@ const Planning = () => {
   const loadCalendarEvents = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('calendar_events')
       .select('*')
-      .eq('user_id', user.id)
-      .eq('source', 'school');
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error loading calendar events:', error);
       return;
     }
 
-    // Transform Supabase data to match the expected format
-    const events = (data || []).map(event => ({
-      summary: event.summary,
-      startDate: event.start_date,
-      endDate: event.end_date,
-      location: event.location || '',
-      description: event.description || '',
-    }));
+    // Stocker tous les événements
+    setAllCalendarEvents(data || []);
 
-    setImportedEvents(events);
+    // Séparer les événements .ics (source='school') pour compatibilité
+    const icsEvents = (data || [])
+      .filter(event => event.source === 'school')
+      .map(event => ({
+        summary: event.summary,
+        startDate: event.start_date,
+        endDate: event.end_date,
+        location: event.location || '',
+        description: event.description || '',
+      }));
+
+    setImportedEvents(icsEvents);
   };
 
   useEffect(() => {
@@ -240,7 +245,7 @@ const Planning = () => {
 
     if (result.success) {
       await loadRevisionSessions();
-      refetchAll();
+      await loadCalendarEvents();
       
       toast.success(`${result.count} sessions générées !`, {
         description: result.metadata?.warnings?.length 
@@ -266,8 +271,7 @@ const Planning = () => {
     }
 
     await loadRevisionSessions();
-    // Recharger depuis Supabase
-    refetchAll();
+    await loadCalendarEvents();
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,8 +321,6 @@ const Planning = () => {
         if (error) throw error;
 
         await loadCalendarEvents();
-        // Recharger depuis Supabase
-        refetchAll();
       } catch (error) {
         console.error('Error importing calendar:', error);
         toast.error("Erreur lors de l'import du fichier");
@@ -379,14 +381,14 @@ const Planning = () => {
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
-  // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
-  const dayWorkSchedules = (calendarEvents || [])
+  // Filtrer les événements pour la date sélectionnée (allCalendarEvents contient TOUT)
+  const dayWorkSchedules = allCalendarEvents
     .filter(e => e.source === 'work' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
   
-  const dayActivities = (calendarEvents || [])
+  const dayActivities = allCalendarEvents
     .filter(e => e.source === 'sport' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
-  const dayRoutineMoments = (calendarEvents || [])
+  const dayRoutineMoments = allCalendarEvents
     .filter(e => e.source === 'other' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
   // Generate hours (7-23, then 0 for midnight)
@@ -504,7 +506,7 @@ const Planning = () => {
         if (error) throw error;
       }
 
-      await refetchAll();
+      await loadCalendarEvents();
       setEditingEvent(null);
       setApplyToAll(false);
     } catch (error) {
@@ -555,7 +557,7 @@ const Planning = () => {
         if (error) throw error;
       }
 
-      await refetchAll();
+      await loadCalendarEvents();
       setEditingEvent(null);
       setApplyToAll(false);
     } catch (error) {
@@ -600,7 +602,6 @@ const Planning = () => {
       if (error) throw error;
 
       await loadCalendarEvents();
-      refetchAll();
       setIsAddingEvent(false);
       setNewManualEvent({
         title: '',
@@ -667,7 +668,7 @@ const Planning = () => {
                   }
                   
                   await loadRevisionSessions();
-                  refetchAll();
+                  await loadCalendarEvents();
                   toast.success("Toutes les sessions supprimées");
                 }}
                 title="Supprimer toutes les sessions de révisions"
