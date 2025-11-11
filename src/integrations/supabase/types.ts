@@ -198,94 +198,34 @@ export type Database = {
       }
       user_constraints_profile: {
         Row: {
-          breakfast_end: string | null
-          breakfast_start: string | null
-          commute_home_activity: number | null
-          commute_home_job: number | null
-          commute_home_school: number | null
-          commute_home_sport: number | null
-          commutes: Json | null
           created_at: string
-          dinner_break_end: string | null
-          dinner_break_start: string | null
-          has_student_job: boolean | null
-          is_alternant: boolean | null
-          lunch_break_end: string | null
-          lunch_break_start: string | null
-          max_daily_revision_hours: number | null
-          max_weekly_revision_hours: number | null
-          min_free_evenings_per_week: number | null
-          min_personal_time_per_week: number | null
-          no_study_after: string | null
-          no_study_before: string | null
-          no_study_days: string[] | null
-          other_constraints_notes: string | null
-          preferred_productivity: string | null
-          respect_meal_times: boolean | null
-          sleep_hours_needed: number | null
+          meals: Json | null
+          min_personal_time_per_week: number
+          no_study_after: string
+          sleep_hours_needed: number
           updated_at: string
           user_id: string
-          wake_up_time: string | null
+          wake_up_time: string
         }
         Insert: {
-          breakfast_end?: string | null
-          breakfast_start?: string | null
-          commute_home_activity?: number | null
-          commute_home_job?: number | null
-          commute_home_school?: number | null
-          commute_home_sport?: number | null
-          commutes?: Json | null
           created_at?: string
-          dinner_break_end?: string | null
-          dinner_break_start?: string | null
-          has_student_job?: boolean | null
-          is_alternant?: boolean | null
-          lunch_break_end?: string | null
-          lunch_break_start?: string | null
-          max_daily_revision_hours?: number | null
-          max_weekly_revision_hours?: number | null
-          min_free_evenings_per_week?: number | null
-          min_personal_time_per_week?: number | null
-          no_study_after?: string | null
-          no_study_before?: string | null
-          no_study_days?: string[] | null
-          other_constraints_notes?: string | null
-          preferred_productivity?: string | null
-          respect_meal_times?: boolean | null
-          sleep_hours_needed?: number | null
+          meals?: Json | null
+          min_personal_time_per_week?: number
+          no_study_after?: string
+          sleep_hours_needed?: number
           updated_at?: string
           user_id: string
-          wake_up_time?: string | null
+          wake_up_time?: string
         }
         Update: {
-          breakfast_end?: string | null
-          breakfast_start?: string | null
-          commute_home_activity?: number | null
-          commute_home_job?: number | null
-          commute_home_school?: number | null
-          commute_home_sport?: number | null
-          commutes?: Json | null
           created_at?: string
-          dinner_break_end?: string | null
-          dinner_break_start?: string | null
-          has_student_job?: boolean | null
-          is_alternant?: boolean | null
-          lunch_break_end?: string | null
-          lunch_break_start?: string | null
-          max_daily_revision_hours?: number | null
-          max_weekly_revision_hours?: number | null
-          min_free_evenings_per_week?: number | null
-          min_personal_time_per_week?: number | null
-          no_study_after?: string | null
-          no_study_before?: string | null
-          no_study_days?: string[] | null
-          other_constraints_notes?: string | null
-          preferred_productivity?: string | null
-          respect_meal_times?: boolean | null
-          sleep_hours_needed?: number | null
+          meals?: Json | null
+          min_personal_time_per_week?: number
+          no_study_after?: string
+          sleep_hours_needed?: number
           updated_at?: string
           user_id?: string
-          wake_up_time?: string | null
+          wake_up_time?: string
         }
         Relationships: []
       }

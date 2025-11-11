@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SleepConstraintCard } from "./SleepConstraintCard";
+import { PersonalTimeCard } from "./PersonalTimeCard";
+import { MealsCard } from "./MealsCard";
 
 const DAYS = [
   { key: 'lundi', label: 'L' },
@@ -25,14 +28,36 @@ interface RoutineMoment {
   end_time: string;
 }
 
+interface Meal {
+  type: string;
+  start_time: string;
+  end_time: string;
+}
+
 interface RoutineTabProps {
   routineMoments: RoutineMoment[];
   onRoutineMomentsChange: (moments: RoutineMoment[]) => void;
+  wakeUpTime: string;
+  noStudyAfter: string;
+  sleepHoursNeeded: number;
+  minPersonalTimePerWeek: number;
+  meals: Meal[];
+  onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
+  onPersonalTimeSave: (value: number) => void;
+  onMealsSave: (meals: Meal[]) => void;
 }
 
 export const RoutineTab = ({
   routineMoments,
   onRoutineMomentsChange,
+  wakeUpTime,
+  noStudyAfter,
+  sleepHoursNeeded,
+  minPersonalTimePerWeek,
+  meals,
+  onSleepConstraintSave,
+  onPersonalTimeSave,
+  onMealsSave
 }: RoutineTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMomentsOpen, setIsMomentsOpen] = useState(false);
@@ -83,6 +108,23 @@ export const RoutineTab = ({
   return (
     <>
     <div className="space-y-6">
+      {/* Sleep Constraint Card */}
+      <SleepConstraintCard
+        wakeUpTime={wakeUpTime}
+        noStudyAfter={noStudyAfter}
+        sleepHoursNeeded={sleepHoursNeeded}
+        onSave={onSleepConstraintSave}
+      />
+
+      {/* Personal Time Card */}
+      <PersonalTimeCard
+        minPersonalTimePerWeek={minPersonalTimePerWeek}
+        onSave={onPersonalTimeSave}
+      />
+
+      {/* Meals Card */}
+      <MealsCard meals={meals} onSave={onMealsSave} />
+
       {/* Moments réguliers importants */}
       <Card>
         <CardContent className="p-6 space-y-4">

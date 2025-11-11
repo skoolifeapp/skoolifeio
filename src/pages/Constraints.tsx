@@ -8,7 +8,6 @@ import { generateOccurrences } from "@/lib/occurrence-generator";
 import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
-import { OthersTab } from "@/components/constraints/OthersTab";
 
 interface WorkSchedule {
   id?: string;
@@ -51,7 +50,9 @@ const Constraints = () => {
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
   
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'autres'>(state.constraints.activeTab || 'travail');
+  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine'>(
+    (state.constraints.activeTab === 'autres' ? 'travail' : state.constraints.activeTab) || 'travail'
+  );
   
   // Work data
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
@@ -60,18 +61,20 @@ const Constraints = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   
   // Routine data
+  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
+  
+  // Profile data
   const [wakeUpTime, setWakeUpTime] = useState('07:00');
   const [noStudyAfter, setNoStudyAfter] = useState('22:00');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
-  const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
   
-  // Commute data
-  interface Commute {
-    name: string;
-    duration_minutes: number;
+  interface Meal {
+    type: string;
+    start_time: string;
+    end_time: string;
   }
-  const [commutes, setCommutes] = useState<Commute[]>([]);
+  const [meals, setMeals] = useState<Meal[]>([]);
 
   // Filtrer et grouper les calendar_events par type
   // Note: maintenant les événements sont des occurrences individuelles, 
@@ -152,8 +155,8 @@ const Constraints = () => {
       setNoStudyAfter(constraintsProfile.no_study_after || '22:00');
       setSleepHoursNeeded(constraintsProfile.sleep_hours_needed || 8);
       setMinPersonalTimePerWeek(constraintsProfile.min_personal_time_per_week || 5);
-      const loadedCommutes = (constraintsProfile.commutes as Commute[]) || [];
-      setCommutes(loadedCommutes);
+      const loadedMeals = (constraintsProfile.meals as Meal[]) || [];
+      setMeals(loadedMeals);
     }
   }, [constraintsProfile]);
 
@@ -350,12 +353,10 @@ const Constraints = () => {
     }
   };
 
-  const saveProfile = async (customCommutes?: Commute[]) => {
+  const saveProfile = async () => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
-      
-      const commutesToSave = customCommutes !== undefined ? customCommutes : commutes;
       
       const { error } = await supabase
         .from('user_constraints_profile')
@@ -365,7 +366,7 @@ const Constraints = () => {
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
-          commutes: commutesToSave as any,
+          meals: meals as any,
         });
       
       if (error) {
@@ -416,9 +417,9 @@ const Constraints = () => {
     await saveProfile();
   };
 
-  const handleCommutesChange = async (newCommutes: Commute[]) => {
-    setCommutes(newCommutes);
-    await saveProfile(newCommutes);
+  const handleMealsChange = async (newMeals: Meal[]) => {
+    setMeals(newMeals);
+    await saveProfile();
   };
 
   return (
@@ -438,12 +439,11 @@ const Constraints = () => {
             { key: 'travail', label: 'Travail' },
             { key: 'activite', label: 'Activité' },
             { key: 'routine', label: 'Routine' },
-            { key: 'autres', label: 'Autres' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => {
-                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'autres';
+                const tabKey = tab.key as 'travail' | 'activite' | 'routine';
                 setActiveTab(tabKey);
                 setConstraintsTab(tabKey);
               }}
@@ -474,21 +474,11 @@ const Constraints = () => {
           <RoutineTab
             routineMoments={routineMoments}
             onRoutineMomentsChange={handleRoutineMomentsChange}
-          />
-        )}
-
-        {activeTab === 'autres' && (
-          <OthersTab
             wakeUpTime={wakeUpTime}
             noStudyAfter={noStudyAfter}
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
-            commutes={commutes}
-            availableActivities={[
-              ...workSchedules.map(w => w.title || 'Travail'),
-              ...activities.map(a => a.title),
-              ...routineMoments.map(r => r.title),
-            ].filter(Boolean)}
+            meals={meals}
             onSleepConstraintSave={async (data) => {
               setWakeUpTime(data.wakeUpTime);
               setNoStudyAfter(data.noStudyAfter);
@@ -499,7 +489,7 @@ const Constraints = () => {
               setMinPersonalTimePerWeek(value);
               await saveProfile();
             }}
-            onCommutesSave={handleCommutesChange}
+            onMealsSave={handleMealsChange}
           />
         )}
       </div>
