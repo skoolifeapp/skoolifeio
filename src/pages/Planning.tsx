@@ -986,12 +986,12 @@ const Planning = () => {
                         if (event.type === 'work') {
                           const schedule = event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
-                          const typeEmoji = schedule.type === 'alternance' ? '💼' : schedule.type === 'job' ? '🏢' : '📋';
+                          const typeEmoji = schedule.metadata?.work_type === 'alternance' ? '💼' : schedule.metadata?.work_type === 'job' ? '🏢' : '📋';
 
                           return (
                             <div
                               key={`work-${schedule.id}-${idx}`}
-                              className="absolute bg-blue-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-blue-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-700 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1020,7 +1020,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`activity-${activity.id}-${idx}`}
-                              className="absolute bg-green-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-green-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-700 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1049,7 +1049,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`routine-${routine.id}-${idx}`}
-                              className="absolute bg-red-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-red-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-orange-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-orange-700 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
