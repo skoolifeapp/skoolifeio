@@ -28,7 +28,6 @@ import {
   deleteOccurrence,
   deleteAllOccurrences 
 } from "@/lib/occurrence-utils";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ImportedEvent {
   summary: string;
@@ -69,8 +68,6 @@ const Planning = () => {
     occurrenceDate?: string; // Date de l'occurrence pour les événements récurrents
     isRecurring?: boolean; // Indique si l'événement parent est récurrent
   } | null>(null);
-  const [showRecurringDialog, setShowRecurringDialog] = useState(false);
-  const [recurringAction, setRecurringAction] = useState<'update' | 'delete' | null>(null);
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newManualEvent, setNewManualEvent] = useState<{
@@ -425,21 +422,7 @@ const Planning = () => {
     };
   };
 
-  const handleUpdateEventClick = async () => {
-    if (!editingEvent || !user) return;
-
-    // Si l'événement est récurrent (work, activity, routine), demander confirmation
-    if ((editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && editingEvent.isRecurring) {
-      setRecurringAction('update');
-      setShowRecurringDialog(true);
-      return;
-    }
-
-    // Sinon, mettre à jour directement
-    await performUpdate(false);
-  };
-
-  const performUpdate = async (updateAll: boolean) => {
+  const handleUpdateEvent = async (updateAll: boolean = false) => {
     if (!editingEvent || !user) return;
 
     try {
@@ -514,7 +497,6 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
-      setShowRecurringDialog(false);
       toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
@@ -522,21 +504,7 @@ const Planning = () => {
     }
   };
 
-  const handleDeleteEventClick = async () => {
-    if (!editingEvent || !user) return;
-
-    // Si l'événement est récurrent (work, activity, routine), demander confirmation
-    if ((editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && editingEvent.isRecurring) {
-      setRecurringAction('delete');
-      setShowRecurringDialog(true);
-      return;
-    }
-
-    // Sinon, supprimer directement
-    await performDelete(false);
-  };
-
-  const performDelete = async (deleteAll: boolean) => {
+  const handleDeleteEvent = async (deleteAll: boolean = false) => {
     if (!editingEvent || !user) return;
 
     try {
@@ -581,7 +549,6 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
-      setShowRecurringDialog(false);
       toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -1645,21 +1612,64 @@ const Planning = () => {
           </div>
 
           <DrawerFooter>
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="destructive" 
-                onClick={handleDeleteEventClick}
-                className="flex-1"
-              >
-                Supprimer
-              </Button>
-              <Button 
-                onClick={handleUpdateEventClick}
-                className="flex-1"
-              >
-                Enregistrer
-              </Button>
-            </div>
+            {/* Afficher les options pour événements récurrents */}
+            {editingEvent?.isRecurring && (
+              <div className="mb-4 p-4 bg-muted rounded-lg">
+                <p className="text-sm font-semibold mb-3">Cet événement se répète plusieurs fois</p>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => handleDeleteEvent(false)}
+                      className="flex-1"
+                    >
+                      Supprimer cette occurrence
+                    </Button>
+                    <Button 
+                      onClick={() => handleUpdateEvent(false)}
+                      className="flex-1"
+                    >
+                      Modifier cette occurrence
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => handleDeleteEvent(true)}
+                      className="flex-1"
+                    >
+                      Supprimer toutes les occurrences
+                    </Button>
+                    <Button 
+                      onClick={() => handleUpdateEvent(true)}
+                      className="flex-1"
+                    >
+                      Modifier toutes les occurrences
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Boutons standard pour événements non récurrents */}
+            {!editingEvent?.isRecurring && (
+              <div className="flex gap-2 w-full">
+                <Button 
+                  variant="destructive" 
+                  onClick={() => handleDeleteEvent(false)}
+                  className="flex-1"
+                >
+                  Supprimer
+                </Button>
+                <Button 
+                  onClick={() => handleUpdateEvent(false)}
+                  className="flex-1"
+                >
+                  Enregistrer
+                </Button>
+              </div>
+            )}
+
             <DrawerClose asChild>
               <Button variant="outline" className="w-full">Annuler</Button>
             </DrawerClose>
@@ -1728,45 +1738,6 @@ const Planning = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-
-      {/* Dialogue de confirmation pour événements récurrents */}
-      <AlertDialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {recurringAction === 'update' ? 'Modifier l\'événement récurrent' : 'Supprimer l\'événement récurrent'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Cet événement se répète plusieurs fois. Que veux-tu {recurringAction === 'update' ? 'modifier' : 'supprimer'} ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (recurringAction === 'update') {
-                  performUpdate(false);
-                } else {
-                  performDelete(false);
-                }
-              }}
-            >
-              Cette occurrence uniquement
-            </AlertDialogAction>
-            <AlertDialogAction
-              onClick={() => {
-                if (recurringAction === 'update') {
-                  performUpdate(true);
-                } else {
-                  performDelete(true);
-                }
-              }}
-            >
-              Toutes les occurrences
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
