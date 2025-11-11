@@ -456,7 +456,7 @@ const Planning = () => {
         await loadRevisionSessions();
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (updateAll) {
-          // Modifier toutes les occurrences
+          // Modifier toutes les occurrences - on met à jour l'événement parent
           await updateAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id, {
             title: editingEvent.data.title,
             summary: editingEvent.data.title,
@@ -465,7 +465,7 @@ const Planning = () => {
             end_time: editingEvent.data.end_time,
           });
         } else {
-          // Modifier uniquement cette occurrence
+          // Modifier uniquement cette occurrence - créer une exception
           if (editingEvent.occurrenceDate) {
             await createOccurrenceException(
               user.id,
@@ -482,6 +482,7 @@ const Planning = () => {
             );
           }
         }
+        await loadCalendarEvents();
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -497,8 +498,9 @@ const Planning = () => {
         await loadDayExams();
       }
 
-      refetchAll();
+      await refetchAll();
       setEditingEvent(null);
+      setApplyToAll(false); // Reset pour la prochaine fois
       toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
@@ -513,10 +515,10 @@ const Planning = () => {
     try {
       if (editingEvent.type === 'calendar' || editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (deleteAll) {
-          // Supprimer toutes les occurrences
+          // Supprimer toutes les occurrences - supprimer l'événement parent
           await deleteAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id);
         } else if (editingEvent.occurrenceDate) {
-          // Supprimer uniquement cette occurrence
+          // Supprimer uniquement cette occurrence - créer une exception
           await deleteOccurrence(
             user.id,
             editingEvent.data.parentEventId || editingEvent.data.id,
@@ -550,8 +552,9 @@ const Planning = () => {
         await loadDayExams();
       }
 
-      refetchAll();
+      await refetchAll();
       setEditingEvent(null);
+      setApplyToAll(false); // Reset pour la prochaine fois
       toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
