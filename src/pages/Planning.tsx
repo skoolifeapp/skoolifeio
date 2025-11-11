@@ -366,6 +366,10 @@ const Planning = () => {
     setDayExams(filtered);
   };
 
+  // Define date strings first
+  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+
   // Get events for selected day
   const daySchoolEvents = importedEvents.filter(event => 
     isSameDay(new Date(event.startDate), selectedDate)
@@ -389,8 +393,6 @@ const Planning = () => {
   );
 
   // Get work schedules for selected day, en excluant les exceptions
-  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
-  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
   // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
   const dayWorkSchedules = (calendarEvents || [])
