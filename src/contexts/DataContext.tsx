@@ -72,7 +72,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     queryFn: async () => {
       if (!user) return null;
       const { data } = await supabase
-        .from("user_constraints_profile")
+        .from("user_rest")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();

@@ -374,7 +374,7 @@ const Constraints = () => {
       });
 
       const { data, error } = await supabase
-        .from('user_constraints_profile')
+        .from('user_rest')
         .upsert({
           user_id: userId,
           wake_up_time: wakeUpTime,
@@ -425,7 +425,7 @@ const Constraints = () => {
       }
 
       const { error } = await supabase
-        .from('user_constraints_profile')
+        .from('user_rest')
         .upsert({
           user_id: userId,
           wake_up_time: data.wakeUpTime,
@@ -460,7 +460,7 @@ const Constraints = () => {
       }
 
       const { error } = await supabase
-        .from('user_constraints_profile')
+        .from('user_rest')
         .upsert({
           user_id: userId,
           min_personal_time_per_week: value,
