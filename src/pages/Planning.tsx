@@ -120,7 +120,8 @@ const Planning = () => {
     const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .eq('source', 'school');
 
     if (error) {
       console.error('Error loading calendar events:', error);
