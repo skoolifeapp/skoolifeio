@@ -1022,7 +1022,9 @@ const Planning = () => {
                         }
 
                         if (event.type === 'work') {
-                          const schedule = event.data;
+                          // Utiliser editingEvent si c'est l'événement en cours d'édition
+                          const isEditing = editingEvent?.type === 'work' && editingEvent?.data?.id === event.data.id;
+                          const schedule = isEditing ? editingEvent.data : event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
 
                           return (
@@ -1035,13 +1037,13 @@ const Planning = () => {
                                 setEditingEvent({
                                   type: 'work',
                                   data: { 
-                                    ...schedule,
-                                    parentEventId: schedule.id,
-                                    start_time: format(new Date(schedule.start_date), 'HH:mm'),
-                                    end_time: format(new Date(schedule.end_date), 'HH:mm'),
+                                    ...event.data,
+                                    parentEventId: event.data.id,
+                                    start_time: format(new Date(event.data.start_date), 'HH:mm'),
+                                    end_time: format(new Date(event.data.end_date), 'HH:mm'),
                                   },
                                   occurrenceDate,
-                                  isRecurring: schedule.is_recurring || false,
+                                  isRecurring: event.data.is_recurring || false,
                                 });
                               }}
                             >
@@ -1059,7 +1061,9 @@ const Planning = () => {
                         }
 
                         if (event.type === 'activity') {
-                          const activity = event.data;
+                          // Utiliser editingEvent si c'est l'événement en cours d'édition
+                          const isEditing = editingEvent?.type === 'activity' && editingEvent?.data?.id === event.data.id;
+                          const activity = isEditing ? editingEvent.data : event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
 
                           return (
@@ -1072,13 +1076,13 @@ const Planning = () => {
                                 setEditingEvent({
                                   type: 'activity',
                                   data: { 
-                                    ...activity,
-                                    parentEventId: activity.id,
-                                    start_time: format(new Date(activity.start_date), 'HH:mm'),
-                                    end_time: format(new Date(activity.end_date), 'HH:mm'),
+                                    ...event.data,
+                                    parentEventId: event.data.id,
+                                    start_time: format(new Date(event.data.start_date), 'HH:mm'),
+                                    end_time: format(new Date(event.data.end_date), 'HH:mm'),
                                   },
                                   occurrenceDate,
-                                  isRecurring: activity.is_recurring || false,
+                                  isRecurring: event.data.is_recurring || false,
                                 });
                               }}
                             >
@@ -1096,7 +1100,9 @@ const Planning = () => {
                         }
 
                         if (event.type === 'routine') {
-                          const routine = event.data;
+                          // Utiliser editingEvent si c'est l'événement en cours d'édition
+                          const isEditing = editingEvent?.type === 'routine' && editingEvent?.data?.id === event.data.id;
+                          const routine = isEditing ? editingEvent.data : event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
 
                           return (
@@ -1109,13 +1115,13 @@ const Planning = () => {
                                 setEditingEvent({
                                   type: 'routine',
                                   data: { 
-                                    ...routine,
-                                    parentEventId: routine.id,
-                                    start_time: format(new Date(routine.start_date), 'HH:mm'),
-                                    end_time: format(new Date(routine.end_date), 'HH:mm'),
+                                    ...event.data,
+                                    parentEventId: event.data.id,
+                                    start_time: format(new Date(event.data.start_date), 'HH:mm'),
+                                    end_time: format(new Date(event.data.end_date), 'HH:mm'),
                                   },
                                   occurrenceDate,
-                                  isRecurring: routine.is_recurring || false,
+                                  isRecurring: event.data.is_recurring || false,
                                 });
                               }}
                             >
