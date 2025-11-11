@@ -490,7 +490,6 @@ const Planning = () => {
           
           if (updateErr) console.error('Error updating one:', updateErr);
         }
-        await loadCalendarEvents();
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -503,17 +502,13 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadDayExams();
       }
 
       await refetchAll();
-
       setEditingEvent(null);
       setApplyToAll(false);
-      toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
-      toast.error("Erreur lors de la modification");
     }
   };
 
@@ -541,10 +536,9 @@ const Planning = () => {
             .from('calendar_events')
             .delete()
             .eq('id', id);
-
+          
           if (deleteErr) console.error('Error deleting one:', deleteErr);
         }
-        await loadCalendarEvents();
       } else if (editingEvent.type === 'revision') {
         const { error } = await supabase
           .from('revision_sessions')
@@ -552,8 +546,6 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadRevisionSessions();
-        await refetchAll();
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -561,16 +553,13 @@ const Planning = () => {
           .eq('id', editingEvent.data.id);
 
         if (error) throw error;
-        await loadDayExams();
-        await refetchAll();
       }
 
+      await refetchAll();
       setEditingEvent(null);
       setApplyToAll(false);
-      toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
-      toast.error("Erreur lors de la suppression");
     }
   };
 
