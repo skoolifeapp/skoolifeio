@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
@@ -133,14 +134,25 @@ export const CommuteCard = ({
           
           <div className="px-4 space-y-4 pb-6">
             <div>
-              <Label htmlFor="commute-name">Nom du trajet</Label>
-              <Input
-                id="commute-name"
-                placeholder="Ex: Domicile ↔ École"
+              <Label htmlFor="commute-name">Destination</Label>
+              <Select
                 value={newCommute.name}
-                onChange={(e) => setNewCommute({ ...newCommute, name: e.target.value })}
-                className="mt-1.5"
-              />
+                onValueChange={(value) => setNewCommute({ ...newCommute, name: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Sélectionne une destination" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="Domicile ↔ École">Domicile ↔ École</SelectItem>
+                  <SelectItem value="Domicile ↔ Alternance">Domicile ↔ Alternance</SelectItem>
+                  <SelectItem value="Domicile ↔ Job">Domicile ↔ Job</SelectItem>
+                  <SelectItem value="Domicile ↔ Activité principale">Domicile ↔ Activité principale</SelectItem>
+                  <SelectItem value="Domicile ↔ Salle de sport">Domicile ↔ Salle de sport</SelectItem>
+                  <SelectItem value="École ↔ Alternance">École ↔ Alternance</SelectItem>
+                  <SelectItem value="École ↔ Job">École ↔ Job</SelectItem>
+                  <SelectItem value="Autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="commute-duration">Durée (minutes)</Label>
