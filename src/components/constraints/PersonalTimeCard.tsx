@@ -44,7 +44,7 @@ export const PersonalTimeCard = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">Temps personnel minimum ({constraintCount})</Label>
+                  <Label className="text-base">Temps personnel minimum</Label>
                   <p className="text-xs text-muted-foreground">Pour souffler, voir des potes, sortir...</p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -53,7 +53,7 @@ export const SleepConstraintCard = ({
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between w-full">
                 <div className="text-left">
-                  <Label className="text-base">Rythme de sommeil ({constraintCount})</Label>
+                  <Label className="text-base">Rythme de sommeil</Label>
                   <p className="text-xs text-muted-foreground">Heure de lever et de coucher</p>
                 </div>
                 <div className="flex items-center gap-2">
