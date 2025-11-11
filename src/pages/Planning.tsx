@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Trash2, Bell, BellOff, Upload, Plus } from "lucide-react";
 import ICAL from "ical.js";
 import { toast } from "sonner";
 import { format, isSameDay, addDays } from "date-fns";
@@ -62,13 +62,24 @@ const Planning = () => {
   } | null>(null);
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
-  const [newEvent, setNewEvent] = useState({
+  const [newManualEvent, setNewManualEvent] = useState<{
+    title: string;
+    description: string;
+    location: string;
+    start_date: string;
+    end_date: string;
+    source: 'school' | 'work' | 'sport' | 'other';
+    is_recurring: boolean;
+    days_of_week: number[];
+  }>({
     title: '',
     description: '',
-    start_time: '',
-    end_time: '',
     location: '',
-    color: '#3b82f6'
+    start_date: '',
+    end_date: '',
+    source: 'other',
+    is_recurring: false,
+    days_of_week: []
   });
 
   useEffect(() => {
@@ -552,39 +563,44 @@ const Planning = () => {
     setPlanningDate(newDate);
   };
 
-  const handleAddEvent = async () => {
-    if (!user || !newEvent.title || !newEvent.start_time || !newEvent.end_time) {
+  const handleAddManualEvent = async () => {
+    if (!user || !newManualEvent.title || !newManualEvent.start_date || !newManualEvent.end_date) {
       toast.error("Remplis tous les champs obligatoires");
       return;
     }
 
     try {
       const { error } = await supabase
-        .from('planned_events')
-        .insert({
+        .from('calendar_events')
+        .insert([{
           user_id: user.id,
-          title: newEvent.title,
-          description: newEvent.description,
-          start_time: newEvent.start_time,
-          end_time: newEvent.end_time,
-          location: newEvent.location,
-          color: newEvent.color,
-        });
+          title: newManualEvent.title,
+          summary: newManualEvent.title,
+          description: newManualEvent.description,
+          start_date: newManualEvent.start_date,
+          end_date: newManualEvent.end_date,
+          location: newManualEvent.location,
+          source: newManualEvent.source,
+          is_recurring: newManualEvent.is_recurring,
+          days_of_week: newManualEvent.days_of_week.length > 0 ? newManualEvent.days_of_week : null,
+        }]);
 
       if (error) throw error;
 
-      await loadPlannedEvents();
+      await loadCalendarEvents();
       refetchAll();
       setIsAddingEvent(false);
-      setNewEvent({
+      setNewManualEvent({
         title: '',
         description: '',
-        start_time: '',
-        end_time: '',
         location: '',
-        color: '#3b82f6'
+        start_date: '',
+        end_date: '',
+        source: 'other',
+        is_recurring: false,
+        days_of_week: []
       });
-      toast.error("Événement ajouté");
+      toast.success("Événement ajouté");
     } catch (error) {
       console.error('Error adding event:', error);
       toast.error("Erreur lors de l'ajout");
@@ -612,6 +628,14 @@ const Planning = () => {
               title="Importer un fichier .ics"
             >
               <Upload className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsAddingEvent(true)}
+              title="Ajouter un événement"
+            >
+              <Plus className="h-4 w-4" />
             </Button>
             {revisionSessions.length > 0 && (
               <Button
@@ -1161,13 +1185,13 @@ const Planning = () => {
         </div>
       </div>
 
-      {/* Drawer pour ajouter un événement */}
+      {/* Drawer pour ajouter un événement manuel */}
       <Drawer open={isAddingEvent} onOpenChange={setIsAddingEvent}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Ajouter un événement</DrawerTitle>
             <DrawerDescription>
-              Crée un nouvel événement dans ton planning
+              Crée un nouvel événement dans ton calendrier
             </DrawerDescription>
           </DrawerHeader>
           
@@ -1176,8 +1200,8 @@ const Planning = () => {
               <Label htmlFor="new-title">Titre *</Label>
               <Input
                 id="new-title"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                value={newManualEvent.title}
+                onChange={(e) => setNewManualEvent({ ...newManualEvent, title: e.target.value })}
                 placeholder="Titre de l'événement"
               />
             </div>
@@ -1186,8 +1210,8 @@ const Planning = () => {
               <Label htmlFor="new-description">Description</Label>
               <Input
                 id="new-description"
-                value={newEvent.description}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                value={newManualEvent.description}
+                onChange={(e) => setNewManualEvent({ ...newManualEvent, description: e.target.value })}
                 placeholder="Description (optionnel)"
               />
             </div>
@@ -1198,8 +1222,8 @@ const Planning = () => {
                 <Input
                   id="new-start"
                   type="datetime-local"
-                  value={newEvent.start_time}
-                  onChange={(e) => setNewEvent({ ...newEvent, start_time: e.target.value })}
+                  value={newManualEvent.start_date}
+                  onChange={(e) => setNewManualEvent({ ...newManualEvent, start_date: e.target.value })}
                 />
               </div>
               <div>
@@ -1207,8 +1231,8 @@ const Planning = () => {
                 <Input
                   id="new-end"
                   type="datetime-local"
-                  value={newEvent.end_time}
-                  onChange={(e) => setNewEvent({ ...newEvent, end_time: e.target.value })}
+                  value={newManualEvent.end_date}
+                  onChange={(e) => setNewManualEvent({ ...newManualEvent, end_date: e.target.value })}
                 />
               </div>
             </div>
@@ -1217,25 +1241,30 @@ const Planning = () => {
               <Label htmlFor="new-location">Lieu</Label>
               <Input
                 id="new-location"
-                value={newEvent.location}
-                onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                value={newManualEvent.location}
+                onChange={(e) => setNewManualEvent({ ...newManualEvent, location: e.target.value })}
                 placeholder="Lieu (optionnel)"
               />
             </div>
 
             <div>
-              <Label htmlFor="new-color">Couleur</Label>
-              <Input
-                id="new-color"
-                type="color"
-                value={newEvent.color}
-                onChange={(e) => setNewEvent({ ...newEvent, color: e.target.value })}
-              />
+              <Label htmlFor="new-source">Type d'événement *</Label>
+              <select
+                id="new-source"
+                value={newManualEvent.source}
+                onChange={(e) => setNewManualEvent({ ...newManualEvent, source: e.target.value as 'school' | 'work' | 'sport' | 'other' })}
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+              >
+                <option value="other">Autre</option>
+                <option value="school">École</option>
+                <option value="work">Travail</option>
+                <option value="sport">Sport/Activité</option>
+              </select>
             </div>
           </div>
 
           <DrawerFooter>
-            <Button onClick={handleAddEvent}>Ajouter</Button>
+            <Button onClick={handleAddManualEvent}>Ajouter</Button>
             <DrawerClose asChild>
               <Button variant="outline">Annuler</Button>
             </DrawerClose>
