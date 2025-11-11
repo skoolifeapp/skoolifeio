@@ -122,45 +122,6 @@ export type Database = {
         }
         Relationships: []
       }
-      planned_events: {
-        Row: {
-          color: string | null
-          created_at: string
-          description: string | null
-          end_time: string
-          id: string
-          location: string | null
-          start_time: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          end_time: string
-          id?: string
-          location?: string | null
-          start_time: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          end_time?: string
-          id?: string
-          location?: string | null
-          start_time?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -235,50 +196,6 @@ export type Database = {
           },
         ]
       }
-      study_sessions: {
-        Row: {
-          completed: boolean
-          created_at: string
-          end_time: string
-          exam_id: string | null
-          id: string
-          start_time: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          end_time: string
-          exam_id?: string | null
-          id?: string
-          start_time: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          end_time?: string
-          exam_id?: string | null
-          id?: string
-          start_time?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "study_sessions_exam_id_fkey"
-            columns: ["exam_id"]
-            isOneToOne: false
-            referencedRelation: "exams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_constraints_profile: {
         Row: {
           breakfast_end: string | null
@@ -287,6 +204,7 @@ export type Database = {
           commute_home_job: number | null
           commute_home_school: number | null
           commute_home_sport: number | null
+          commutes: Json | null
           created_at: string
           dinner_break_end: string | null
           dinner_break_start: string | null
@@ -316,6 +234,7 @@ export type Database = {
           commute_home_job?: number | null
           commute_home_school?: number | null
           commute_home_sport?: number | null
+          commutes?: Json | null
           created_at?: string
           dinner_break_end?: string | null
           dinner_break_start?: string | null
@@ -345,6 +264,7 @@ export type Database = {
           commute_home_job?: number | null
           commute_home_school?: number | null
           commute_home_sport?: number | null
+          commutes?: Json | null
           created_at?: string
           dinner_break_end?: string | null
           dinner_break_start?: string | null
@@ -366,27 +286,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           wake_up_time?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
         }
         Relationships: []
       }

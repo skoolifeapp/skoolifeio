@@ -2,17 +2,20 @@ import { SleepConstraintCard } from "./SleepConstraintCard";
 import { PersonalTimeCard } from "./PersonalTimeCard";
 import { CommuteCard } from "./CommuteCard";
 
+interface Commute {
+  name: string;
+  duration_minutes: number;
+}
+
 interface OthersTabProps {
   wakeUpTime: string;
   noStudyAfter: string;
   sleepHoursNeeded: number;
   minPersonalTimePerWeek: number;
-  commuteHomeSchool: number;
-  commuteHomeJob: number;
-  commuteHomeActivity: number;
+  commutes: Commute[];
   onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
   onPersonalTimeSave: (value: number) => void;
-  onCommuteSave: (data: { commuteHomeSchool: number; commuteHomeJob: number; commuteHomeActivity: number }) => void;
+  onCommutesSave: (commutes: Commute[]) => void;
 }
 
 export const OthersTab = ({
@@ -20,12 +23,10 @@ export const OthersTab = ({
   noStudyAfter,
   sleepHoursNeeded,
   minPersonalTimePerWeek,
-  commuteHomeSchool,
-  commuteHomeJob,
-  commuteHomeActivity,
+  commutes,
   onSleepConstraintSave,
   onPersonalTimeSave,
-  onCommuteSave,
+  onCommutesSave,
 }: OthersTabProps) => {
   return (
     <div className="space-y-6">
@@ -42,10 +43,8 @@ export const OthersTab = ({
       />
 
       <CommuteCard
-        commuteHomeSchool={commuteHomeSchool}
-        commuteHomeJob={commuteHomeJob}
-        commuteHomeActivity={commuteHomeActivity}
-        onSave={onCommuteSave}
+        commutes={commutes}
+        onSave={onCommutesSave}
       />
     </div>
   );

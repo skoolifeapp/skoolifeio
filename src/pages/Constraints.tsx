@@ -67,9 +67,11 @@ const Constraints = () => {
   const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
   
   // Commute data
-  const [commuteHomeSchool, setCommuteHomeSchool] = useState(0);
-  const [commuteHomeJob, setCommuteHomeJob] = useState(0);
-  const [commuteHomeActivity, setCommuteHomeActivity] = useState(0);
+  interface Commute {
+    name: string;
+    duration_minutes: number;
+  }
+  const [commutes, setCommutes] = useState<Commute[]>([]);
 
   // Filtrer et grouper les calendar_events par type
   // Note: maintenant les événements sont des occurrences individuelles, 
@@ -150,9 +152,7 @@ const Constraints = () => {
       setNoStudyAfter(constraintsProfile.no_study_after || '22:00');
       setSleepHoursNeeded(constraintsProfile.sleep_hours_needed || 8);
       setMinPersonalTimePerWeek(constraintsProfile.min_personal_time_per_week || 5);
-      setCommuteHomeSchool(constraintsProfile.commute_home_school || 0);
-      setCommuteHomeJob(constraintsProfile.commute_home_job || 0);
-      setCommuteHomeActivity(constraintsProfile.commute_home_activity || 0);
+      setCommutes((constraintsProfile.commutes as Commute[]) || []);
     }
   }, [constraintsProfile]);
 
@@ -362,9 +362,7 @@ const Constraints = () => {
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
-          commute_home_school: commuteHomeSchool,
-          commute_home_job: commuteHomeJob,
-          commute_home_activity: commuteHomeActivity,
+          commutes: commutes as any,
         });
       
       if (error) {
@@ -415,18 +413,8 @@ const Constraints = () => {
     await saveProfile();
   };
 
-  const handleCommuteHomeSchoolChange = async (minutes: number) => {
-    setCommuteHomeSchool(minutes);
-    await saveProfile();
-  };
-
-  const handleCommuteHomeJobChange = async (minutes: number) => {
-    setCommuteHomeJob(minutes);
-    await saveProfile();
-  };
-
-  const handleCommuteHomeActivityChange = async (minutes: number) => {
-    setCommuteHomeActivity(minutes);
+  const handleCommutesChange = async (newCommutes: Commute[]) => {
+    setCommutes(newCommutes);
     await saveProfile();
   };
 
@@ -492,9 +480,7 @@ const Constraints = () => {
             noStudyAfter={noStudyAfter}
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
-            commuteHomeSchool={commuteHomeSchool}
-            commuteHomeJob={commuteHomeJob}
-            commuteHomeActivity={commuteHomeActivity}
+            commutes={commutes}
             onSleepConstraintSave={async (data) => {
               setWakeUpTime(data.wakeUpTime);
               setNoStudyAfter(data.noStudyAfter);
@@ -505,12 +491,7 @@ const Constraints = () => {
               setMinPersonalTimePerWeek(value);
               await saveProfile();
             }}
-            onCommuteSave={async (data) => {
-              setCommuteHomeSchool(data.commuteHomeSchool);
-              setCommuteHomeJob(data.commuteHomeJob);
-              setCommuteHomeActivity(data.commuteHomeActivity);
-              await saveProfile();
-            }}
+            onCommutesSave={handleCommutesChange}
           />
         )}
       </div>

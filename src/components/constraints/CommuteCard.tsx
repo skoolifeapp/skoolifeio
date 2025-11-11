@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,38 +8,48 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerC
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 
+interface Commute {
+  name: string;
+  duration_minutes: number;
+}
+
 interface CommuteCardProps {
-  commuteHomeSchool: number;
-  commuteHomeJob: number;
-  commuteHomeActivity: number;
-  onSave: (data: { commuteHomeSchool: number; commuteHomeJob: number; commuteHomeActivity: number }) => void;
+  commutes: Commute[];
+  onSave: (commutes: Commute[]) => void;
 }
 
 export const CommuteCard = ({
-  commuteHomeSchool,
-  commuteHomeJob,
-  commuteHomeActivity,
+  commutes,
   onSave,
 }: CommuteCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editData, setEditData] = useState({
-    commuteHomeSchool,
-    commuteHomeJob,
-    commuteHomeActivity,
+  const [newCommute, setNewCommute] = useState<Commute>({
+    name: '',
+    duration_minutes: 0,
   });
 
-  const hasConstraints = commuteHomeSchool > 0 || commuteHomeJob > 0 || commuteHomeActivity > 0;
-  const constraintCount = [commuteHomeSchool > 0, commuteHomeJob > 0, commuteHomeActivity > 0].filter(Boolean).length;
+  const constraintCount = commutes.length;
 
-  const handleSave = () => {
-    onSave(editData);
+  const handleAdd = () => {
+    if (!newCommute.name || newCommute.duration_minutes <= 0) {
+      toast.error("Remplis tous les champs");
+      return;
+    }
+
+    onSave([...commutes, newCommute]);
+    setNewCommute({ name: '', duration_minutes: 0 });
     setIsDrawerOpen(false);
-    toast.success("Temps de trajet enregistré");
+    toast.success("Trajet ajouté");
+  };
+
+  const handleRemove = (index: number) => {
+    onSave(commutes.filter((_, i) => i !== index));
+    toast.success("Trajet supprimé");
   };
 
   const openDrawer = () => {
-    setEditData({ commuteHomeSchool, commuteHomeJob, commuteHomeActivity });
+    setNewCommute({ name: '', duration_minutes: 0 });
     setIsDrawerOpen(true);
   };
 
@@ -70,28 +80,28 @@ export const CommuteCard = ({
               </div>
             </CollapsibleTrigger>
 
-            {hasConstraints && (
+            {commutes.length > 0 && (
               <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                <div className="p-4 border rounded-lg space-y-2">
-                  {commuteHomeSchool > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Domicile ↔ École</span>
-                      <span className="font-medium">{commuteHomeSchool} min</span>
+                {commutes.map((commute, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{commute.name}</span>
+                          <span className="text-muted-foreground">{commute.duration_minutes} min</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleRemove(index)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 ml-2 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                  {commuteHomeJob > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Domicile ↔ Travail</span>
-                      <span className="font-medium">{commuteHomeJob} min</span>
-                    </div>
-                  )}
-                  {commuteHomeActivity > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Domicile ↔ Activité</span>
-                      <span className="font-medium">{commuteHomeActivity} min</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </CollapsibleContent>
             )}
           </Collapsible>
@@ -101,47 +111,36 @@ export const CommuteCard = ({
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Configurer les temps de trajet</DrawerTitle>
+            <DrawerTitle>Ajouter un trajet</DrawerTitle>
           </DrawerHeader>
           
           <div className="px-4 space-y-4 pb-6">
             <div>
-              <Label className="text-sm">Domicile ↔ École (minutes)</Label>
+              <Label className="text-sm">Nom du trajet</Label>
               <Input
-                type="number"
-                min="0"
-                value={editData.commuteHomeSchool}
-                onChange={(e) => setEditData({ ...editData, commuteHomeSchool: parseInt(e.target.value) || 0 })}
+                value={newCommute.name}
+                onChange={(e) => setNewCommute({ ...newCommute, name: e.target.value })}
+                placeholder="Ex: Domicile ↔ École, Maison ↔ Salle de sport..."
                 className="mt-1.5"
               />
             </div>
 
             <div>
-              <Label className="text-sm">Domicile ↔ Travail (minutes)</Label>
+              <Label className="text-sm">Durée (minutes)</Label>
               <Input
                 type="number"
                 min="0"
-                value={editData.commuteHomeJob}
-                onChange={(e) => setEditData({ ...editData, commuteHomeJob: parseInt(e.target.value) || 0 })}
-                className="mt-1.5"
-              />
-            </div>
-
-            <div>
-              <Label className="text-sm">Domicile ↔ Activité (minutes)</Label>
-              <Input
-                type="number"
-                min="0"
-                value={editData.commuteHomeActivity}
-                onChange={(e) => setEditData({ ...editData, commuteHomeActivity: parseInt(e.target.value) || 0 })}
+                value={newCommute.duration_minutes || ''}
+                onChange={(e) => setNewCommute({ ...newCommute, duration_minutes: parseInt(e.target.value) || 0 })}
+                placeholder="Temps de trajet en minutes"
                 className="mt-1.5"
               />
             </div>
           </div>
 
           <DrawerFooter>
-            <Button onClick={handleSave} className="w-full">
-              Enregistrer
+            <Button onClick={handleAdd} className="w-full">
+              Ajouter
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="w-full">
