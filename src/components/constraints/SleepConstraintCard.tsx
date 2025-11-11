@@ -37,7 +37,6 @@ export const SleepConstraintCard = ({
     await onSave(editData);
     setIsDrawerOpen(false);
     setIsOpen(true);
-    toast.success("Rythme de sommeil enregistré");
   };
 
   const openDrawer = () => {

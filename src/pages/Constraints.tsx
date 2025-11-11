@@ -620,7 +620,6 @@ const Constraints = () => {
       if (data.weeklyHoursGoal !== undefined) setWeeklyHoursGoal(data.weeklyHoursGoal);
       
       await refetchAll();
-      toast.success("Contraintes de révision enregistrées");
     } catch (error) {
       console.error('Error saving revision constraints:', error);
       toast.error("Erreur lors de l'enregistrement");

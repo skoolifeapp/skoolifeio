@@ -44,21 +44,18 @@ export const RevisionTab = ({
     onSave({ maxSessionsPerDay: tempMaxSessions });
     setIsSessionsDrawerOpen(false);
     setIsSessionsOpen(true);
-    toast.success("Sessions par jour enregistrées");
   };
 
   const handleDurationSave = async () => {
     onSave({ maxSessionDurationMinutes: tempMaxDuration });
     setIsDurationDrawerOpen(false);
     setIsDurationOpen(true);
-    toast.success("Durée par session enregistrée");
   };
 
   const handleWeeklyGoalSave = async () => {
     onSave({ weeklyHoursGoal: tempWeeklyGoal });
     setIsWeeklyGoalDrawerOpen(false);
     setIsWeeklyGoalOpen(true);
-    toast.success("Objectif hebdomadaire enregistré");
   };
 
   const openSessionsDrawer = () => {

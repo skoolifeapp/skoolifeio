@@ -28,7 +28,6 @@ export const PersonalTimeCard = ({
     await onSave(editValue);
     setIsDrawerOpen(false);
     setIsOpen(true);
-    toast.success("Temps personnel enregistré");
   };
 
   const openDrawer = () => {
