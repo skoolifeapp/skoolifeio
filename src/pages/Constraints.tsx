@@ -537,7 +537,14 @@ const Constraints = () => {
         )}
 
         {activeTab === 'trajet' && (
-          <CommuteCard commutes={commutes} onSave={handleCommutesChange} />
+          <CommuteCard 
+            commutes={commutes} 
+            onSave={handleCommutesChange}
+            availableDestinations={[
+              ...workSchedules.map(w => `Domicile ↔ ${w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')}`),
+              ...activities.map(a => `Domicile ↔ ${a.title}`)
+            ]}
+          />
         )}
       </div>
     </div>
