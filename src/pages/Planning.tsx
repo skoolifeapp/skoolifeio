@@ -702,7 +702,7 @@ const Planning = () => {
                     });
                   }}
                 >
-                  <span className="text-sm">{exam.subject.match(/[\p{Emoji}]/gu) ? '' : '📚'}</span>
+                  <span className="text-sm"></span>
                   <span className="text-sm font-semibold truncate">{exam.subject}</span>
                   {exam.type && <span className="text-xs text-muted-foreground">({exam.type})</span>}
                 </div>
@@ -979,8 +979,6 @@ const Planning = () => {
                         if (event.type === 'work') {
                           const schedule = event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
-                          const hasEmoji = schedule.title && /[\p{Emoji}]/gu.test(schedule.title);
-                          const typeEmoji = !hasEmoji ? (schedule.metadata?.work_type === 'alternance' ? '💼' : schedule.metadata?.work_type === 'job' ? '🏢' : '📋') : '';
 
                           return (
                             <div
@@ -995,7 +993,7 @@ const Planning = () => {
                               }}
                             >
                               <div className="text-xs font-semibold truncate">
-                                {typeEmoji}{typeEmoji && ' '}{schedule.title || 'Travail'}
+                                {schedule.title || 'Travail'}
                               </div>
                               <div className="text-xs opacity-90">
                                 {format(new Date(schedule.start_date), 'HH:mm')} - {format(new Date(schedule.end_date), 'HH:mm')} ({duration} min)
@@ -1010,7 +1008,6 @@ const Planning = () => {
                         if (event.type === 'activity') {
                           const activity = event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
-                          const hasEmoji = activity.title && /[\p{Emoji}]/gu.test(activity.title);
 
                           return (
                             <div
@@ -1025,7 +1022,7 @@ const Planning = () => {
                               }}
                             >
                               <div className="text-xs font-semibold truncate">
-                                {!hasEmoji && '🏃 '}{activity.title}
+                                {activity.title}
                               </div>
                               <div className="text-xs opacity-90">
                                 {format(new Date(activity.start_date), 'HH:mm')} - {format(new Date(activity.end_date), 'HH:mm')} ({duration} min)
@@ -1040,7 +1037,6 @@ const Planning = () => {
                         if (event.type === 'routine') {
                           const routine = event.data;
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
-                          const hasEmoji = routine.title && /[\p{Emoji}]/gu.test(routine.title);
 
                           return (
                             <div
@@ -1055,7 +1051,7 @@ const Planning = () => {
                               }}
                             >
                               <div className="text-xs font-semibold truncate">
-                                {!hasEmoji && '⏰ '}{routine.title}
+                                {routine.title}
                               </div>
                               <div className="text-xs opacity-90">
                                 {format(new Date(routine.start_date), 'HH:mm')} - {format(new Date(routine.end_date), 'HH:mm')} ({duration} min)
@@ -1069,7 +1065,6 @@ const Planning = () => {
                           const start = new Date(session.start_time);
                           const end = new Date(session.end_time);
                           const duration = Math.round(((event.endMinutes - event.startMinutes)));
-                          const hasEmoji = session.subject && /[\p{Emoji}]/gu.test(session.subject);
 
                           return (
                             <div
@@ -1085,7 +1080,7 @@ const Planning = () => {
                             >
                               <div className="flex items-start justify-between gap-1">
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-xs font-semibold truncate">{!hasEmoji && '📚 '}{session.subject}</div>
+                                  <div className="text-xs font-semibold truncate">{session.subject}</div>
                                   <div className="text-xs opacity-90">
                                     {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
                                   </div>
