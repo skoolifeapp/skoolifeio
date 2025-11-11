@@ -776,8 +776,12 @@ const Planning = () => {
 
                       // Add work schedules
                       dayWorkSchedules.forEach((schedule, index) => {
-                        const [startHours, startMinutes] = schedule.start_time.split(':').map(Number);
-                        const [endHours, endMinutes] = schedule.end_time.split(':').map(Number);
+                        const start = new Date(schedule.start_date);
+                        const end = new Date(schedule.end_date);
+                        const startHours = start.getHours();
+                        const startMinutes = start.getMinutes();
+                        const endHours = end.getHours();
+                        const endMinutes = end.getMinutes();
                         
                         const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
                         const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
@@ -793,8 +797,12 @@ const Planning = () => {
 
                       // Add activities
                       dayActivities.forEach((activity, index) => {
-                        const [startHours, startMinutes] = activity.start_time.split(':').map(Number);
-                        const [endHours, endMinutes] = activity.end_time.split(':').map(Number);
+                        const start = new Date(activity.start_date);
+                        const end = new Date(activity.end_date);
+                        const startHours = start.getHours();
+                        const startMinutes = start.getMinutes();
+                        const endHours = end.getHours();
+                        const endMinutes = end.getMinutes();
                         
                         const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
                         const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
@@ -810,8 +818,12 @@ const Planning = () => {
 
                       // Add routine moments
                       dayRoutineMoments.forEach((routine, index) => {
-                        const [startHours, startMinutes] = routine.start_time.split(':').map(Number);
-                        const [endHours, endMinutes] = routine.end_time.split(':').map(Number);
+                        const start = new Date(routine.start_date);
+                        const end = new Date(routine.end_date);
+                        const startHours = start.getHours();
+                        const startMinutes = start.getMinutes();
+                        const endHours = end.getHours();
+                        const endMinutes = end.getMinutes();
                         
                         const adjustedStartHour = startHours >= START_HOUR ? startHours - START_HOUR : startHours + 24 - START_HOUR;
                         const adjustedEndHour = endHours >= START_HOUR ? endHours - START_HOUR : endHours + 24 - START_HOUR;
