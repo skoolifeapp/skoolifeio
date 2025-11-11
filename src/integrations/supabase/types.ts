@@ -140,6 +140,51 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_event_exceptions: {
+        Row: {
+          created_at: string
+          exception_date: string
+          id: string
+          new_event_id: string | null
+          parent_event_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exception_date: string
+          id?: string
+          new_event_id?: string | null
+          parent_event_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exception_date?: string
+          id?: string
+          new_event_id?: string | null
+          parent_event_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_event_exceptions_new_event_id_fkey"
+            columns: ["new_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_event_exceptions_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       revision_sessions: {
         Row: {
           created_at: string

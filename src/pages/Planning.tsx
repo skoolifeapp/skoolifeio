@@ -22,6 +22,13 @@ import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
+import { 
+  createOccurrenceException, 
+  updateAllOccurrences,
+  deleteOccurrence,
+  deleteAllOccurrences 
+} from "@/lib/occurrence-utils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ImportedEvent {
   summary: string;
@@ -59,7 +66,11 @@ const Planning = () => {
   const [editingEvent, setEditingEvent] = useState<{
     type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine' | 'planned';
     data: any;
+    occurrenceDate?: string; // Date de l'occurrence pour les événements récurrents
+    isRecurring?: boolean; // Indique si l'événement parent est récurrent
   } | null>(null);
+  const [showRecurringDialog, setShowRecurringDialog] = useState(false);
+  const [recurringAction, setRecurringAction] = useState<'update' | 'delete' | null>(null);
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newManualEvent, setNewManualEvent] = useState<{
@@ -414,7 +425,21 @@ const Planning = () => {
     };
   };
 
-  const handleUpdateEvent = async () => {
+  const handleUpdateEventClick = async () => {
+    if (!editingEvent || !user) return;
+
+    // Si l'événement est récurrent (work, activity, routine), demander confirmation
+    if ((editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && editingEvent.isRecurring) {
+      setRecurringAction('update');
+      setShowRecurringDialog(true);
+      return;
+    }
+
+    // Sinon, mettre à jour directement
+    await performUpdate(false);
+  };
+
+  const performUpdate = async (updateAll: boolean) => {
     if (!editingEvent || !user) return;
 
     try {
@@ -445,19 +470,33 @@ const Planning = () => {
         if (error) throw error;
         await loadRevisionSessions();
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
-        // Modifier l'occurrence individuelle
-        const { error } = await supabase
-          .from('calendar_events')
-          .update({
+        if (updateAll) {
+          // Modifier toutes les occurrences
+          await updateAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id, {
             title: editingEvent.data.title,
             summary: editingEvent.data.title,
-            start_date: editingEvent.data.start_date,
-            end_date: editingEvent.data.end_date,
             location: editingEvent.data.location,
-          })
-          .eq('id', editingEvent.data.id);
-
-        if (error) throw error;
+            start_time: editingEvent.data.start_time,
+            end_time: editingEvent.data.end_time,
+          });
+        } else {
+          // Modifier uniquement cette occurrence
+          if (editingEvent.occurrenceDate) {
+            await createOccurrenceException(
+              user.id,
+              editingEvent.data.parentEventId || editingEvent.data.id,
+              editingEvent.occurrenceDate,
+              {
+                title: editingEvent.data.title,
+                summary: editingEvent.data.title,
+                start_date: `${editingEvent.occurrenceDate}T${editingEvent.data.start_time}:00`,
+                end_date: `${editingEvent.occurrenceDate}T${editingEvent.data.end_time}:00`,
+                location: editingEvent.data.location,
+                source: editingEvent.data.source,
+              }
+            );
+          }
+        }
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -475,23 +514,52 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
+      setShowRecurringDialog(false);
+      toast.success("Événement modifié");
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error("Erreur lors de la modification");
     }
   };
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEventClick = async () => {
+    if (!editingEvent || !user) return;
+
+    // Si l'événement est récurrent (work, activity, routine), demander confirmation
+    if ((editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && editingEvent.isRecurring) {
+      setRecurringAction('delete');
+      setShowRecurringDialog(true);
+      return;
+    }
+
+    // Sinon, supprimer directement
+    await performDelete(false);
+  };
+
+  const performDelete = async (deleteAll: boolean) => {
     if (!editingEvent || !user) return;
 
     try {
       if (editingEvent.type === 'calendar' || editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
-        const { error } = await supabase
-          .from('calendar_events')
-          .delete()
-          .eq('id', editingEvent.data.id);
+        if (deleteAll) {
+          // Supprimer toutes les occurrences
+          await deleteAllOccurrences(editingEvent.data.parentEventId || editingEvent.data.id);
+        } else if (editingEvent.occurrenceDate) {
+          // Supprimer uniquement cette occurrence
+          await deleteOccurrence(
+            user.id,
+            editingEvent.data.parentEventId || editingEvent.data.id,
+            editingEvent.occurrenceDate
+          );
+        } else {
+          // Suppression simple pour événements non récurrents
+          const { error } = await supabase
+            .from('calendar_events')
+            .delete()
+            .eq('id', editingEvent.data.id);
 
-        if (error) throw error;
+          if (error) throw error;
+        }
         await loadCalendarEvents();
       } else if (editingEvent.type === 'revision') {
         const { error } = await supabase
@@ -513,6 +581,8 @@ const Planning = () => {
 
       refetchAll();
       setEditingEvent(null);
+      setShowRecurringDialog(false);
+      toast.success("Événement supprimé");
     } catch (error) {
       console.error('Error deleting event:', error);
       toast.error("Erreur lors de la suppression");
@@ -986,9 +1056,17 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
+                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'work',
-                                  data: { ...schedule }
+                                  data: { 
+                                    ...schedule,
+                                    parentEventId: schedule.id,
+                                    start_time: format(new Date(schedule.start_date), 'HH:mm'),
+                                    end_time: format(new Date(schedule.end_date), 'HH:mm'),
+                                  },
+                                  occurrenceDate,
+                                  isRecurring: schedule.is_recurring || false,
                                 });
                               }}
                             >
@@ -1015,9 +1093,17 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
+                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'activity',
-                                  data: { ...activity }
+                                  data: { 
+                                    ...activity,
+                                    parentEventId: activity.id,
+                                    start_time: format(new Date(activity.start_date), 'HH:mm'),
+                                    end_time: format(new Date(activity.end_date), 'HH:mm'),
+                                  },
+                                  occurrenceDate,
+                                  isRecurring: activity.is_recurring || false,
                                 });
                               }}
                             >
@@ -1044,9 +1130,17 @@ const Planning = () => {
                               className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
+                                const occurrenceDate = format(selectedDate, 'yyyy-MM-dd');
                                 setEditingEvent({
                                   type: 'routine',
-                                  data: { ...routine }
+                                  data: { 
+                                    ...routine,
+                                    parentEventId: routine.id,
+                                    start_time: format(new Date(routine.start_date), 'HH:mm'),
+                                    end_time: format(new Date(routine.end_date), 'HH:mm'),
+                                  },
+                                  occurrenceDate,
+                                  isRecurring: routine.is_recurring || false,
                                 });
                               }}
                             >
@@ -1554,13 +1648,13 @@ const Planning = () => {
             <div className="flex gap-2 w-full">
               <Button 
                 variant="destructive" 
-                onClick={handleDeleteEvent}
+                onClick={handleDeleteEventClick}
                 className="flex-1"
               >
                 Supprimer
               </Button>
               <Button 
-                onClick={handleUpdateEvent}
+                onClick={handleUpdateEventClick}
                 className="flex-1"
               >
                 Enregistrer
@@ -1634,6 +1728,45 @@ const Planning = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      {/* Dialogue de confirmation pour événements récurrents */}
+      <AlertDialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {recurringAction === 'update' ? 'Modifier l\'événement récurrent' : 'Supprimer l\'événement récurrent'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cet événement se répète plusieurs fois. Que veux-tu {recurringAction === 'update' ? 'modifier' : 'supprimer'} ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (recurringAction === 'update') {
+                  performUpdate(false);
+                } else {
+                  performDelete(false);
+                }
+              }}
+            >
+              Cette occurrence uniquement
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (recurringAction === 'update') {
+                  performUpdate(true);
+                } else {
+                  performDelete(true);
+                }
+              }}
+            >
+              Toutes les occurrences
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
