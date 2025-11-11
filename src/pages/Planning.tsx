@@ -366,21 +366,10 @@ const Planning = () => {
     setDayExams(filtered);
   };
 
-  // Define date strings first
-  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
-  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-
   // Get events for selected day
-  const daySchoolEvents = importedEvents.filter(event => 
+  const dayEvents = importedEvents.filter(event => 
     isSameDay(new Date(event.startDate), selectedDate)
   );
-
-  // Get manual events for selected day by source
-  const dayManualEvents = (calendarEvents || [])
-    .filter(e => 
-      !['work', 'sport', 'other'].includes(e.source) &&
-      format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr
-    );
 
   // Get revision sessions for selected day
   const dayRevisionSessions = revisionSessions.filter(session => 
@@ -393,6 +382,8 @@ const Planning = () => {
   );
 
   // Get work schedules for selected day, en excluant les exceptions
+  const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
   // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
   const dayWorkSchedules = (calendarEvents || [])
@@ -771,7 +762,7 @@ const Planning = () => {
 
               {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {daySchoolEvents.length === 0 && dayManualEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -788,8 +779,8 @@ const Planning = () => {
                         index: number;
                       }> = [];
 
-                      // Add school calendar events
-                      daySchoolEvents.forEach((event, index) => {
+                      // Add calendar events
+                      dayEvents.forEach((event, index) => {
                         const start = new Date(event.startDate);
                         const end = new Date(event.endDate);
                         const startHour = start.getHours();
@@ -803,36 +794,6 @@ const Planning = () => {
                         allEvents.push({
                           type: 'calendar',
                           data: event,
-                          startMinutes: (adjustedStartHour * 60) + startMinute,
-                          endMinutes: (adjustedEndHour * 60) + endMinute,
-                          index
-                        });
-                      });
-
-                      // Add manual events (work/sport/other added manually)
-                      dayManualEvents.forEach((event, index) => {
-                        const start = new Date(event.start_date);
-                        const end = new Date(event.end_date);
-                        const startHour = start.getHours();
-                        const startMinute = start.getMinutes();
-                        const endHour = end.getHours();
-                        const endMinute = end.getMinutes();
-                        
-                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
-                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
-                        
-                        // Map source to type for consistent rendering
-                        let eventType: 'work' | 'activity' | 'routine' | 'calendar' = 'calendar';
-                        if (event.source === 'work') eventType = 'work';
-                        else if (event.source === 'sport') eventType = 'activity';
-                        else if (event.source === 'other') eventType = 'routine';
-                        
-                        allEvents.push({
-                          type: eventType,
-                          data: {
-                            ...event,
-                            title: event.title || event.summary,
-                          },
                           startMinutes: (adjustedStartHour * 60) + startMinute,
                           endMinutes: (adjustedEndHour * 60) + endMinute,
                           index
@@ -1010,14 +971,8 @@ const Planning = () => {
                         // Render based on type
                         if (event.type === 'calendar') {
                           const evt = event.data;
-                          // Handle both imported events (startDate/endDate) and manual events (start_date/end_date)
-                          const startDate = evt.startDate || evt.start_date;
-                          const endDate = evt.endDate || evt.end_date;
-                          
-                          if (!startDate || !endDate) return null;
-                          
-                          const start = new Date(startDate);
-                          const end = new Date(endDate);
+                          const start = new Date(evt.startDate);
+                          const end = new Date(evt.endDate);
                           const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 10) / 10;
 
                           return (
@@ -1030,8 +985,8 @@ const Planning = () => {
                                   .from('calendar_events')
                                   .select('*')
                                   .eq('user_id', user?.id)
-                                  .eq('summary', evt.summary || evt.title)
-                                  .eq('start_date', startDate)
+                                  .eq('summary', evt.summary)
+                                  .eq('start_date', evt.startDate)
                                   .maybeSingle();
 
                                 if (data) {
@@ -1042,7 +997,7 @@ const Planning = () => {
                                 }
                               }}
                             >
-                              <div className="text-xs font-semibold truncate">{evt.summary || evt.title}</div>
+                              <div className="text-xs font-semibold truncate">{evt.summary}</div>
                               <div className="text-xs opacity-90">
                                 {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration}h)
                               </div>
