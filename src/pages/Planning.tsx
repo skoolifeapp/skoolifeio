@@ -1003,7 +1003,7 @@ const Planning = () => {
                                 {typeEmoji} {schedule.title || 'Travail'}
                               </div>
                               <div className="text-xs opacity-90">
-                                {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} ({duration} min)
+                                {format(new Date(schedule.start_date), 'HH:mm')} - {format(new Date(schedule.end_date), 'HH:mm')} ({duration} min)
                               </div>
                               {schedule.location && (
                                 <div className="text-xs opacity-80 truncate mt-1">{schedule.location}</div>
@@ -1032,7 +1032,7 @@ const Planning = () => {
                                 🏃 {activity.title}
                               </div>
                               <div className="text-xs opacity-90">
-                                {activity.start_time.substring(0, 5)} - {activity.end_time.substring(0, 5)} ({duration} min)
+                                {format(new Date(activity.start_date), 'HH:mm')} - {format(new Date(activity.end_date), 'HH:mm')} ({duration} min)
                               </div>
                               {activity.location && (
                                 <div className="text-xs opacity-80 truncate mt-1">{activity.location}</div>
@@ -1061,7 +1061,7 @@ const Planning = () => {
                                 ⏰ {routine.title}
                               </div>
                               <div className="text-xs opacity-90">
-                                {routine.start_time.substring(0, 5)} - {routine.end_time.substring(0, 5)} ({duration} min)
+                                {format(new Date(routine.start_date), 'HH:mm')} - {format(new Date(routine.end_date), 'HH:mm')} ({duration} min)
                               </div>
                             </div>
                           );
