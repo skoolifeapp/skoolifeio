@@ -44,9 +44,7 @@ interface RoutineMoment {
 const Constraints = () => {
   const { 
     constraintsProfile, 
-    workSchedules: dataWorkSchedules, 
-    activities: dataActivities, 
-    routineMoments: dataRoutineMoments,
+    calendarEvents,
     refetchAll
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
@@ -71,24 +69,55 @@ const Constraints = () => {
   const [commuteHomeJob, setCommuteHomeJob] = useState(0);
   const [commuteHomeActivity, setCommuteHomeActivity] = useState(0);
 
-  // Synchroniser les états locaux avec les données du DataContext
+  // Filtrer les calendar_events par type et mapper vers les anciennes structures
   useEffect(() => {
-    if (dataWorkSchedules) {
-      setWorkSchedules(dataWorkSchedules);
-    }
-  }, [dataWorkSchedules]);
+    if (calendarEvents) {
+      // Filtrer les événements de type 'work'
+      const workEvents = calendarEvents
+        .filter(event => event.type === 'work')
+        .map(event => ({
+          id: event.id,
+          type: event.metadata?.work_type || 'other',
+          title: event.title,
+          days: event.days || [],
+          start_time: event.start_time,
+          end_time: event.end_time,
+          location: event.location,
+          frequency: event.metadata?.frequency,
+          hours_per_week: event.metadata?.hours_per_week,
+          alternance_rhythm: event.metadata?.alternance_rhythm,
+          start_date: event.metadata?.start_date,
+          company_name: event.metadata?.company_name,
+        }));
+      setWorkSchedules(workEvents);
 
-  useEffect(() => {
-    if (dataActivities) {
-      setActivities(dataActivities);
-    }
-  }, [dataActivities]);
+      // Filtrer les événements de type 'sport'
+      const sportEvents = calendarEvents
+        .filter(event => event.type === 'sport')
+        .map(event => ({
+          id: event.id,
+          type: event.metadata?.activity_type || 'sport',
+          title: event.title,
+          days: event.days || [],
+          start_time: event.start_time,
+          end_time: event.end_time,
+          location: event.location,
+        }));
+      setActivities(sportEvents);
 
-  useEffect(() => {
-    if (dataRoutineMoments) {
-      setRoutineMoments(dataRoutineMoments);
+      // Filtrer les événements de type 'others'
+      const otherEvents = calendarEvents
+        .filter(event => event.type === 'others')
+        .map(event => ({
+          id: event.id,
+          title: event.title,
+          days: event.days || [],
+          start_time: event.start_time,
+          end_time: event.end_time,
+        }));
+      setRoutineMoments(otherEvents);
     }
-  }, [dataRoutineMoments]);
+  }, [calendarEvents]);
 
   useEffect(() => {
     if (constraintsProfile) {
@@ -105,10 +134,15 @@ const Constraints = () => {
 
   const saveWorkSchedules = async (schedules: WorkSchedule[]) => {
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+
+      // Supprimer tous les événements de type 'work'
       const { error: deleteError } = await supabase
-        .from('work_schedules')
+        .from('calendar_events')
         .delete()
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', userId)
+        .eq('type', 'work');
       
       if (deleteError) {
         console.error('Error deleting work schedules:', deleteError);
@@ -116,26 +150,28 @@ const Constraints = () => {
         return;
       }
       
-      // Insert new schedules if any
+      // Insérer les nouveaux horaires de travail
       if (schedules.length > 0) {
-        const userId = (await supabase.auth.getUser()).data.user?.id;
-        if (!userId) return;
-        
         const { error } = await supabase
-          .from('work_schedules')
+          .from('calendar_events')
           .insert(schedules.map(s => ({
-            type: s.type,
-            title: s.title,
+            user_id: userId,
+            type: 'work',
+            is_recurring: true,
             days: s.days,
             start_time: s.start_time,
             end_time: s.end_time,
+            title: s.title,
+            summary: s.title,
             location: s.location || null,
-            frequency: s.frequency,
-            hours_per_week: s.hours_per_week,
-            alternance_rhythm: s.alternance_rhythm || null,
-            start_date: s.start_date || null,
-            company_name: s.company_name || null,
-            user_id: userId,
+            metadata: {
+              work_type: s.type,
+              company_name: s.company_name,
+              alternance_rhythm: s.alternance_rhythm,
+              frequency: s.frequency,
+              hours_per_week: s.hours_per_week,
+              start_date: s.start_date,
+            }
           })));
         
         if (error) {
@@ -145,7 +181,6 @@ const Constraints = () => {
         }
       }
       
-      // Recharger les données depuis Supabase
       refetchAll();
     } catch (error) {
       console.error('Error saving work schedules:', error);
@@ -158,10 +193,12 @@ const Constraints = () => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
       
+      // Supprimer tous les événements de type 'sport'
       const { error: deleteError } = await supabase
-        .from('activities')
+        .from('calendar_events')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('type', 'sport');
       
       if (deleteError) {
         console.error('Error deleting activities:', deleteError);
@@ -171,15 +208,20 @@ const Constraints = () => {
       
       if (acts.length > 0) {
         const { error } = await supabase
-          .from('activities')
+          .from('calendar_events')
           .insert(acts.map(a => ({
-            type: a.type,
-            title: a.title,
+            user_id: userId,
+            type: 'sport',
+            is_recurring: true,
             days: a.days,
             start_time: a.start_time,
             end_time: a.end_time,
+            title: a.title,
+            summary: a.title,
             location: a.location || null,
-            user_id: userId,
+            metadata: {
+              activity_type: a.type
+            }
           })));
         
         if (error) {
@@ -189,7 +231,6 @@ const Constraints = () => {
         }
       }
       
-      // Recharger les données depuis Supabase
       refetchAll();
     } catch (error) {
       console.error('Error saving activities:', error);
@@ -202,10 +243,12 @@ const Constraints = () => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
       
+      // Supprimer tous les événements de type 'others'
       const { error: deleteError } = await supabase
-        .from('routine_moments')
+        .from('calendar_events')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('type', 'others');
       
       if (deleteError) {
         console.error('Error deleting routine moments:', deleteError);
@@ -215,13 +258,17 @@ const Constraints = () => {
       
       if (moments.length > 0) {
         const { error } = await supabase
-          .from('routine_moments')
+          .from('calendar_events')
           .insert(moments.map(m => ({
-            title: m.title,
+            user_id: userId,
+            type: 'others',
+            is_recurring: true,
             days: m.days,
             start_time: m.start_time,
             end_time: m.end_time,
-            user_id: userId,
+            title: m.title,
+            summary: m.title,
+            metadata: {}
           })));
         
         if (error) {
@@ -231,7 +278,6 @@ const Constraints = () => {
         }
       }
       
-      // Recharger les données depuis Supabase
       refetchAll();
     } catch (error) {
       console.error('Error saving routine moments:', error);
@@ -263,7 +309,6 @@ const Constraints = () => {
         return;
       }
       
-      // Recharger les données depuis Supabase
       refetchAll();
     } catch (error) {
       console.error('Error saving profile:', error);

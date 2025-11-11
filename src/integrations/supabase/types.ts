@@ -14,76 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
-      activities: {
-        Row: {
-          created_at: string
-          days: string[]
-          end_time: string
-          id: string
-          location: string | null
-          start_time: string
-          title: string
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          days?: string[]
-          end_time: string
-          id?: string
-          location?: string | null
-          start_time: string
-          title: string
-          type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          days?: string[]
-          end_time?: string
-          id?: string
-          location?: string | null
-          start_time?: string
-          title?: string
-          type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       calendar_events: {
         Row: {
           created_at: string
+          days: string[] | null
           description: string | null
-          end_date: string
+          end_date: string | null
+          end_time: string | null
           id: string
+          is_recurring: boolean | null
           location: string | null
-          start_date: string
-          summary: string
+          metadata: Json | null
+          start_date: string | null
+          start_time: string | null
+          summary: string | null
+          title: string | null
+          type: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          days?: string[] | null
           description?: string | null
-          end_date: string
+          end_date?: string | null
+          end_time?: string | null
           id?: string
+          is_recurring?: boolean | null
           location?: string | null
-          start_date: string
-          summary: string
+          metadata?: Json | null
+          start_date?: string | null
+          start_time?: string | null
+          summary?: string | null
+          title?: string | null
+          type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          days?: string[] | null
           description?: string | null
-          end_date?: string
+          end_date?: string | null
+          end_time?: string | null
           id?: string
+          is_recurring?: boolean | null
           location?: string | null
-          start_date?: string
-          summary?: string
+          metadata?: Json | null
+          start_date?: string | null
+          start_time?: string | null
+          summary?: string | null
+          title?: string | null
+          type?: string
           updated_at?: string
           user_id?: string
         }
@@ -285,39 +267,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      routine_moments: {
-        Row: {
-          created_at: string
-          days: string[]
-          end_time: string
-          id: string
-          start_time: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          days?: string[]
-          end_time: string
-          id?: string
-          start_time: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          days?: string[]
-          end_time?: string
-          id?: string
-          start_time?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       study_sessions: {
         Row: {
@@ -540,60 +489,6 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
-        }
-        Relationships: []
-      }
-      work_schedules: {
-        Row: {
-          alternance_rhythm: string | null
-          company_name: string | null
-          created_at: string
-          days: string[]
-          end_time: string
-          frequency: string | null
-          hours_per_week: number | null
-          id: string
-          location: string | null
-          start_date: string | null
-          start_time: string
-          title: string | null
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          alternance_rhythm?: string | null
-          company_name?: string | null
-          created_at?: string
-          days?: string[]
-          end_time: string
-          frequency?: string | null
-          hours_per_week?: number | null
-          id?: string
-          location?: string | null
-          start_date?: string | null
-          start_time: string
-          title?: string | null
-          type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          alternance_rhythm?: string | null
-          company_name?: string | null
-          created_at?: string
-          days?: string[]
-          end_time?: string
-          frequency?: string | null
-          hours_per_week?: number | null
-          id?: string
-          location?: string | null
-          start_date?: string | null
-          start_time?: string
-          title?: string | null
-          type?: string
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

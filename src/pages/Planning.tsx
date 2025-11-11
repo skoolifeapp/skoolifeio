@@ -43,7 +43,12 @@ interface RevisionSession {
 
 const Planning = () => {
   const { user } = useAuth();
-  const { refetchAll, workSchedules, activities, routineMoments } = useData();
+  const { refetchAll, calendarEvents } = useData();
+  
+  // Filtrer les événements par type
+  const workSchedules = calendarEvents.filter(e => e.type === 'work');
+  const activities = calendarEvents.filter(e => e.type === 'sport');
+  const routineMoments = calendarEvents.filter(e => e.type === 'others');
   const { state, setPlanningDate } = useNavigationState();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -592,9 +597,10 @@ const Planning = () => {
         } else {
           // Modifier toutes les occurrences
           const { error } = await supabase
-            .from('work_schedules')
+            .from('calendar_events')
             .update({
               title: editingEvent.data.title,
+              summary: editingEvent.data.title,
               start_time: editingEvent.data.start_time,
               end_time: editingEvent.data.end_time,
               location: editingEvent.data.location,
@@ -657,9 +663,10 @@ const Planning = () => {
           await loadEventExceptions();
         } else {
           const { error } = await supabase
-            .from('activities')
+            .from('calendar_events')
             .update({
               title: editingEvent.data.title,
+              summary: editingEvent.data.title,
               start_time: editingEvent.data.start_time,
               end_time: editingEvent.data.end_time,
               location: editingEvent.data.location,
@@ -693,9 +700,10 @@ const Planning = () => {
           await loadEventExceptions();
         } else {
           const { error } = await supabase
-            .from('routine_moments')
+            .from('calendar_events')
             .update({
               title: editingEvent.data.title,
+              summary: editingEvent.data.title,
               start_time: editingEvent.data.start_time,
               end_time: editingEvent.data.end_time,
             })
@@ -762,7 +770,7 @@ const Planning = () => {
         } else {
           // Supprimer toutes les occurrences
           const { error } = await supabase
-            .from('work_schedules')
+            .from('calendar_events')
             .delete()
             .eq('id', editingEvent.data.id);
 
@@ -805,7 +813,7 @@ const Planning = () => {
           await loadEventExceptions();
         } else {
           const { error } = await supabase
-            .from('activities')
+            .from('calendar_events')
             .delete()
             .eq('id', editingEvent.data.id);
 
@@ -832,7 +840,7 @@ const Planning = () => {
           await loadEventExceptions();
         } else {
           const { error } = await supabase
-            .from('routine_moments')
+            .from('calendar_events')
             .delete()
             .eq('id', editingEvent.data.id);
 
