@@ -597,12 +597,15 @@ const Constraints = () => {
         return;
       }
 
+      // Convertir les noms camelCase en snake_case pour Supabase
+      const updateData: any = { user_id: userId };
+      if (data.maxSessionsPerDay !== undefined) updateData.max_sessions_per_day = data.maxSessionsPerDay;
+      if (data.maxSessionDurationMinutes !== undefined) updateData.max_session_duration_minutes = data.maxSessionDurationMinutes;
+      if (data.weeklyHoursGoal !== undefined) updateData.weekly_hours_goal = data.weeklyHoursGoal;
+
       const { error } = await supabase
         .from('user_rest_and_revisions')
-        .upsert({
-          user_id: userId,
-          ...data,
-        }, {
+        .upsert(updateData, {
           onConflict: 'user_id'
         });
 
@@ -617,6 +620,7 @@ const Constraints = () => {
       if (data.weeklyHoursGoal !== undefined) setWeeklyHoursGoal(data.weeklyHoursGoal);
       
       await refetchAll();
+      toast.success("Contraintes de révision enregistrées");
     } catch (error) {
       console.error('Error saving revision constraints:', error);
       toast.error("Erreur lors de l'enregistrement");
