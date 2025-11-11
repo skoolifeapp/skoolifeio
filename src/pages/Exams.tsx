@@ -38,7 +38,6 @@ const Exams = () => {
     date: "",
     priority: 3,
     type: "partiel",
-    coefficient: 1,
     difficulty: 3,
   });
 
@@ -96,7 +95,7 @@ const Exams = () => {
         date: newExam.date,
         priority: newExam.priority,
         type: newExam.type,
-        coefficient: newExam.coefficient,
+        coefficient: (newExam.priority + newExam.difficulty) / 2,
         difficulty: newExam.difficulty,
       });
 
@@ -112,7 +111,6 @@ const Exams = () => {
       date: "",
       priority: 3,
       type: "partiel",
-      coefficient: 1,
       difficulty: 3,
     });
     
@@ -373,20 +371,6 @@ const Exams = () => {
                   <SelectItem value="autre">Autre</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="coefficient">Coefficient</Label>
-              <Input
-                id="coefficient"
-                type="number"
-                min="0.5"
-                max="10"
-                step="0.5"
-                value={newExam.coefficient}
-                onChange={(e) => setNewExam({ ...newExam, coefficient: parseFloat(e.target.value) || 1 })}
-                className="mt-1.5"
-              />
             </div>
 
             <div>
