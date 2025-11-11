@@ -541,8 +541,8 @@ const Constraints = () => {
             commutes={commutes} 
             onSave={handleCommutesChange}
             availableDestinations={[
-              ...workSchedules.map(w => `Domicile ↔ ${w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')}`),
-              ...activities.map(a => `Domicile ↔ ${a.title}`)
+              ...workSchedules.map(w => w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')),
+              ...activities.map(a => a.title)
             ]}
           />
         )}
