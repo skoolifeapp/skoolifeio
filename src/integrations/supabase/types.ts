@@ -244,36 +244,45 @@ export type Database = {
         }
         Relationships: []
       }
-      user_rest: {
+      user_rest_and_revisions: {
         Row: {
           created_at: string
           id: string
+          max_session_duration_minutes: number | null
+          max_sessions_per_day: number | null
           min_personal_time_per_week: number
           no_study_after: string | null
           sleep_hours_needed: number | null
           updated_at: string
           user_id: string
           wake_up_time: string | null
+          weekly_hours_goal: number | null
         }
         Insert: {
           created_at?: string
           id?: string
+          max_session_duration_minutes?: number | null
+          max_sessions_per_day?: number | null
           min_personal_time_per_week?: number
           no_study_after?: string | null
           sleep_hours_needed?: number | null
           updated_at?: string
           user_id: string
           wake_up_time?: string | null
+          weekly_hours_goal?: number | null
         }
         Update: {
           created_at?: string
           id?: string
+          max_session_duration_minutes?: number | null
+          max_sessions_per_day?: number | null
           min_personal_time_per_week?: number
           no_study_after?: string | null
           sleep_hours_needed?: number | null
           updated_at?: string
           user_id?: string
           wake_up_time?: string | null
+          weekly_hours_goal?: number | null
         }
         Relationships: []
       }

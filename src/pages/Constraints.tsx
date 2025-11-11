@@ -9,6 +9,7 @@ import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
 import { CommuteCard } from "@/components/constraints/CommuteCard";
+import { RevisionTab } from "@/components/constraints/RevisionTab";
 
 interface WorkSchedule {
   id?: string;
@@ -53,7 +54,7 @@ const Constraints = () => {
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
   
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>(
+  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet' | 'revisions'>(
     (state.constraints.activeTab === 'autres' ? 'travail' : state.constraints.activeTab) || 'travail'
   );
   
@@ -71,6 +72,9 @@ const Constraints = () => {
   const [noStudyAfter, setNoStudyAfter] = useState('');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(0);
+  const [maxSessionsPerDay, setMaxSessionsPerDay] = useState(2);
+  const [maxSessionDurationMinutes, setMaxSessionDurationMinutes] = useState(90);
+  const [weeklyHoursGoal, setWeeklyHoursGoal] = useState(10);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Filtrer et grouper les calendar_events par type
@@ -154,11 +158,17 @@ const Constraints = () => {
       const loadedNoStudyAfter = constraintsProfile.no_study_after || '';
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
       const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 0;
+      const loadedMaxSessions = constraintsProfile.max_sessions_per_day || 2;
+      const loadedMaxDuration = constraintsProfile.max_session_duration_minutes || 90;
+      const loadedWeeklyGoal = constraintsProfile.weekly_hours_goal || 10;
       
       setWakeUpTime(loadedWakeUpTime);
       setNoStudyAfter(loadedNoStudyAfter);
       setSleepHoursNeeded(loadedSleepHours);
       setMinPersonalTimePerWeek(loadedPersonalTime);
+      setMaxSessionsPerDay(loadedMaxSessions);
+      setMaxSessionDurationMinutes(loadedMaxDuration);
+      setWeeklyHoursGoal(loadedWeeklyGoal);
       setIsInitialLoad(false);
     } else {
       setIsInitialLoad(false);
@@ -374,7 +384,7 @@ const Constraints = () => {
       });
 
       const { data, error } = await supabase
-        .from('user_rest')
+        .from('user_rest_and_revisions')
         .upsert({
           user_id: userId,
           wake_up_time: wakeUpTime,
@@ -425,7 +435,7 @@ const Constraints = () => {
       }
 
       const { error } = await supabase
-        .from('user_rest')
+        .from('user_rest_and_revisions')
         .upsert({
           user_id: userId,
           wake_up_time: data.wakeUpTime,
@@ -460,7 +470,7 @@ const Constraints = () => {
       }
 
       const { error } = await supabase
-        .from('user_rest')
+        .from('user_rest_and_revisions')
         .upsert({
           user_id: userId,
           min_personal_time_per_week: value,
@@ -574,6 +584,45 @@ const Constraints = () => {
     }
   };
 
+  // Revision constraints handler
+  const handleRevisionConstraintsSave = async (data: { 
+    maxSessionsPerDay?: number; 
+    maxSessionDurationMinutes?: number; 
+    weeklyHoursGoal?: number 
+  }) => {
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        toast.error("Utilisateur non connecté");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('user_rest_and_revisions')
+        .upsert({
+          user_id: userId,
+          ...data,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Error saving revision constraints:', error);
+        toast.error("Erreur lors de l'enregistrement");
+        return;
+      }
+
+      if (data.maxSessionsPerDay !== undefined) setMaxSessionsPerDay(data.maxSessionsPerDay);
+      if (data.maxSessionDurationMinutes !== undefined) setMaxSessionDurationMinutes(data.maxSessionDurationMinutes);
+      if (data.weeklyHoursGoal !== undefined) setWeeklyHoursGoal(data.weeklyHoursGoal);
+      
+      await refetchAll();
+    } catch (error) {
+      console.error('Error saving revision constraints:', error);
+      toast.error("Erreur lors de l'enregistrement");
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
@@ -593,11 +642,12 @@ const Constraints = () => {
             { key: 'activite', label: 'Activité' },
             { key: 'routine', label: 'Routine' },
             { key: 'trajet', label: 'Trajet' },
+            { key: 'revisions', label: 'Révisions' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => {
-                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'trajet';
+                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'trajet' | 'revisions';
                 setActiveTab(tabKey);
                 setConstraintsTab(tabKey);
               }}
@@ -649,6 +699,15 @@ const Constraints = () => {
               ...workSchedules.map(w => w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')),
               ...activities.map(a => a.title)
             ]}
+          />
+        )}
+
+        {activeTab === 'revisions' && (
+          <RevisionTab
+            maxSessionsPerDay={maxSessionsPerDay}
+            maxSessionDurationMinutes={maxSessionDurationMinutes}
+            weeklyHoursGoal={weeklyHoursGoal}
+            onSave={handleRevisionConstraintsSave}
           />
         )}
       </div>
