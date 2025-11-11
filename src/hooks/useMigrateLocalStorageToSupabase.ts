@@ -7,7 +7,10 @@ interface LocalExam {
   id: string;
   subject: string;
   date: string;
-  priority: string;
+  priority: string | number;
+  type?: string;
+  coefficient?: number;
+  difficulty?: number;
 }
 
 interface LocalConstraint {
@@ -95,6 +98,9 @@ export const useMigrateLocalStorageToSupabase = () => {
                   subject: exam.subject,
                   date: exam.date,
                   priority: priorityNum,
+                  type: exam.type || 'partiel',
+                  coefficient: exam.coefficient || 1,
+                  difficulty: exam.difficulty || 3,
                 };
               });
 

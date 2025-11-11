@@ -76,14 +76,11 @@ export type Database = {
       }
       exams: {
         Row: {
-          coefficient: number | null
+          coefficient: number
           created_at: string
           date: string
-          difficulty: number | null
+          difficulty: number
           id: string
-          is_done: boolean | null
-          location: string | null
-          notes: string | null
           priority: number
           subject: string
           type: string | null
@@ -91,14 +88,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          coefficient?: number | null
+          coefficient: number
           created_at?: string
           date: string
-          difficulty?: number | null
+          difficulty: number
           id?: string
-          is_done?: boolean | null
-          location?: string | null
-          notes?: string | null
           priority: number
           subject: string
           type?: string | null
@@ -106,14 +100,11 @@ export type Database = {
           user_id: string
         }
         Update: {
-          coefficient?: number | null
+          coefficient?: number
           created_at?: string
           date?: string
-          difficulty?: number | null
+          difficulty?: number
           id?: string
-          is_done?: boolean | null
-          location?: string | null
-          notes?: string | null
           priority?: number
           subject?: string
           type?: string | null
@@ -223,39 +214,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_constraints_profile: {
-        Row: {
-          created_at: string
-          id: string
-          min_personal_time_per_week: number
-          no_study_after: string | null
-          sleep_hours_needed: number | null
-          updated_at: string
-          user_id: string
-          wake_up_time: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          min_personal_time_per_week?: number
-          no_study_after?: string | null
-          sleep_hours_needed?: number | null
-          updated_at?: string
-          user_id: string
-          wake_up_time?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          min_personal_time_per_week?: number
-          no_study_after?: string | null
-          sleep_hours_needed?: number | null
-          updated_at?: string
-          user_id?: string
-          wake_up_time?: string | null
-        }
-        Relationships: []
-      }
       user_meals: {
         Row: {
           created_at: string
@@ -289,30 +247,33 @@ export type Database = {
       user_rest: {
         Row: {
           created_at: string
+          id: string
           min_personal_time_per_week: number
-          no_study_after: string
-          sleep_hours_needed: number
+          no_study_after: string | null
+          sleep_hours_needed: number | null
           updated_at: string
           user_id: string
-          wake_up_time: string
+          wake_up_time: string | null
         }
         Insert: {
           created_at?: string
+          id?: string
           min_personal_time_per_week?: number
-          no_study_after?: string
-          sleep_hours_needed?: number
+          no_study_after?: string | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id: string
-          wake_up_time?: string
+          wake_up_time?: string | null
         }
         Update: {
           created_at?: string
+          id?: string
           min_personal_time_per_week?: number
-          no_study_after?: string
-          sleep_hours_needed?: number
+          no_study_after?: string | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id?: string
-          wake_up_time?: string
+          wake_up_time?: string | null
         }
         Relationships: []
       }

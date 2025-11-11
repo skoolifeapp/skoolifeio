@@ -22,12 +22,9 @@ interface Exam {
   subject: string;
   date: string;
   priority: number;
-  type?: string;
-  location?: string;
-  coefficient?: number;
-  difficulty?: number;
-  notes?: string;
-  is_done?: boolean;
+  type: string;
+  coefficient: number;
+  difficulty: number;
 }
 
 const Exams = () => {
@@ -41,10 +38,8 @@ const Exams = () => {
     date: "",
     priority: 3,
     type: "partiel",
-    location: "",
-    coefficient: "",
+    coefficient: 1,
     difficulty: 3,
-    notes: "",
   });
 
   // Charger les examens directement avec React Query
@@ -87,20 +82,6 @@ const Exams = () => {
     refetchExams();
   };
 
-  const toggleDone = async (exam: Exam) => {
-    const { error } = await supabase
-      .from('exams')
-      .update({ is_done: !exam.is_done })
-      .eq('id', exam.id);
-
-    if (error) {
-      toast.error("Erreur lors de la mise à jour");
-      return;
-    }
-
-    refetchExams();
-  };
-
   const handleAddExam = async () => {
     if (!user || !newExam.subject || !newExam.date) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -115,10 +96,8 @@ const Exams = () => {
         date: newExam.date,
         priority: newExam.priority,
         type: newExam.type,
-        location: newExam.location || null,
-        coefficient: newExam.coefficient ? parseFloat(newExam.coefficient) : null,
+        coefficient: newExam.coefficient,
         difficulty: newExam.difficulty,
-        notes: newExam.notes || null,
       });
 
     if (error) {
@@ -133,10 +112,8 @@ const Exams = () => {
       date: "",
       priority: 3,
       type: "partiel",
-      location: "",
-      coefficient: "",
+      coefficient: 1,
       difficulty: 3,
-      notes: "",
     });
     
     refetchExams();
@@ -199,7 +176,6 @@ const Exams = () => {
     total: exams.length,
     upcoming: upcomingExams.length,
     high: exams.filter(e => getUrgencyScore(e) >= 4).length,
-    done: exams.filter(e => e.is_done).length,
   };
 
   const getDayLabel = (dateStr: string) => {
@@ -313,59 +289,26 @@ const Exams = () => {
                       <h3 className="font-bold text-lg mb-1">{exam.subject}</h3>
                       <p className="text-sm text-muted-foreground mb-2">
                         {format(new Date(exam.date), "d MMM yyyy", { locale: fr })}
-                        {exam.location && ` · ${exam.location}`}
                       </p>
 
                       {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {exam.type || 'Partiel'}
+                          {exam.type}
                         </Badge>
-                        {exam.coefficient && (
-                          <Badge variant="outline" className="text-xs">
-                            Coef. {exam.coefficient}
-                          </Badge>
-                        )}
+                        <Badge variant="outline" className="text-xs">
+                          Coef. {exam.coefficient}
+                        </Badge>
                         <Badge className={getUrgencyColor(getUrgencyScore(exam))}>
                           Urgence: {Math.round(getUrgencyScore(exam))}/5
                         </Badge>
                         <Badge variant="outline" className="text-xs font-semibold">
                           {getCountdown(exam.date)}
                         </Badge>
-                        {exam.is_done && (
-                          <Badge className="bg-green-100 text-green-700 border-green-200">
-                            ✓ Révision OK
-                          </Badge>
-                        )}
                       </div>
 
-                      {/* Notes */}
-                      {exam.notes && (
-                        <p className="text-xs text-muted-foreground italic border-l-2 border-muted pl-3 mb-3">
-                          {exam.notes}
-                        </p>
-                      )}
-
                       {/* Actions */}
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={exam.is_done ? "outline" : "default"}
-                          onClick={() => toggleDone(exam)}
-                          className="text-xs"
-                        >
-                          {exam.is_done ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Fait
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-3 w-3 mr-1" />
-                              Marquer terminé
-                            </>
-                          )}
-                        </Button>
+                      <div className="flex gap-2 mt-3">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -430,6 +373,20 @@ const Exams = () => {
                   <SelectItem value="autre">Autre</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="coefficient">Coefficient</Label>
+              <Input
+                id="coefficient"
+                type="number"
+                min="0.5"
+                max="10"
+                step="0.5"
+                value={newExam.coefficient}
+                onChange={(e) => setNewExam({ ...newExam, coefficient: parseFloat(e.target.value) || 1 })}
+                className="mt-1.5"
+              />
             </div>
 
             <div>
