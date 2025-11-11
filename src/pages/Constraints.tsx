@@ -67,10 +67,10 @@ const Constraints = () => {
   const [routineMoments, setRoutineMoments] = useState<RoutineMoment[]>([]);
   
   // Profile data
-  const [wakeUpTime, setWakeUpTime] = useState('07:00');
-  const [noStudyAfter, setNoStudyAfter] = useState('22:00');
+  const [wakeUpTime, setWakeUpTime] = useState('');
+  const [noStudyAfter, setNoStudyAfter] = useState('');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
-  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
+  const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Filtrer et grouper les calendar_events par type
@@ -150,15 +150,17 @@ const Constraints = () => {
     if (constraintsProfile) {
       console.log('📥 Chargement profil depuis Supabase:', constraintsProfile);
       
-      const loadedWakeUpTime = constraintsProfile.wake_up_time || '07:00';
-      const loadedNoStudyAfter = constraintsProfile.no_study_after || '22:00';
+      const loadedWakeUpTime = constraintsProfile.wake_up_time || '';
+      const loadedNoStudyAfter = constraintsProfile.no_study_after || '';
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
-      const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 5;
+      const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 0;
       
       setWakeUpTime(loadedWakeUpTime);
       setNoStudyAfter(loadedNoStudyAfter);
       setSleepHoursNeeded(loadedSleepHours);
       setMinPersonalTimePerWeek(loadedPersonalTime);
+      setIsInitialLoad(false);
+    } else {
       setIsInitialLoad(false);
     }
   }, [constraintsProfile]);

@@ -228,31 +228,31 @@ export type Database = {
           created_at: string
           id: string
           min_personal_time_per_week: number
-          no_study_after: string
-          sleep_hours_needed: number
+          no_study_after: string | null
+          sleep_hours_needed: number | null
           updated_at: string
           user_id: string
-          wake_up_time: string
+          wake_up_time: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           min_personal_time_per_week?: number
-          no_study_after?: string
-          sleep_hours_needed?: number
+          no_study_after?: string | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id: string
-          wake_up_time?: string
+          wake_up_time?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           min_personal_time_per_week?: number
-          no_study_after?: string
-          sleep_hours_needed?: number
+          no_study_after?: string | null
+          sleep_hours_needed?: number | null
           updated_at?: string
           user_id?: string
-          wake_up_time?: string
+          wake_up_time?: string | null
         }
         Relationships: []
       }
