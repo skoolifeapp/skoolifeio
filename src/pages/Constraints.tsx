@@ -518,16 +518,13 @@ const Constraints = () => {
     }
   };
 
-  // Effet pour sauvegarder automatiquement quand les valeurs changent
+  // Effet pour sauvegarder automatiquement et instantanément
   useEffect(() => {
     // Ne pas sauvegarder au premier chargement
     if (!constraintsProfile) return;
     
-    const timer = setTimeout(() => {
-      saveProfile();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    // Sauvegarde instantanée
+    saveProfile();
   }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek]);
 
   return (
