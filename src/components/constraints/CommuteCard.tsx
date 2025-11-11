@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
@@ -16,11 +17,13 @@ interface Commute {
 interface CommuteCardProps {
   commutes: Commute[];
   onSave: (commutes: Commute[]) => void;
+  availableActivities: string[]; // Titres des activités déjà configurées
 }
 
 export const CommuteCard = ({
   commutes,
   onSave,
+  availableActivities,
 }: CommuteCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -116,13 +119,31 @@ export const CommuteCard = ({
           
           <div className="px-4 space-y-4 pb-6">
             <div>
-              <Label className="text-sm">Nom du trajet</Label>
-              <Input
-                value={newCommute.name}
-                onChange={(e) => setNewCommute({ ...newCommute, name: e.target.value })}
-                placeholder="Ex: Domicile ↔ École, Maison ↔ Salle de sport..."
-                className="mt-1.5"
-              />
+              <Label className="text-sm">Activité / Lieu</Label>
+              <Select 
+                value={newCommute.name} 
+                onValueChange={(value) => setNewCommute({ ...newCommute, name: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Sélectionne une activité..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {availableActivities.length > 0 ? (
+                    availableActivities.map((activity, index) => (
+                      <SelectItem key={index} value={activity}>
+                        {activity}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-activities" disabled>
+                      Aucune activité configurée
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-2">
+                Configure d'abord tes activités dans les autres onglets
+              </p>
             </div>
 
             <div>

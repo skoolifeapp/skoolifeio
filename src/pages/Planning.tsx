@@ -112,17 +112,8 @@ const Planning = () => {
   const loadPlannedEvents = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('planned_events')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading planned events:', error);
-      return;
-    }
-
-    setPlannedEvents(data || []);
+    // Planned events feature removed - using calendar_events instead
+    setPlannedEvents([]);
   };
 
   const loadCalendarEvents = async () => {
@@ -480,21 +471,6 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
-      } else if (editingEvent.type === 'planned') {
-        const { error } = await supabase
-          .from('planned_events')
-          .update({
-            title: editingEvent.data.title,
-            start_time: editingEvent.data.start_time,
-            end_time: editingEvent.data.end_time,
-            location: editingEvent.data.location,
-            description: editingEvent.data.description,
-            color: editingEvent.data.color,
-          })
-          .eq('id', editingEvent.data.id);
-
-        if (error) throw error;
-        await loadPlannedEvents();
       }
 
       refetchAll();
@@ -533,14 +509,6 @@ const Planning = () => {
 
         if (error) throw error;
         await loadDayExams();
-      } else if (editingEvent.type === 'planned') {
-        const { error } = await supabase
-          .from('planned_events')
-          .delete()
-          .eq('id', editingEvent.data.id);
-
-        if (error) throw error;
-        await loadPlannedEvents();
       }
 
       refetchAll();

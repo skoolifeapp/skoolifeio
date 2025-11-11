@@ -481,6 +481,11 @@ const Constraints = () => {
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
             commutes={commutes}
+            availableActivities={[
+              ...workSchedules.map(w => w.title || 'Travail'),
+              ...activities.map(a => a.title),
+              ...routineMoments.map(r => r.title),
+            ].filter(Boolean)}
             onSleepConstraintSave={async (data) => {
               setWakeUpTime(data.wakeUpTime);
               setNoStudyAfter(data.noStudyAfter);

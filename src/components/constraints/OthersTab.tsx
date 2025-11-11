@@ -13,6 +13,7 @@ interface OthersTabProps {
   sleepHoursNeeded: number;
   minPersonalTimePerWeek: number;
   commutes: Commute[];
+  availableActivities: string[];
   onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
   onPersonalTimeSave: (value: number) => void;
   onCommutesSave: (commutes: Commute[]) => void;
@@ -24,6 +25,7 @@ export const OthersTab = ({
   sleepHoursNeeded,
   minPersonalTimePerWeek,
   commutes,
+  availableActivities,
   onSleepConstraintSave,
   onPersonalTimeSave,
   onCommutesSave,
@@ -44,6 +46,7 @@ export const OthersTab = ({
 
       <CommuteCard
         commutes={commutes}
+        availableActivities={availableActivities}
         onSave={onCommutesSave}
       />
     </div>
