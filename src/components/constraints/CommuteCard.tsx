@@ -95,7 +95,9 @@ export const CommuteCard = ({
 
             {commutes.length > 0 && (
               <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                {commutes.map((commute, index) => (
+                {commutes.map((commute, index) => {
+                  console.log('Affichage trajet:', commute);
+                  return (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -114,7 +116,8 @@ export const CommuteCard = ({
                       </Button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </CollapsibleContent>
             )}
           </Collapsible>

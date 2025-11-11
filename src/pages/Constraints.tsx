@@ -148,11 +148,14 @@ const Constraints = () => {
 
   useEffect(() => {
     if (constraintsProfile) {
+      console.log('Chargement du profil:', constraintsProfile);
       setWakeUpTime(constraintsProfile.wake_up_time || '07:00');
       setNoStudyAfter(constraintsProfile.no_study_after || '22:00');
       setSleepHoursNeeded(constraintsProfile.sleep_hours_needed || 8);
       setMinPersonalTimePerWeek(constraintsProfile.min_personal_time_per_week || 5);
-      setCommutes((constraintsProfile.commutes as Commute[]) || []);
+      const loadedCommutes = (constraintsProfile.commutes as Commute[]) || [];
+      console.log('Trajets chargés:', loadedCommutes);
+      setCommutes(loadedCommutes);
     }
   }, [constraintsProfile]);
 
@@ -354,6 +357,8 @@ const Constraints = () => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
       
+      console.log('Sauvegarde du profil, trajets:', commutes);
+      
       const { error } = await supabase
         .from('user_constraints_profile')
         .upsert({
@@ -371,6 +376,7 @@ const Constraints = () => {
         return;
       }
       
+      console.log('Profil sauvegardé avec succès');
       refetchAll();
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -414,8 +420,10 @@ const Constraints = () => {
   };
 
   const handleCommutesChange = async (newCommutes: Commute[]) => {
+    console.log('handleCommutesChange - Nouveaux trajets:', newCommutes);
     setCommutes(newCommutes);
     await saveProfile();
+    console.log('Trajets sauvegardés, état actuel:', newCommutes);
   };
 
   return (
