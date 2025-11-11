@@ -1438,11 +1438,15 @@ const Planning = () => {
                     <Label htmlFor="edit-work-start">Début</Label>
                     <Input
                       id="edit-work-start"
-                      type="time"
-                      value={editingEvent.data.start_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.start_date ? format(new Date(editingEvent.data.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, start_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          start_date: new Date(e.target.value).toISOString(),
+                          start_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
@@ -1450,11 +1454,15 @@ const Planning = () => {
                     <Label htmlFor="edit-work-end">Fin</Label>
                     <Input
                       id="edit-work-end"
-                      type="time"
-                      value={editingEvent.data.end_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.end_date ? format(new Date(editingEvent.data.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, end_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          end_date: new Date(e.target.value).toISOString(),
+                          end_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
@@ -1541,11 +1549,15 @@ const Planning = () => {
                     <Label htmlFor="edit-activity-start">Début</Label>
                     <Input
                       id="edit-activity-start"
-                      type="time"
-                      value={editingEvent.data.start_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.start_date ? format(new Date(editingEvent.data.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, start_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          start_date: new Date(e.target.value).toISOString(),
+                          start_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
@@ -1553,11 +1565,15 @@ const Planning = () => {
                     <Label htmlFor="edit-activity-end">Fin</Label>
                     <Input
                       id="edit-activity-end"
-                      type="time"
-                      value={editingEvent.data.end_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.end_date ? format(new Date(editingEvent.data.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, end_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          end_date: new Date(e.target.value).toISOString(),
+                          end_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
@@ -1594,11 +1610,15 @@ const Planning = () => {
                     <Label htmlFor="edit-routine-start">Début</Label>
                     <Input
                       id="edit-routine-start"
-                      type="time"
-                      value={editingEvent.data.start_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.start_date ? format(new Date(editingEvent.data.start_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, start_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          start_date: new Date(e.target.value).toISOString(),
+                          start_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
@@ -1606,11 +1626,15 @@ const Planning = () => {
                     <Label htmlFor="edit-routine-end">Fin</Label>
                     <Input
                       id="edit-routine-end"
-                      type="time"
-                      value={editingEvent.data.end_time || ''}
+                      type="datetime-local"
+                      value={editingEvent.data.end_date ? format(new Date(editingEvent.data.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
-                        data: { ...editingEvent.data, end_time: e.target.value }
+                        data: { 
+                          ...editingEvent.data, 
+                          end_date: new Date(e.target.value).toISOString(),
+                          end_time: format(new Date(e.target.value), 'HH:mm')
+                        }
                       })}
                     />
                   </div>
