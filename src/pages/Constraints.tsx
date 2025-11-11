@@ -180,13 +180,14 @@ const Constraints = () => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
-      
-      // Supprimer tous les événements de type 'work' (parent et occurrences)
+
+      // Supprimer tous les événements de type 'work'
       const { error: deleteError } = await supabase
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('source', 'work');
+        .eq('source', 'work')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting work schedules:', deleteError);
@@ -194,51 +195,19 @@ const Constraints = () => {
         return;
       }
       
+      // Insérer les nouveaux horaires de travail en générant toutes les occurrences
       if (schedules.length > 0) {
-        // Pour chaque schedule, créer un événement parent puis ses occurrences
-        for (const s of schedules) {
-          // 1. Créer l'événement parent (template)
-          const { data: parentEvent, error: parentError } = await supabase
-            .from('calendar_events')
-            .insert([{
-              user_id: userId,
-              source: 'work' as const,
-              is_recurring: true,
-              days_of_week: s.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
-              start_time: s.start_time,
-              end_time: s.end_time,
-              title: s.title,
-              summary: s.title,
-              location: s.location || null,
-              start_date: new Date().toISOString(), // Date fictive pour le parent
-              end_date: new Date().toISOString(),
-              metadata: {
-                work_type: s.type,
-                company_name: s.company_name,
-                alternance_rhythm: s.alternance_rhythm,
-                frequency: s.frequency,
-                hours_per_week: s.hours_per_week,
-                start_date: s.start_date,
-                is_parent: true, // Marquer comme parent
-              }
-            }])
-            .select()
-            .single();
-          
-          if (parentError) throw parentError;
-          
-          // 2. Générer et créer les occurrences
+        const allOccurrences = schedules.flatMap(s => {
           const occurrences = generateOccurrences({
             days: s.days,
             start_time: s.start_time,
             end_time: s.end_time,
           }, 3); // 3 mois
           
-          const occurrencesToInsert = occurrences.map(occ => ({
+          return occurrences.map(occ => ({
             user_id: userId,
             source: 'work' as const,
             is_recurring: true,
-            parent_recurring_id: parentEvent.id, // Lier au parent
             days_of_week: s.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
             start_time: s.start_time,
             end_time: s.end_time,
@@ -256,12 +225,16 @@ const Constraints = () => {
               start_date: s.start_date,
             }
           }));
-          
-          const { error } = await supabase
-            .from('calendar_events')
-            .insert(occurrencesToInsert);
-          
-          if (error) throw error;
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
+        
+        if (error) {
+          console.error('Error inserting work schedules:', error);
+          toast.error("Erreur lors de l'enregistrement du travail");
+          return;
         }
       }
       
@@ -282,7 +255,8 @@ const Constraints = () => {
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('source', 'sport');
+        .eq('source', 'sport')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting activities:', deleteError);
@@ -291,44 +265,17 @@ const Constraints = () => {
       }
       
       if (acts.length > 0) {
-        for (const a of acts) {
-          // 1. Créer l'événement parent
-          const { data: parentEvent, error: parentError } = await supabase
-            .from('calendar_events')
-            .insert([{
-              user_id: userId,
-              source: 'sport' as const,
-              is_recurring: true,
-              days_of_week: a.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
-              start_time: a.start_time,
-              end_time: a.end_time,
-              title: a.title,
-              summary: a.title,
-              location: a.location || null,
-              start_date: new Date().toISOString(),
-              end_date: new Date().toISOString(),
-              metadata: {
-                activity_type: a.type,
-                is_parent: true,
-              }
-            }])
-            .select()
-            .single();
-          
-          if (parentError) throw parentError;
-          
-          // 2. Générer et créer les occurrences
+        const allOccurrences = acts.flatMap(a => {
           const occurrences = generateOccurrences({
             days: a.days,
             start_time: a.start_time,
             end_time: a.end_time,
           }, 3);
           
-          const occurrencesToInsert = occurrences.map(occ => ({
+          return occurrences.map(occ => ({
             user_id: userId,
             source: 'sport' as const,
             is_recurring: true,
-            parent_recurring_id: parentEvent.id,
             days_of_week: a.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
             start_time: a.start_time,
             end_time: a.end_time,
@@ -341,12 +288,16 @@ const Constraints = () => {
               activity_type: a.type
             }
           }));
-          
-          const { error } = await supabase
-            .from('calendar_events')
-            .insert(occurrencesToInsert);
-          
-          if (error) throw error;
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
+        
+        if (error) {
+          console.error('Error inserting activities:', error);
+          toast.error("Erreur lors de l'enregistrement des activités");
+          return;
         }
       }
       
@@ -367,7 +318,8 @@ const Constraints = () => {
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('source', 'other');
+        .eq('source', 'other')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting routine moments:', deleteError);
@@ -376,42 +328,17 @@ const Constraints = () => {
       }
       
       if (moments.length > 0) {
-        for (const m of moments) {
-          // 1. Créer l'événement parent
-          const { data: parentEvent, error: parentError } = await supabase
-            .from('calendar_events')
-            .insert([{
-              user_id: userId,
-              source: 'other' as const,
-              is_recurring: true,
-              days_of_week: m.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
-              start_time: m.start_time,
-              end_time: m.end_time,
-              title: m.title,
-              summary: m.title,
-              start_date: new Date().toISOString(),
-              end_date: new Date().toISOString(),
-              metadata: {
-                is_parent: true,
-              }
-            }])
-            .select()
-            .single();
-          
-          if (parentError) throw parentError;
-          
-          // 2. Générer et créer les occurrences
+        const allOccurrences = moments.flatMap(m => {
           const occurrences = generateOccurrences({
             days: m.days,
             start_time: m.start_time,
             end_time: m.end_time,
           }, 3);
           
-          const occurrencesToInsert = occurrences.map(occ => ({
+          return occurrences.map(occ => ({
             user_id: userId,
             source: 'other' as const,
             is_recurring: true,
-            parent_recurring_id: parentEvent.id,
             days_of_week: m.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
             start_time: m.start_time,
             end_time: m.end_time,
@@ -421,12 +348,16 @@ const Constraints = () => {
             end_date: occ.end_date,
             metadata: {}
           }));
-          
-          const { error } = await supabase
-            .from('calendar_events')
-            .insert(occurrencesToInsert);
-          
-          if (error) throw error;
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
+        
+        if (error) {
+          console.error('Error inserting routine moments:', error);
+          toast.error("Erreur lors de l'enregistrement de la routine");
+          return;
         }
       }
       
