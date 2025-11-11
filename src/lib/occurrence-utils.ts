@@ -87,36 +87,74 @@ export async function createOccurrenceException(
   occurrenceDate: string,
   modifiedEventData?: any
 ) {
+  // Vérifier si une exception existe déjà pour cette date
+  const { data: existingException } = await supabase
+    .from('recurring_event_exceptions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('parent_event_id', parentEventId)
+    .eq('exception_date', occurrenceDate)
+    .maybeSingle();
+
   let newEventId = null;
 
-  // Si des données modifiées sont fournies, créer un nouvel événement
+  // Si des données modifiées sont fournies, créer ou mettre à jour un événement
   if (modifiedEventData) {
-    const { data: newEvent, error: insertError } = await supabase
-      .from('calendar_events')
-      .insert([{
-        ...modifiedEventData,
-        user_id: userId,
-        is_recurring: false, // L'exception n'est pas récurrente
-        days_of_week: null,
-      }])
-      .select()
-      .single();
+    if (existingException?.new_event_id) {
+      // Mettre à jour l'événement existant
+      const { error: updateError } = await supabase
+        .from('calendar_events')
+        .update({
+          ...modifiedEventData,
+          user_id: userId,
+          is_recurring: false,
+          days_of_week: null,
+        })
+        .eq('id', existingException.new_event_id);
 
-    if (insertError) throw insertError;
-    newEventId = newEvent.id;
+      if (updateError) throw updateError;
+      newEventId = existingException.new_event_id;
+    } else {
+      // Créer un nouvel événement
+      const { data: newEvent, error: insertError } = await supabase
+        .from('calendar_events')
+        .insert([{
+          ...modifiedEventData,
+          user_id: userId,
+          is_recurring: false,
+          days_of_week: null,
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      newEventId = newEvent.id;
+    }
   }
 
-  // Créer l'enregistrement d'exception
-  const { error } = await supabase
-    .from('recurring_event_exceptions')
-    .insert([{
-      user_id: userId,
-      parent_event_id: parentEventId,
-      exception_date: occurrenceDate,
-      new_event_id: newEventId,
-    }]);
+  if (existingException) {
+    // Mettre à jour l'exception existante
+    const { error } = await supabase
+      .from('recurring_event_exceptions')
+      .update({
+        new_event_id: newEventId,
+      })
+      .eq('id', existingException.id);
 
-  if (error) throw error;
+    if (error) throw error;
+  } else {
+    // Créer une nouvelle exception
+    const { error } = await supabase
+      .from('recurring_event_exceptions')
+      .insert([{
+        user_id: userId,
+        parent_event_id: parentEventId,
+        exception_date: occurrenceDate,
+        new_event_id: newEventId,
+      }]);
+
+    if (error) throw error;
+  }
 
   return newEventId;
 }
