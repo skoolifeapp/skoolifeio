@@ -381,19 +381,30 @@ const Planning = () => {
     isSameDay(new Date(event.start_time), selectedDate)
   );
 
-  // Get work schedules for selected day, en excluant les exceptions
+  // Get work schedules for selected day (filtrer seulement les occurrences, pas les parents)
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
-  // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
   const dayWorkSchedules = (calendarEvents || [])
-    .filter(e => e.source === 'work' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => 
+      e.source === 'work' && 
+      format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr &&
+      e.parent_recurring_id !== null // Seulement les occurrences, pas les parents
+    );
   
   const dayActivities = (calendarEvents || [])
-    .filter(e => e.source === 'sport' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => 
+      e.source === 'sport' && 
+      format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr &&
+      e.parent_recurring_id !== null
+    );
 
   const dayRoutineMoments = (calendarEvents || [])
-    .filter(e => e.source === 'other' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => 
+      e.source === 'other' && 
+      format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr &&
+      e.parent_recurring_id !== null
+    );
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
