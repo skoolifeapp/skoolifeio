@@ -453,42 +453,30 @@ const Planning = () => {
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (updateAll && editingEvent.isRecurring && editingEvent.data.parent_recurring_id) {
           // Modifier toutes les occurrences
-          const parentId = String(editingEvent.data.parent_recurring_id);
-          const title = String(editingEvent.data.title);
-          const location = editingEvent.data.location ? String(editingEvent.data.location) : null;
-          const startTime = editingEvent.data.start_time ? String(editingEvent.data.start_time) : null;
-          const endTime = editingEvent.data.end_time ? String(editingEvent.data.end_time) : null;
-          
           const { error: updateErr } = await (supabase as any)
             .from('calendar_events')
             .update({
-              title,
-              summary: title,
-              location,
-              start_time: startTime,
-              end_time: endTime,
+              title: editingEvent.data.title,
+              summary: editingEvent.data.title,
+              location: editingEvent.data.location || null,
+              start_date: editingEvent.data.start_date,
+              end_date: editingEvent.data.end_date,
             })
-            .eq('parent_recurring_id', parentId);
+            .eq('parent_recurring_id', String(editingEvent.data.parent_recurring_id));
           
           if (updateErr) console.error('Error updating all:', updateErr);
         } else {
           // Modifier uniquement cette occurrence
-          const id = String(editingEvent.data.id);
-          const title = String(editingEvent.data.title);
-          const location = editingEvent.data.location ? String(editingEvent.data.location) : null;
-          const startTime = editingEvent.data.start_time ? String(editingEvent.data.start_time) : null;
-          const endTime = editingEvent.data.end_time ? String(editingEvent.data.end_time) : null;
-          
           const { error: updateErr } = await (supabase as any)
             .from('calendar_events')
             .update({
-              title,
-              summary: title,
-              location,
-              start_time: startTime,
-              end_time: endTime,
+              title: editingEvent.data.title,
+              summary: editingEvent.data.title,
+              location: editingEvent.data.location || null,
+              start_date: editingEvent.data.start_date,
+              end_date: editingEvent.data.end_date,
             })
-            .eq('id', id);
+            .eq('id', String(editingEvent.data.id));
           
           if (updateErr) console.error('Error updating one:', updateErr);
         }
@@ -1450,8 +1438,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          start_date: new Date(e.target.value).toISOString(),
-                          start_time: format(new Date(e.target.value), 'HH:mm')
+                          start_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
@@ -1466,8 +1453,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          end_date: new Date(e.target.value).toISOString(),
-                          end_time: format(new Date(e.target.value), 'HH:mm')
+                          end_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
@@ -1561,8 +1547,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          start_date: new Date(e.target.value).toISOString(),
-                          start_time: format(new Date(e.target.value), 'HH:mm')
+                          start_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
@@ -1577,8 +1562,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          end_date: new Date(e.target.value).toISOString(),
-                          end_time: format(new Date(e.target.value), 'HH:mm')
+                          end_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
@@ -1622,8 +1606,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          start_date: new Date(e.target.value).toISOString(),
-                          start_time: format(new Date(e.target.value), 'HH:mm')
+                          start_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
@@ -1638,8 +1621,7 @@ const Planning = () => {
                         ...editingEvent,
                         data: { 
                           ...editingEvent.data, 
-                          end_date: new Date(e.target.value).toISOString(),
-                          end_time: format(new Date(e.target.value), 'HH:mm')
+                          end_date: new Date(e.target.value).toISOString()
                         }
                       })}
                     />
