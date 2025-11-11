@@ -1618,23 +1618,24 @@ const Planning = () => {
             {/* Afficher les options pour événements récurrents */}
             {editingEvent?.isRecurring && (
               <div className="mb-4 space-y-3">
-                <p className="text-sm font-medium text-center">Est-ce que cela concerne :</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={!applyToAll ? "default" : "outline"}
-                    onClick={() => setApplyToAll(false)}
-                    className="w-full"
-                  >
-                    Cette occurrence
-                  </Button>
-                  <Button
-                    variant={applyToAll ? "default" : "outline"}
-                    onClick={() => setApplyToAll(true)}
-                    className="w-full"
-                  >
-                    Toutes les occurrences
-                  </Button>
-                </div>
+                <p className="text-sm font-medium">Est-ce que cela concerne :</p>
+                <RadioGroup 
+                  value={applyToAll ? "all" : "single"} 
+                  onValueChange={(value) => setApplyToAll(value === "all")}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="single" id="single" />
+                    <Label htmlFor="single" className="font-normal cursor-pointer">
+                      Cette occurrence
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="all" />
+                    <Label htmlFor="all" className="font-normal cursor-pointer">
+                      Toutes les occurrences
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
             )}
 
