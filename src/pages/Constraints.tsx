@@ -414,20 +414,70 @@ const Constraints = () => {
     await saveRoutineMoments(moments);
   };
 
-  const handleWakeUpTimeChange = async (time: string) => {
-    setWakeUpTime(time);
+  const handleSleepConstraintSave = async (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => {
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        toast.error("Utilisateur non connecté");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('user_constraints_profile')
+        .upsert({
+          user_id: userId,
+          wake_up_time: data.wakeUpTime,
+          no_study_after: data.noStudyAfter,
+          sleep_hours_needed: data.sleepHoursNeeded,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Error saving sleep constraints:', error);
+        toast.error("Erreur lors de l'enregistrement");
+        return;
+      }
+
+      setWakeUpTime(data.wakeUpTime);
+      setNoStudyAfter(data.noStudyAfter);
+      setSleepHoursNeeded(data.sleepHoursNeeded);
+      await refetchAll();
+    } catch (error) {
+      console.error('Error saving sleep constraints:', error);
+      toast.error("Erreur lors de l'enregistrement");
+    }
   };
 
-  const handleNoStudyAfterChange = async (time: string) => {
-    setNoStudyAfter(time);
-  };
+  const handlePersonalTimeSave = async (value: number) => {
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        toast.error("Utilisateur non connecté");
+        return;
+      }
 
-  const handleSleepHoursChange = async (hours: number) => {
-    setSleepHoursNeeded(hours);
-  };
+      const { error } = await supabase
+        .from('user_constraints_profile')
+        .upsert({
+          user_id: userId,
+          min_personal_time_per_week: value,
+        }, {
+          onConflict: 'user_id'
+        });
 
-  const handleMinPersonalTimeChange = async (hours: number) => {
-    setMinPersonalTimePerWeek(hours);
+      if (error) {
+        console.error('Error saving personal time:', error);
+        toast.error("Erreur lors de l'enregistrement");
+        return;
+      }
+
+      setMinPersonalTimePerWeek(value);
+      await refetchAll();
+    } catch (error) {
+      console.error('Error saving personal time:', error);
+      toast.error("Erreur lors de l'enregistrement");
+    }
   };
 
   // Meals handlers
@@ -522,21 +572,6 @@ const Constraints = () => {
     }
   };
 
-  // Effet pour sauvegarder automatiquement et instantanément
-  useEffect(() => {
-    // Ne pas sauvegarder lors du chargement initial
-    if (isInitialLoad) return;
-    
-    console.log('💾 Déclenchement sauvegarde automatique:', {
-      wakeUpTime,
-      noStudyAfter,
-      sleepHoursNeeded,
-      minPersonalTimePerWeek
-    });
-    
-    // Sauvegarde instantanée
-    saveProfile();
-  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek]);
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
@@ -596,14 +631,8 @@ const Constraints = () => {
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
             meals={userMeals}
-            onSleepConstraintSave={async (data) => {
-              setWakeUpTime(data.wakeUpTime);
-              setNoStudyAfter(data.noStudyAfter);
-              setSleepHoursNeeded(data.sleepHoursNeeded);
-            }}
-            onPersonalTimeSave={async (value) => {
-              setMinPersonalTimePerWeek(value);
-            }}
+            onSleepConstraintSave={handleSleepConstraintSave}
+            onPersonalTimeSave={handlePersonalTimeSave}
             onMealsSave={handleMealAdd}
             onMealsDelete={handleMealDelete}
           />

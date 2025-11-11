@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface PersonalTimeCardProps {
   minPersonalTimePerWeek: number;
-  onSave: (value: number) => void;
+  onSave: (value: number) => Promise<void>;
 }
 
 export const PersonalTimeCard = ({

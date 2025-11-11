@@ -43,8 +43,8 @@ interface RoutineTabProps {
   sleepHoursNeeded: number;
   minPersonalTimePerWeek: number;
   meals: Meal[];
-  onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
-  onPersonalTimeSave: (value: number) => void;
+  onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => Promise<void>;
+  onPersonalTimeSave: (value: number) => Promise<void>;
   onMealsSave: (meal: Meal) => Promise<void>;
   onMealsDelete: (id: string) => Promise<void>;
 }

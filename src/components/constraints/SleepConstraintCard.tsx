@@ -13,7 +13,7 @@ interface SleepConstraintCardProps {
   wakeUpTime: string;
   noStudyAfter: string;
   sleepHoursNeeded: number;
-  onSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
+  onSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => Promise<void>;
 }
 
 export const SleepConstraintCard = ({
