@@ -35,14 +35,24 @@ export const CommuteCard = ({
   const constraintCount = commutes.length;
 
   const handleAdd = () => {
-    if (!newCommute.name || newCommute.duration_minutes <= 0) {
-      toast.error("Remplis tous les champs");
+    console.log('Tentative d\'ajout:', newCommute);
+    
+    if (!newCommute.name || newCommute.name === 'no-activities') {
+      toast.error("Sélectionne une activité");
+      return;
+    }
+    
+    if (!newCommute.duration_minutes || newCommute.duration_minutes <= 0) {
+      toast.error("Indique une durée valide");
       return;
     }
 
-    onSave([...commutes, newCommute]);
+    const updatedCommutes = [...commutes, newCommute];
+    console.log('Trajets mis à jour:', updatedCommutes);
+    onSave(updatedCommutes);
     setNewCommute({ name: '', duration_minutes: 0 });
     setIsDrawerOpen(false);
+    setIsOpen(true); // Ouvrir automatiquement la liste
     toast.success("Trajet ajouté");
   };
 
