@@ -17,16 +17,12 @@ export type Database = {
       calendar_events: {
         Row: {
           created_at: string
-          days: string[] | null
           description: string | null
-          end_date: string | null
-          end_time: string | null
+          end_date: string
           id: string
-          is_recurring: boolean | null
           location: string | null
           metadata: Json | null
-          start_date: string | null
-          start_time: string | null
+          start_date: string
           summary: string | null
           title: string | null
           type: string
@@ -35,16 +31,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          days?: string[] | null
           description?: string | null
-          end_date?: string | null
-          end_time?: string | null
+          end_date: string
           id?: string
-          is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
-          start_date?: string | null
-          start_time?: string | null
+          start_date: string
           summary?: string | null
           title?: string | null
           type?: string
@@ -53,55 +45,15 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          days?: string[] | null
           description?: string | null
-          end_date?: string | null
-          end_time?: string | null
+          end_date?: string
           id?: string
-          is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
-          start_date?: string | null
-          start_time?: string | null
+          start_date?: string
           summary?: string | null
           title?: string | null
           type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      event_exceptions: {
-        Row: {
-          created_at: string
-          exception_date: string
-          exception_type: string
-          id: string
-          modified_data: Json | null
-          source_id: string
-          source_type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          exception_date: string
-          exception_type: string
-          id?: string
-          modified_data?: Json | null
-          source_id: string
-          source_type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          exception_date?: string
-          exception_type?: string
-          id?: string
-          modified_data?: Json | null
-          source_id?: string
-          source_type?: string
           updated_at?: string
           user_id?: string
         }

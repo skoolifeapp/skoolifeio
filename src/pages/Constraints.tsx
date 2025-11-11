@@ -3,6 +3,8 @@ import { useData } from "@/contexts/DataContext";
 import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { generateOccurrences } from "@/lib/occurrence-generator";
 import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
@@ -69,53 +71,76 @@ const Constraints = () => {
   const [commuteHomeJob, setCommuteHomeJob] = useState(0);
   const [commuteHomeActivity, setCommuteHomeActivity] = useState(0);
 
-  // Filtrer les calendar_events par type et mapper vers les anciennes structures
+  // Filtrer et grouper les calendar_events par type
+  // Note: maintenant les événements sont des occurrences individuelles, 
+  // donc on doit les regrouper par titre/métadonnées pour l'affichage
   useEffect(() => {
     if (calendarEvents) {
-      // Filtrer les événements de type 'work'
-      const workEvents = calendarEvents
-        .filter(event => event.type === 'work')
-        .map(event => ({
-          id: event.id,
-          type: event.metadata?.work_type || 'other',
-          title: event.title,
-          days: event.days || [],
-          start_time: event.start_time,
-          end_time: event.end_time,
-          location: event.location,
-          frequency: event.metadata?.frequency,
-          hours_per_week: event.metadata?.hours_per_week,
-          alternance_rhythm: event.metadata?.alternance_rhythm,
-          start_date: event.metadata?.start_date,
-          company_name: event.metadata?.company_name,
-        }));
-      setWorkSchedules(workEvents);
+      // Pour l'interface, on doit reconstituer les événements "récurrents" à partir des occurrences
+      // On groupe par titre et métadonnées
+      const workEventsMap = new Map<string, WorkSchedule>();
+      const sportEventsMap = new Map<string, Activity>();
+      const othersEventsMap = new Map<string, RoutineMoment>();
 
-      // Filtrer les événements de type 'sport'
-      const sportEvents = calendarEvents
-        .filter(event => event.type === 'sport')
-        .map(event => ({
-          id: event.id,
-          type: event.metadata?.activity_type || 'sport',
-          title: event.title,
-          days: event.days || [],
-          start_time: event.start_time,
-          end_time: event.end_time,
-          location: event.location,
-        }));
-      setActivities(sportEvents);
+      calendarEvents.forEach(event => {
+        if (event.type === 'work') {
+          const key = event.title + JSON.stringify(event.metadata || {});
+          if (!workEventsMap.has(key)) {
+            // Extraire les jours et heures de la première occurrence
+            const startDate = new Date(event.start_date);
+            const endDate = new Date(event.end_date);
+            
+            workEventsMap.set(key, {
+              id: event.id,
+              type: event.metadata?.work_type || 'other',
+              title: event.title,
+              days: [], // On collectera les jours uniques
+              start_time: format(startDate, 'HH:mm'),
+              end_time: format(endDate, 'HH:mm'),
+              location: event.location,
+              frequency: event.metadata?.frequency,
+              hours_per_week: event.metadata?.hours_per_week,
+              alternance_rhythm: event.metadata?.alternance_rhythm,
+              start_date: event.metadata?.start_date,
+              company_name: event.metadata?.company_name,
+            });
+          }
+        } else if (event.type === 'sport') {
+          const key = event.title + JSON.stringify(event.metadata || {});
+          if (!sportEventsMap.has(key)) {
+            const startDate = new Date(event.start_date);
+            const endDate = new Date(event.end_date);
+            
+            sportEventsMap.set(key, {
+              id: event.id,
+              type: event.metadata?.activity_type || 'sport',
+              title: event.title,
+              days: [],
+              start_time: format(startDate, 'HH:mm'),
+              end_time: format(endDate, 'HH:mm'),
+              location: event.location,
+            });
+          }
+        } else if (event.type === 'others') {
+          const key = event.title;
+          if (!othersEventsMap.has(key)) {
+            const startDate = new Date(event.start_date);
+            const endDate = new Date(event.end_date);
+            
+            othersEventsMap.set(key, {
+              id: event.id,
+              title: event.title,
+              days: [],
+              start_time: format(startDate, 'HH:mm'),
+              end_time: format(endDate, 'HH:mm'),
+            });
+          }
+        }
+      });
 
-      // Filtrer les événements de type 'others'
-      const otherEvents = calendarEvents
-        .filter(event => event.type === 'others')
-        .map(event => ({
-          id: event.id,
-          title: event.title,
-          days: event.days || [],
-          start_time: event.start_time,
-          end_time: event.end_time,
-        }));
-      setRoutineMoments(otherEvents);
+      setWorkSchedules(Array.from(workEventsMap.values()));
+      setActivities(Array.from(sportEventsMap.values()));
+      setRoutineMoments(Array.from(othersEventsMap.values()));
     }
   }, [calendarEvents]);
 
@@ -150,20 +175,23 @@ const Constraints = () => {
         return;
       }
       
-      // Insérer les nouveaux horaires de travail
+      // Insérer les nouveaux horaires de travail en générant toutes les occurrences
       if (schedules.length > 0) {
-        const { error } = await supabase
-          .from('calendar_events')
-          .insert(schedules.map(s => ({
-            user_id: userId,
-            type: 'work',
-            is_recurring: true,
+        const allOccurrences = schedules.flatMap(s => {
+          const occurrences = generateOccurrences({
             days: s.days,
             start_time: s.start_time,
-            end_time: s.end_time,
+            end_time: s.end_time
+          }, 3); // 3 mois
+          
+          return occurrences.map(occ => ({
+            user_id: userId,
+            type: 'work',
             title: s.title,
             summary: s.title,
             location: s.location || null,
+            start_date: occ.start_date,
+            end_date: occ.end_date,
             metadata: {
               work_type: s.type,
               company_name: s.company_name,
@@ -172,7 +200,12 @@ const Constraints = () => {
               hours_per_week: s.hours_per_week,
               start_date: s.start_date,
             }
-          })));
+          }));
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
         
         if (error) {
           console.error('Error inserting work schedules:', error);
@@ -207,22 +240,30 @@ const Constraints = () => {
       }
       
       if (acts.length > 0) {
-        const { error } = await supabase
-          .from('calendar_events')
-          .insert(acts.map(a => ({
-            user_id: userId,
-            type: 'sport',
-            is_recurring: true,
+        const allOccurrences = acts.flatMap(a => {
+          const occurrences = generateOccurrences({
             days: a.days,
             start_time: a.start_time,
-            end_time: a.end_time,
+            end_time: a.end_time
+          }, 3);
+          
+          return occurrences.map(occ => ({
+            user_id: userId,
+            type: 'sport',
             title: a.title,
             summary: a.title,
             location: a.location || null,
+            start_date: occ.start_date,
+            end_date: occ.end_date,
             metadata: {
               activity_type: a.type
             }
-          })));
+          }));
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
         
         if (error) {
           console.error('Error inserting activities:', error);
@@ -257,19 +298,27 @@ const Constraints = () => {
       }
       
       if (moments.length > 0) {
-        const { error } = await supabase
-          .from('calendar_events')
-          .insert(moments.map(m => ({
-            user_id: userId,
-            type: 'others',
-            is_recurring: true,
+        const allOccurrences = moments.flatMap(m => {
+          const occurrences = generateOccurrences({
             days: m.days,
             start_time: m.start_time,
-            end_time: m.end_time,
+            end_time: m.end_time
+          }, 3);
+          
+          return occurrences.map(occ => ({
+            user_id: userId,
+            type: 'others',
             title: m.title,
             summary: m.title,
+            start_date: occ.start_date,
+            end_date: occ.end_date,
             metadata: {}
-          })));
+          }));
+        });
+        
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert(allOccurrences);
         
         if (error) {
           console.error('Error inserting routine moments:', error);

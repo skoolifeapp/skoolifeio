@@ -44,11 +44,6 @@ interface RevisionSession {
 const Planning = () => {
   const { user } = useAuth();
   const { refetchAll, calendarEvents } = useData();
-  
-  // Filtrer les événements par type
-  const workSchedules = calendarEvents.filter(e => e.type === 'work');
-  const activities = calendarEvents.filter(e => e.type === 'sport');
-  const routineMoments = calendarEvents.filter(e => e.type === 'others');
   const { state, setPlanningDate } = useNavigationState();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,11 +59,7 @@ const Planning = () => {
   const [editingEvent, setEditingEvent] = useState<{
     type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine' | 'planned';
     data: any;
-    isRecurring?: boolean;
-    selectedDate?: Date;
   } | null>(null);
-  const [recurrenceChoice, setRecurrenceChoice] = useState<'this' | 'all'>('this');
-  const [eventExceptions, setEventExceptions] = useState<any[]>([]);
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newEvent, setNewEvent] = useState({
@@ -86,7 +77,6 @@ const Planning = () => {
     
     if (user) {
       loadCalendarEvents();
-      loadEventExceptions();
       loadPlannedEvents();
       checkNotificationStatus();
       cleanCancelledEvents();
@@ -107,21 +97,6 @@ const Planning = () => {
     }
   };
 
-  const loadEventExceptions = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('event_exceptions')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading event exceptions:', error);
-      return;
-    }
-
-    setEventExceptions(data || []);
-  };
 
   const loadPlannedEvents = async () => {
     if (!user) return;
@@ -397,118 +372,15 @@ const Planning = () => {
   const selectedDayName = format(selectedDate, 'EEEE', { locale: fr }).toLowerCase();
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   
-  console.log('Filtering work schedules for:', selectedDateStr, 'Exceptions:', eventExceptions.length);
+  // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
+  const dayWorkSchedules = (calendarEvents || [])
+    .filter(e => e.type === 'work' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
   
-  const dayWorkSchedules = (workSchedules || [])
-    .filter(schedule => {
-      const hasDay = schedule.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      // Vérifier si cette occurrence a une exception "deleted"
-      const hasException = eventExceptions.some(
-        exc => {
-          const match = exc.source_type === 'work_schedule' 
-            && exc.source_id === schedule.id 
-            && exc.exception_date === selectedDateStr
-            && exc.exception_type === 'deleted';
-          
-          if (match) {
-            console.log('Exception trouvée pour:', schedule.id, 'date:', selectedDateStr);
-          }
-          
-          return match;
-        }
-      );
-      
-      return !hasException;
-    })
-    .map(schedule => {
-      // Vérifier si cette occurrence a une exception "modified"
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'work_schedule' 
-          && exc.source_id === schedule.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      // Si une exception existe, utiliser les données modifiées
-      if (exception && exception.modified_data) {
-        return {
-          ...schedule,
-          ...exception.modified_data
-        };
-      }
-      
-      return schedule;
-    });
-  
-  console.log('Work schedules after filtering:', dayWorkSchedules.length);
+  const dayActivities = (calendarEvents || [])
+    .filter(e => e.type === 'sport' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
-  // Get activities for selected day, en excluant les exceptions
-  const dayActivities = (activities || [])
-    .filter(activity => {
-      const hasDay = activity.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      const hasException = eventExceptions.some(
-        exc => exc.source_type === 'activity' 
-          && exc.source_id === activity.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'deleted'
-      );
-      
-      return !hasException;
-    })
-    .map(activity => {
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'activity' 
-          && exc.source_id === activity.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      if (exception && exception.modified_data) {
-        return {
-          ...activity,
-          ...exception.modified_data
-        };
-      }
-      
-      return activity;
-    });
-
-  // Get routine moments for selected day, en excluant les exceptions
-  const dayRoutineMoments = (routineMoments || [])
-    .filter(routine => {
-      const hasDay = routine.days.includes(selectedDayName);
-      if (!hasDay) return false;
-      
-      const hasException = eventExceptions.some(
-        exc => exc.source_type === 'routine_moment' 
-          && exc.source_id === routine.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'deleted'
-      );
-      
-      return !hasException;
-    })
-    .map(routine => {
-      const exception = eventExceptions.find(
-        exc => exc.source_type === 'routine_moment' 
-          && exc.source_id === routine.id 
-          && exc.exception_date === selectedDateStr
-          && exc.exception_type === 'modified'
-      );
-      
-      if (exception && exception.modified_data) {
-        return {
-          ...routine,
-          ...exception.modified_data
-        };
-      }
-      
-      return routine;
-    });
+  const dayRoutineMoments = (calendarEvents || [])
+    .filter(e => e.type === 'others' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
@@ -568,47 +440,20 @@ const Planning = () => {
 
         if (error) throw error;
         await loadRevisionSessions();
-      } else if (editingEvent.type === 'work') {
-        // Si c'est récurrent et qu'on modifie seulement cette occurrence
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          // Créer une exception de type "modified"
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'work_schedule',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'modified',
-              modified_data: {
-                title: editingEvent.data.title,
-                start_time: editingEvent.data.start_time,
-                end_time: editingEvent.data.end_time,
-                location: editingEvent.data.location,
-              }
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
+      } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
+        // Modifier l'occurrence individuelle
+        const { error } = await supabase
+          .from('calendar_events')
+          .update({
+            title: editingEvent.data.title,
+            summary: editingEvent.data.title,
+            start_date: editingEvent.data.start_date,
+            end_date: editingEvent.data.end_date,
+            location: editingEvent.data.location,
+          })
+          .eq('id', editingEvent.data.id);
 
-          if (error) throw error;
-          await loadEventExceptions();
-        } else {
-          // Modifier toutes les occurrences
-          const { error } = await supabase
-            .from('calendar_events')
-            .update({
-              title: editingEvent.data.title,
-              summary: editingEvent.data.title,
-              start_time: editingEvent.data.start_time,
-              end_time: editingEvent.data.end_time,
-              location: editingEvent.data.location,
-            })
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
+        if (error) throw error;
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -637,80 +482,6 @@ const Planning = () => {
 
         if (error) throw error;
         await loadPlannedEvents();
-      } else if (editingEvent.type === 'activity') {
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'activity',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'modified',
-              modified_data: {
-                title: editingEvent.data.title,
-                start_time: editingEvent.data.start_time,
-                end_time: editingEvent.data.end_time,
-                location: editingEvent.data.location,
-              }
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
-
-          if (error) throw error;
-          await loadEventExceptions();
-        } else {
-          const { error } = await supabase
-            .from('calendar_events')
-            .update({
-              title: editingEvent.data.title,
-              summary: editingEvent.data.title,
-              start_time: editingEvent.data.start_time,
-              end_time: editingEvent.data.end_time,
-              location: editingEvent.data.location,
-            })
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
-      } else if (editingEvent.type === 'routine') {
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'routine_moment',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'modified',
-              modified_data: {
-                title: editingEvent.data.title,
-                start_time: editingEvent.data.start_time,
-                end_time: editingEvent.data.end_time,
-              }
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
-
-          if (error) throw error;
-          await loadEventExceptions();
-        } else {
-          const { error } = await supabase
-            .from('calendar_events')
-            .update({
-              title: editingEvent.data.title,
-              summary: editingEvent.data.title,
-              start_time: editingEvent.data.start_time,
-              end_time: editingEvent.data.end_time,
-            })
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
       }
 
       refetchAll();
@@ -725,7 +496,7 @@ const Planning = () => {
     if (!editingEvent || !user) return;
 
     try {
-      if (editingEvent.type === 'calendar') {
+      if (editingEvent.type === 'calendar' || editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         const { error } = await supabase
           .from('calendar_events')
           .delete()
@@ -741,41 +512,6 @@ const Planning = () => {
 
         if (error) throw error;
         await loadRevisionSessions();
-      } else if (editingEvent.type === 'work') {
-        // Si c'est récurrent et qu'on supprime seulement cette occurrence
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          // Créer une exception de type "deleted" 
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'work_schedule',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'deleted',
-              modified_data: null
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
-
-          if (error) {
-            console.error('Error creating exception:', error);
-            throw error;
-          }
-          
-          console.log('Exception créée pour:', exceptionDate, editingEvent.data.id);
-          await loadEventExceptions();
-        } else {
-          // Supprimer toutes les occurrences
-          const { error } = await supabase
-            .from('calendar_events')
-            .delete()
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -792,69 +528,8 @@ const Planning = () => {
 
         if (error) throw error;
         await loadPlannedEvents();
-      } else if (editingEvent.type === 'activity') {
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'activity',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'deleted',
-              modified_data: null
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
-
-          if (error) throw error;
-          await loadEventExceptions();
-        } else {
-          const { error } = await supabase
-            .from('calendar_events')
-            .delete()
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
-      } else if (editingEvent.type === 'routine') {
-        if (editingEvent.isRecurring && recurrenceChoice === 'this' && editingEvent.selectedDate) {
-          const exceptionDate = format(editingEvent.selectedDate, 'yyyy-MM-dd');
-          
-          const { error } = await supabase
-            .from('event_exceptions')
-            .upsert({
-              user_id: user.id,
-              source_type: 'routine_moment',
-              source_id: editingEvent.data.id,
-              exception_date: exceptionDate,
-              exception_type: 'deleted',
-              modified_data: null
-            }, {
-              onConflict: 'user_id,source_type,source_id,exception_date'
-            });
-
-          if (error) throw error;
-          await loadEventExceptions();
-        } else {
-          const { error } = await supabase
-            .from('calendar_events')
-            .delete()
-            .eq('id', editingEvent.data.id);
-
-          if (error) throw error;
-        }
       }
 
-      // Recharger toutes les données pour s'assurer que la suppression est visible
-      await Promise.all([
-        loadCalendarEvents(),
-        loadRevisionSessions(),
-        loadDayExams()
-      ]);
-      
       refetchAll();
       setEditingEvent(null);
     } catch (error) {
@@ -1308,9 +983,7 @@ const Planning = () => {
                               onClick={() => {
                                 setEditingEvent({
                                   type: 'work',
-                                  data: { ...schedule },
-                                  isRecurring: true,
-                                  selectedDate: selectedDate
+                                  data: { ...schedule }
                                 });
                               }}
                             >
@@ -1339,9 +1012,7 @@ const Planning = () => {
                               onClick={() => {
                                 setEditingEvent({
                                   type: 'activity',
-                                  data: { ...activity },
-                                  isRecurring: true,
-                                  selectedDate: selectedDate
+                                  data: { ...activity }
                                 });
                               }}
                             >
@@ -1370,9 +1041,7 @@ const Planning = () => {
                               onClick={() => {
                                 setEditingEvent({
                                   type: 'routine',
-                                  data: { ...routine },
-                                  isRecurring: true,
-                                  selectedDate: selectedDate
+                                  data: { ...routine }
                                 });
                               }}
                             >
@@ -1579,26 +1248,7 @@ const Planning = () => {
           </DrawerHeader>
           
           <div className="px-4 space-y-4 pb-6">
-            {/* Choix pour événements récurrents */}
-            {editingEvent?.isRecurring && (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') && (
-              <div className="bg-muted p-3 rounded-lg space-y-2">
-                <Label>Que veux-tu modifier ?</Label>
-                <RadioGroup value={recurrenceChoice} onValueChange={(v) => setRecurrenceChoice(v as 'this' | 'all')}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="this" id="this-occ" />
-                    <Label htmlFor="this-occ" className="font-normal">
-                      Cette occurrence ({format(editingEvent?.selectedDate || new Date(), 'd MMM', { locale: fr })})
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="all-occ" />
-                    <Label htmlFor="all-occ" className="font-normal">
-                      Toutes les occurrences
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
+            {/* Formulaires de modification */}
 
             {editingEvent?.type === 'calendar' && (
               <>
