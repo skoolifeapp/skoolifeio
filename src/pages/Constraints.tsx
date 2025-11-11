@@ -71,6 +71,7 @@ const Constraints = () => {
   const [noStudyAfter, setNoStudyAfter] = useState('22:00');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Filtrer et grouper les calendar_events par type
   // Note: maintenant les événements sont des occurrences individuelles, 
@@ -147,6 +148,8 @@ const Constraints = () => {
 
   useEffect(() => {
     if (constraintsProfile) {
+      console.log('📥 Chargement profil depuis Supabase:', constraintsProfile);
+      
       const loadedWakeUpTime = constraintsProfile.wake_up_time || '07:00';
       const loadedNoStudyAfter = constraintsProfile.no_study_after || '22:00';
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
@@ -156,6 +159,7 @@ const Constraints = () => {
       setNoStudyAfter(loadedNoStudyAfter);
       setSleepHoursNeeded(loadedSleepHours);
       setMinPersonalTimePerWeek(loadedPersonalTime);
+      setIsInitialLoad(false);
     }
   }, [constraintsProfile]);
 
@@ -520,8 +524,15 @@ const Constraints = () => {
 
   // Effet pour sauvegarder automatiquement et instantanément
   useEffect(() => {
-    // Ne pas sauvegarder au premier chargement
-    if (!constraintsProfile) return;
+    // Ne pas sauvegarder lors du chargement initial
+    if (isInitialLoad) return;
+    
+    console.log('💾 Déclenchement sauvegarde automatique:', {
+      wakeUpTime,
+      noStudyAfter,
+      sleepHoursNeeded,
+      minPersonalTimePerWeek
+    });
     
     // Sauvegarde instantanée
     saveProfile();
