@@ -148,13 +148,11 @@ const Constraints = () => {
 
   useEffect(() => {
     if (constraintsProfile) {
-      console.log('Chargement du profil:', constraintsProfile);
       setWakeUpTime(constraintsProfile.wake_up_time || '07:00');
       setNoStudyAfter(constraintsProfile.no_study_after || '22:00');
       setSleepHoursNeeded(constraintsProfile.sleep_hours_needed || 8);
       setMinPersonalTimePerWeek(constraintsProfile.min_personal_time_per_week || 5);
       const loadedCommutes = (constraintsProfile.commutes as Commute[]) || [];
-      console.log('Trajets chargés:', loadedCommutes);
       setCommutes(loadedCommutes);
     }
   }, [constraintsProfile]);
@@ -352,12 +350,12 @@ const Constraints = () => {
     }
   };
 
-  const saveProfile = async () => {
+  const saveProfile = async (customCommutes?: Commute[]) => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
       
-      console.log('Sauvegarde du profil, trajets:', commutes);
+      const commutesToSave = customCommutes !== undefined ? customCommutes : commutes;
       
       const { error } = await supabase
         .from('user_constraints_profile')
@@ -367,7 +365,7 @@ const Constraints = () => {
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
-          commutes: commutes as any,
+          commutes: commutesToSave as any,
         });
       
       if (error) {
@@ -376,7 +374,6 @@ const Constraints = () => {
         return;
       }
       
-      console.log('Profil sauvegardé avec succès');
       refetchAll();
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -420,10 +417,8 @@ const Constraints = () => {
   };
 
   const handleCommutesChange = async (newCommutes: Commute[]) => {
-    console.log('handleCommutesChange - Nouveaux trajets:', newCommutes);
     setCommutes(newCommutes);
-    await saveProfile();
-    console.log('Trajets sauvegardés, état actuel:', newCommutes);
+    await saveProfile(newCommutes);
   };
 
   return (

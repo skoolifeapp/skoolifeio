@@ -35,8 +35,6 @@ export const CommuteCard = ({
   const constraintCount = commutes.length;
 
   const handleAdd = () => {
-    console.log('Tentative d\'ajout:', newCommute);
-    
     if (!newCommute.name || newCommute.name === 'no-activities') {
       toast.error("Sélectionne une activité");
       return;
@@ -48,11 +46,10 @@ export const CommuteCard = ({
     }
 
     const updatedCommutes = [...commutes, newCommute];
-    console.log('Trajets mis à jour:', updatedCommutes);
     onSave(updatedCommutes);
     setNewCommute({ name: '', duration_minutes: 0 });
     setIsDrawerOpen(false);
-    setIsOpen(true); // Ouvrir automatiquement la liste
+    setIsOpen(true);
     toast.success("Trajet ajouté");
   };
 
@@ -95,9 +92,7 @@ export const CommuteCard = ({
 
             {commutes.length > 0 && (
               <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                {commutes.map((commute, index) => {
-                  console.log('Affichage trajet:', commute);
-                  return (
+                {commutes.map((commute, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -116,8 +111,7 @@ export const CommuteCard = ({
                       </Button>
                     </div>
                   </div>
-                  );
-                })}
+                ))}
               </CollapsibleContent>
             )}
           </Collapsible>
