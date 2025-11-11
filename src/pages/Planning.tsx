@@ -1614,39 +1614,40 @@ const Planning = () => {
           <DrawerFooter>
             {/* Afficher les options pour événements récurrents */}
             {editingEvent?.isRecurring && (
-              <div className="mb-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm font-semibold mb-3">Cet événement se répète plusieurs fois</p>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="destructive" 
-                      onClick={() => handleDeleteEvent(false)}
-                      className="flex-1"
-                    >
-                      Supprimer cette occurrence
-                    </Button>
-                    <Button 
-                      onClick={() => handleUpdateEvent(false)}
-                      className="flex-1"
-                    >
-                      Modifier cette occurrence
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="destructive" 
-                      onClick={() => handleDeleteEvent(true)}
-                      className="flex-1"
-                    >
-                      Supprimer toutes les occurrences
-                    </Button>
-                    <Button 
-                      onClick={() => handleUpdateEvent(true)}
-                      className="flex-1"
-                    >
-                      Modifier toutes les occurrences
-                    </Button>
-                  </div>
+              <div className="mb-3 p-3 bg-muted rounded-lg space-y-3">
+                <p className="text-sm font-semibold text-center">Cet événement se répète plusieurs fois</p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={() => handleUpdateEvent(false)}
+                    size="sm"
+                    className="text-xs h-auto py-3 px-2"
+                  >
+                    <span className="text-center">Modifier<br/>cette occurrence</span>
+                  </Button>
+                  <Button 
+                    onClick={() => handleUpdateEvent(true)}
+                    size="sm"
+                    className="text-xs h-auto py-3 px-2"
+                  >
+                    <span className="text-center">Modifier<br/>toutes</span>
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleDeleteEvent(false)}
+                    size="sm"
+                    className="text-xs h-auto py-3 px-2"
+                  >
+                    <span className="text-center">Supprimer<br/>cette occurrence</span>
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleDeleteEvent(true)}
+                    size="sm"
+                    className="text-xs h-auto py-3 px-2"
+                  >
+                    <span className="text-center">Supprimer<br/>toutes</span>
+                  </Button>
                 </div>
               </div>
             )}
