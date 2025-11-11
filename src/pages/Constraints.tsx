@@ -83,7 +83,7 @@ const Constraints = () => {
       const othersEventsMap = new Map<string, RoutineMoment>();
 
       calendarEvents.forEach(event => {
-        if (event.type === 'work') {
+        if (event.source === 'work') {
           const key = event.title + JSON.stringify(event.metadata || {});
           if (!workEventsMap.has(key)) {
             // Extraire les jours et heures de la première occurrence
@@ -94,7 +94,7 @@ const Constraints = () => {
               id: event.id,
               type: event.metadata?.work_type || 'other',
               title: event.title,
-              days: [], // On collectera les jours uniques
+              days: event.days_of_week?.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][d]) || [],
               start_time: format(startDate, 'HH:mm'),
               end_time: format(endDate, 'HH:mm'),
               location: event.location,
@@ -105,7 +105,7 @@ const Constraints = () => {
               company_name: event.metadata?.company_name,
             });
           }
-        } else if (event.type === 'sport') {
+        } else if (event.source === 'sport') {
           const key = event.title + JSON.stringify(event.metadata || {});
           if (!sportEventsMap.has(key)) {
             const startDate = new Date(event.start_date);
@@ -115,13 +115,13 @@ const Constraints = () => {
               id: event.id,
               type: event.metadata?.activity_type || 'sport',
               title: event.title,
-              days: [],
+              days: event.days_of_week?.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][d]) || [],
               start_time: format(startDate, 'HH:mm'),
               end_time: format(endDate, 'HH:mm'),
               location: event.location,
             });
           }
-        } else if (event.type === 'others') {
+        } else if (event.source === 'other') {
           const key = event.title;
           if (!othersEventsMap.has(key)) {
             const startDate = new Date(event.start_date);
@@ -130,7 +130,7 @@ const Constraints = () => {
             othersEventsMap.set(key, {
               id: event.id,
               title: event.title,
-              days: [],
+              days: event.days_of_week?.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][d]) || [],
               start_time: format(startDate, 'HH:mm'),
               end_time: format(endDate, 'HH:mm'),
             });
@@ -167,7 +167,8 @@ const Constraints = () => {
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('type', 'work');
+        .eq('source', 'work')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting work schedules:', deleteError);
@@ -181,12 +182,16 @@ const Constraints = () => {
           const occurrences = generateOccurrences({
             days: s.days,
             start_time: s.start_time,
-            end_time: s.end_time
+            end_time: s.end_time,
           }, 3); // 3 mois
           
           return occurrences.map(occ => ({
             user_id: userId,
-            type: 'work',
+            source: 'work' as const,
+            is_recurring: true,
+            days_of_week: s.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
+            start_time: s.start_time,
+            end_time: s.end_time,
             title: s.title,
             summary: s.title,
             location: s.location || null,
@@ -231,7 +236,8 @@ const Constraints = () => {
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('type', 'sport');
+        .eq('source', 'sport')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting activities:', deleteError);
@@ -244,12 +250,16 @@ const Constraints = () => {
           const occurrences = generateOccurrences({
             days: a.days,
             start_time: a.start_time,
-            end_time: a.end_time
+            end_time: a.end_time,
           }, 3);
           
           return occurrences.map(occ => ({
             user_id: userId,
-            type: 'sport',
+            source: 'sport' as const,
+            is_recurring: true,
+            days_of_week: a.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
+            start_time: a.start_time,
+            end_time: a.end_time,
             title: a.title,
             summary: a.title,
             location: a.location || null,
@@ -284,12 +294,13 @@ const Constraints = () => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
       
-      // Supprimer tous les événements de type 'others'
+      // Supprimer tous les événements de type 'other'
       const { error: deleteError } = await supabase
         .from('calendar_events')
         .delete()
         .eq('user_id', userId)
-        .eq('type', 'others');
+        .eq('source', 'other')
+        .eq('is_recurring', true);
       
       if (deleteError) {
         console.error('Error deleting routine moments:', deleteError);
@@ -302,12 +313,16 @@ const Constraints = () => {
           const occurrences = generateOccurrences({
             days: m.days,
             start_time: m.start_time,
-            end_time: m.end_time
+            end_time: m.end_time,
           }, 3);
           
           return occurrences.map(occ => ({
             user_id: userId,
-            type: 'others',
+            source: 'other' as const,
+            is_recurring: true,
+            days_of_week: m.days.map(d => ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].indexOf(d.toLowerCase())),
+            start_time: m.start_time,
+            end_time: m.end_time,
             title: m.title,
             summary: m.title,
             start_date: occ.start_date,

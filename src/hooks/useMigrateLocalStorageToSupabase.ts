@@ -141,6 +141,7 @@ export const useMigrateLocalStorageToSupabase = () => {
             if (count === 0) {
               const eventsToInsert = events.map(event => ({
                 user_id: user.id,
+                source: 'school' as const,
                 summary: event.summary,
                 start_date: event.startDate,
                 end_date: event.endDate,

@@ -296,6 +296,7 @@ const Planning = () => {
         // Insert new events
         const eventsToInsert = events.map(event => ({
           user_id: user.id,
+          source: 'school' as const,
           summary: event.summary,
           start_date: event.startDate,
           end_date: event.endDate,
@@ -374,13 +375,13 @@ const Planning = () => {
   
   // Filtrer les événements pour la date sélectionnée (chaque occurrence est maintenant une entrée séparée)
   const dayWorkSchedules = (calendarEvents || [])
-    .filter(e => e.type === 'work' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => e.source === 'work' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
   
   const dayActivities = (calendarEvents || [])
-    .filter(e => e.type === 'sport' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => e.source === 'sport' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
   const dayRoutineMoments = (calendarEvents || [])
-    .filter(e => e.type === 'others' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+    .filter(e => e.source === 'other' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];

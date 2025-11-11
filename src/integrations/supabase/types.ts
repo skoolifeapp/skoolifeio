@@ -17,43 +17,58 @@ export type Database = {
       calendar_events: {
         Row: {
           created_at: string
+          days_of_week: number[] | null
           description: string | null
           end_date: string
+          end_time: string | null
           id: string
+          is_active: boolean | null
+          is_recurring: boolean | null
           location: string | null
           metadata: Json | null
+          source: Database["public"]["Enums"]["event_source"]
           start_date: string
+          start_time: string | null
           summary: string | null
           title: string | null
-          type: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          days_of_week?: number[] | null
           description?: string | null
           end_date: string
+          end_time?: string | null
           id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
+          source: Database["public"]["Enums"]["event_source"]
           start_date: string
+          start_time?: string | null
           summary?: string | null
           title?: string | null
-          type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          days_of_week?: number[] | null
           description?: string | null
           end_date?: string
+          end_time?: string | null
           id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
+          source?: Database["public"]["Enums"]["event_source"]
           start_date?: string
+          start_time?: string | null
           summary?: string | null
           title?: string | null
-          type?: string
           updated_at?: string
           user_id?: string
         }
@@ -460,6 +475,15 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       constraint_type: "alternance" | "job" | "sport" | "rdv" | "exception"
+      event_source:
+        | "school"
+        | "work"
+        | "alternance"
+        | "job"
+        | "sport"
+        | "activity"
+        | "routine"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -589,6 +613,16 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       constraint_type: ["alternance", "job", "sport", "rdv", "exception"],
+      event_source: [
+        "school",
+        "work",
+        "alternance",
+        "job",
+        "sport",
+        "activity",
+        "routine",
+        "other",
+      ],
     },
   },
 } as const
