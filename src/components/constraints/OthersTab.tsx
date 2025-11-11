@@ -46,7 +46,6 @@ export const OthersTab = ({
 
       <CommuteCard
         commutes={commutes}
-        availableActivities={availableActivities}
         onSave={onCommutesSave}
       />
     </div>

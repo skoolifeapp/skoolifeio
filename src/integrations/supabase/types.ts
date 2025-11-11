@@ -198,6 +198,7 @@ export type Database = {
       }
       user_constraints_profile: {
         Row: {
+          commutes: Json | null
           created_at: string
           meals: Json | null
           min_personal_time_per_week: number
@@ -208,6 +209,7 @@ export type Database = {
           wake_up_time: string
         }
         Insert: {
+          commutes?: Json | null
           created_at?: string
           meals?: Json | null
           min_personal_time_per_week?: number
@@ -218,6 +220,7 @@ export type Database = {
           wake_up_time?: string
         }
         Update: {
+          commutes?: Json | null
           created_at?: string
           meals?: Json | null
           min_personal_time_per_week?: number

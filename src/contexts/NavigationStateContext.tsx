@@ -10,7 +10,7 @@ interface ExamsState {
 }
 
 interface ConstraintsState {
-  activeTab: 'travail' | 'activite' | 'routine' | 'autres';
+  activeTab: 'travail' | 'activite' | 'routine' | 'trajet' | 'autres';
 }
 
 interface NavigationState {
@@ -24,7 +24,7 @@ interface NavigationStateContextType {
   setPlanningDate: (date: Date) => void;
   setExamsFilter: (filter: 'upcoming' | 'all' | 'past' | 'high') => void;
   setExamsScrollPosition: (position: number) => void;
-  setConstraintsTab: (tab: 'travail' | 'activite' | 'routine' | 'autres') => void;
+  setConstraintsTab: (tab: 'travail' | 'activite' | 'routine' | 'trajet' | 'autres') => void;
 }
 
 const NavigationStateContext = createContext<NavigationStateContextType | undefined>(undefined);
@@ -64,7 +64,7 @@ export const NavigationStateProvider = ({ children }: { children: ReactNode }) =
     }));
   };
 
-  const setConstraintsTab = (tab: 'travail' | 'activite' | 'routine' | 'autres') => {
+  const setConstraintsTab = (tab: 'travail' | 'activite' | 'routine' | 'trajet' | 'autres') => {
     setState(prev => ({
       ...prev,
       constraints: { ...prev.constraints, activeTab: tab },

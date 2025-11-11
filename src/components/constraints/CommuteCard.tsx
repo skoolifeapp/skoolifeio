@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Commute {
@@ -17,15 +16,13 @@ interface Commute {
 interface CommuteCardProps {
   commutes: Commute[];
   onSave: (commutes: Commute[]) => void;
-  availableActivities: string[]; // Titres des activités déjà configurées
 }
 
 export const CommuteCard = ({
   commutes,
   onSave,
-  availableActivities,
 }: CommuteCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [newCommute, setNewCommute] = useState<Commute>({
     name: '',
@@ -35,8 +32,8 @@ export const CommuteCard = ({
   const constraintCount = commutes.length;
 
   const handleAdd = () => {
-    if (!newCommute.name || newCommute.name === 'no-activities') {
-      toast.error("Sélectionne une activité");
+    if (!newCommute.name.trim()) {
+      toast.error("Le nom du trajet est requis");
       return;
     }
     
@@ -68,52 +65,62 @@ export const CommuteCard = ({
       <Card>
         <CardContent className="p-6 space-y-4">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <CollapsibleTrigger className="w-full">
-              <div className="flex items-center justify-between w-full">
-                <div className="text-left">
-                  <Label className="text-base">Temps de trajet ({constraintCount})</Label>
-                  <p className="text-xs text-muted-foreground">Pour bloquer les temps morts imposés</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDrawer();
-                    }}
-                    size="icon" 
-                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    <Plus className="h-4 w-4" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-0 h-auto">
+                    <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                   </Button>
-                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <div>
+                  <h3 className="font-semibold">Temps de trajet</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {constraintCount === 0 ? 'Aucun trajet défini' : `${constraintCount} trajet${constraintCount > 1 ? 's' : ''}`}
+                  </p>
                 </div>
               </div>
-            </CollapsibleTrigger>
 
-            {commutes.length > 0 && (
-              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                {commutes.map((commute, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{commute.name}</span>
-                          <span className="text-muted-foreground">{commute.duration_minutes} min</span>
-                        </div>
+              <Button
+                onClick={openDrawer}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Ajouter
+              </Button>
+            </div>
+
+            <CollapsibleContent>
+              {commutes.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Aucun trajet configuré
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {commutes.map((commute, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{commute.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {commute.duration_minutes} min
+                        </p>
                       </div>
                       <Button
-                        onClick={() => handleRemove(index)}
                         variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 ml-2 text-destructive"
+                        size="sm"
+                        onClick={() => handleRemove(index)}
+                        className="h-8 w-8 p-0"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                  </div>
-                ))}
-              </CollapsibleContent>
-            )}
+                  ))}
+                </div>
+              )}
+            </CollapsibleContent>
           </Collapsible>
         </CardContent>
       </Card>
@@ -126,41 +133,24 @@ export const CommuteCard = ({
           
           <div className="px-4 space-y-4 pb-6">
             <div>
-              <Label className="text-sm">Activité / Lieu</Label>
-              <Select 
-                value={newCommute.name} 
-                onValueChange={(value) => setNewCommute({ ...newCommute, name: value })}
-              >
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue placeholder="Sélectionne une activité..." />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  {availableActivities.length > 0 ? (
-                    availableActivities.map((activity, index) => (
-                      <SelectItem key={index} value={activity}>
-                        {activity}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-activities" disabled>
-                      Aucune activité configurée
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Configure d'abord tes activités dans les autres onglets
-              </p>
-            </div>
-
-            <div>
-              <Label className="text-sm">Durée (minutes)</Label>
+              <Label htmlFor="commute-name">Nom du trajet</Label>
               <Input
+                id="commute-name"
+                placeholder="Ex: Domicile ↔ École"
+                value={newCommute.name}
+                onChange={(e) => setNewCommute({ ...newCommute, name: e.target.value })}
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label htmlFor="commute-duration">Durée (minutes)</Label>
+              <Input
+                id="commute-duration"
                 type="number"
-                min="0"
-                value={newCommute.duration_minutes || ''}
+                min="1"
+                placeholder="30"
+                value={newCommute.duration_minutes || ""}
                 onChange={(e) => setNewCommute({ ...newCommute, duration_minutes: parseInt(e.target.value) || 0 })}
-                placeholder="Temps de trajet en minutes"
                 className="mt-1.5"
               />
             </div>

@@ -8,6 +8,7 @@ import { generateOccurrences } from "@/lib/occurrence-generator";
 import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
+import { CommuteCard } from "@/components/constraints/CommuteCard";
 
 interface WorkSchedule {
   id?: string;
@@ -50,7 +51,7 @@ const Constraints = () => {
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
   
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine'>(
+  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>(
     (state.constraints.activeTab === 'autres' ? 'travail' : state.constraints.activeTab) || 'travail'
   );
   
@@ -75,6 +76,13 @@ const Constraints = () => {
     end_time: string;
   }
   const [meals, setMeals] = useState<Meal[]>([]);
+  
+  // Commute data
+  interface Commute {
+    name: string;
+    duration_minutes: number;
+  }
+  const [commutes, setCommutes] = useState<Commute[]>([]);
 
   // Filtrer et grouper les calendar_events par type
   // Note: maintenant les événements sont des occurrences individuelles, 
@@ -156,12 +164,14 @@ const Constraints = () => {
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
       const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 5;
       const loadedMeals = (constraintsProfile.meals as Meal[]) || [];
+      const loadedCommutes = (constraintsProfile.commutes as Commute[]) || [];
       
       setWakeUpTime(loadedWakeUpTime);
       setNoStudyAfter(loadedNoStudyAfter);
       setSleepHoursNeeded(loadedSleepHours);
       setMinPersonalTimePerWeek(loadedPersonalTime);
       setMeals(loadedMeals);
+      setCommutes(loadedCommutes);
     }
   }, [constraintsProfile]);
 
@@ -371,7 +381,8 @@ const Constraints = () => {
         noStudyAfter,
         sleepHoursNeeded,
         minPersonalTimePerWeek,
-        meals
+        meals,
+        commutes
       });
 
       const { data, error } = await supabase
@@ -383,6 +394,7 @@ const Constraints = () => {
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
           meals: meals as any,
+          commutes: commutes as any,
         }, {
           onConflict: 'user_id'
         })
@@ -438,6 +450,10 @@ const Constraints = () => {
     setMeals(newMeals);
   };
 
+  const handleCommutesChange = async (newCommutes: Commute[]) => {
+    setCommutes(newCommutes);
+  };
+
   // Effet pour sauvegarder automatiquement quand les valeurs changent
   useEffect(() => {
     // Ne pas sauvegarder au premier chargement
@@ -448,7 +464,7 @@ const Constraints = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, meals]);
+  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, meals, commutes]);
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
@@ -467,11 +483,12 @@ const Constraints = () => {
             { key: 'travail', label: 'Travail' },
             { key: 'activite', label: 'Activité' },
             { key: 'routine', label: 'Routine' },
+            { key: 'trajet', label: 'Trajet' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => {
-                const tabKey = tab.key as 'travail' | 'activite' | 'routine';
+                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'trajet';
                 setActiveTab(tabKey);
                 setConstraintsTab(tabKey);
               }}
@@ -517,6 +534,10 @@ const Constraints = () => {
             }}
             onMealsSave={handleMealsChange}
           />
+        )}
+
+        {activeTab === 'trajet' && (
+          <CommuteCard commutes={commutes} onSave={handleCommutesChange} />
         )}
       </div>
     </div>
