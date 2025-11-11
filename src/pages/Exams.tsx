@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, AlertTriangle, TrendingUp, CheckCircle2, Clock, Save } from "lucide-react";
+import { Plus, Calendar, AlertTriangle, TrendingUp, CheckCircle2, Clock, Save, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -32,6 +32,7 @@ const Exams = () => {
   const queryClient = useQueryClient();
   const { state, setExamsFilter } = useNavigationState();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [activeFilter, setActiveFilter] = useState<'upcoming' | 'all' | 'past' | 'high'>(state.exams.activeFilter);
   const [newExam, setNewExam] = useState({
     subject: "",
@@ -81,31 +82,67 @@ const Exams = () => {
     refetchExams();
   };
 
-  const handleAddExam = async () => {
+  const handleEditExam = (exam: Exam) => {
+    setEditingExam(exam);
+    setNewExam({
+      subject: exam.subject,
+      date: exam.date,
+      priority: exam.priority,
+      type: exam.type,
+      difficulty: exam.difficulty,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmitExam = async () => {
     if (!user || !newExam.subject || !newExam.date) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    const { error } = await supabase
-      .from('exams')
-      .insert({
-        user_id: user.id,
-        subject: newExam.subject,
-        date: newExam.date,
-        priority: newExam.priority,
-        type: newExam.type,
-        coefficient: (newExam.priority + newExam.difficulty) / 2,
-        difficulty: newExam.difficulty,
-      });
+    const examData = {
+      subject: newExam.subject,
+      date: newExam.date,
+      priority: newExam.priority,
+      type: newExam.type,
+      coefficient: (newExam.priority + newExam.difficulty) / 2,
+      difficulty: newExam.difficulty,
+    };
 
-    if (error) {
-      console.error('Error adding exam:', error);
-      toast.error("Erreur lors de l'ajout de l'examen");
-      return;
+    if (editingExam) {
+      // Mode modification
+      const { error } = await supabase
+        .from('exams')
+        .update(examData)
+        .eq('id', editingExam.id);
+
+      if (error) {
+        console.error('Error updating exam:', error);
+        toast.error("Erreur lors de la modification de l'examen");
+        return;
+      }
+      
+      toast.success("Examen modifié avec succès");
+    } else {
+      // Mode ajout
+      const { error } = await supabase
+        .from('exams')
+        .insert({
+          user_id: user.id,
+          ...examData,
+        });
+
+      if (error) {
+        console.error('Error adding exam:', error);
+        toast.error("Erreur lors de l'ajout de l'examen");
+        return;
+      }
+
+      toast.success("Examen ajouté avec succès");
     }
 
     setIsDialogOpen(false);
+    setEditingExam(null);
     setNewExam({
       subject: "",
       date: "",
@@ -200,7 +237,17 @@ const Exams = () => {
             <p className="text-sm text-muted-foreground">Visualise, priorise et prépare chaque épreuve sans stress.</p>
           </div>
           <Button
-            onClick={() => setIsDialogOpen(true)}
+            onClick={() => {
+              setEditingExam(null);
+              setNewExam({
+                subject: "",
+                date: "",
+                priority: 3,
+                type: "partiel",
+                difficulty: 3,
+              });
+              setIsDialogOpen(true);
+            }}
             size="icon"
             className="rounded-full shadow-lg"
           >
@@ -309,6 +356,15 @@ const Exams = () => {
                       <div className="flex gap-2 mt-3">
                         <Button
                           size="sm"
+                          variant="outline"
+                          onClick={() => handleEditExam(exam)}
+                          className="text-xs"
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={() => removeExam(exam.id)}
                           className="text-xs text-destructive hover:text-destructive"
@@ -325,11 +381,23 @@ const Exams = () => {
         </div>
       </div>
 
-      {/* Drawer Ajout */}
-      <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Drawer Ajout/Modification */}
+      <Drawer open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) {
+          setEditingExam(null);
+          setNewExam({
+            subject: "",
+            date: "",
+            priority: 3,
+            type: "partiel",
+            difficulty: 3,
+          });
+        }
+      }}>
         <DrawerContent className="max-h-[80vh]">
           <DrawerHeader>
-            <DrawerTitle>Nouvel examen</DrawerTitle>
+            <DrawerTitle>{editingExam ? 'Modifier l\'examen' : 'Nouvel examen'}</DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 px-4 pb-8 overflow-y-auto">
             <div>
@@ -413,9 +481,9 @@ const Exams = () => {
               </p>
             </div>
 
-            <Button onClick={handleAddExam} className="w-full" size="lg">
+            <Button onClick={handleSubmitExam} className="w-full" size="lg">
               <Save className="mr-2 h-4 w-4" />
-              Enregistrer l'examen
+              {editingExam ? 'Mettre à jour l\'examen' : 'Enregistrer l\'examen'}
             </Button>
           </div>
         </DrawerContent>
