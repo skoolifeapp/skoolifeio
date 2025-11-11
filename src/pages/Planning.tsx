@@ -68,6 +68,7 @@ const Planning = () => {
     occurrenceDate?: string; // Date de l'occurrence pour les événements récurrents
     isRecurring?: boolean; // Indique si l'événement parent est récurrent
   } | null>(null);
+  const [applyToAll, setApplyToAll] = useState(false);
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newManualEvent, setNewManualEvent] = useState<{
@@ -422,7 +423,8 @@ const Planning = () => {
     };
   };
 
-  const handleUpdateEvent = async (updateAll: boolean = false) => {
+  const handleUpdateEvent = async () => {
+    const updateAll = applyToAll;
     if (!editingEvent || !user) return;
 
     try {
@@ -504,7 +506,8 @@ const Planning = () => {
     }
   };
 
-  const handleDeleteEvent = async (deleteAll: boolean = false) => {
+  const handleDeleteEvent = async () => {
+    const deleteAll = applyToAll;
     if (!editingEvent || !user) return;
 
     try {
@@ -1614,62 +1617,43 @@ const Planning = () => {
           <DrawerFooter>
             {/* Afficher les options pour événements récurrents */}
             {editingEvent?.isRecurring && (
-              <div className="mb-3 p-3 bg-muted rounded-lg space-y-3">
-                <p className="text-sm font-semibold text-center">Cet événement se répète plusieurs fois</p>
-                
+              <div className="mb-4 space-y-3">
+                <p className="text-sm font-medium text-center">Est-ce que cela concerne :</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={() => handleUpdateEvent(false)}
-                    size="sm"
-                    className="text-xs h-auto py-3 px-2"
+                  <Button
+                    variant={!applyToAll ? "default" : "outline"}
+                    onClick={() => setApplyToAll(false)}
+                    className="w-full"
                   >
-                    <span className="text-center">Modifier<br/>cette occurrence</span>
+                    Cette occurrence
                   </Button>
-                  <Button 
-                    onClick={() => handleUpdateEvent(true)}
-                    size="sm"
-                    className="text-xs h-auto py-3 px-2"
+                  <Button
+                    variant={applyToAll ? "default" : "outline"}
+                    onClick={() => setApplyToAll(true)}
+                    className="w-full"
                   >
-                    <span className="text-center">Modifier<br/>toutes</span>
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => handleDeleteEvent(false)}
-                    size="sm"
-                    className="text-xs h-auto py-3 px-2"
-                  >
-                    <span className="text-center">Supprimer<br/>cette occurrence</span>
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => handleDeleteEvent(true)}
-                    size="sm"
-                    className="text-xs h-auto py-3 px-2"
-                  >
-                    <span className="text-center">Supprimer<br/>toutes</span>
+                    Toutes les occurrences
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Boutons standard pour événements non récurrents */}
-            {!editingEvent?.isRecurring && (
-              <div className="flex gap-2 w-full">
-                <Button 
-                  variant="destructive" 
-                  onClick={() => handleDeleteEvent(false)}
-                  className="flex-1"
-                >
-                  Supprimer
-                </Button>
-                <Button 
-                  onClick={() => handleUpdateEvent(false)}
-                  className="flex-1"
-                >
-                  Enregistrer
-                </Button>
-              </div>
-            )}
+            {/* Boutons d'action */}
+            <div className="flex gap-2 w-full">
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteEvent}
+                className="flex-1"
+              >
+                Supprimer
+              </Button>
+              <Button 
+                onClick={handleUpdateEvent}
+                className="flex-1"
+              >
+                Enregistrer
+              </Button>
+            </div>
 
             <DrawerClose asChild>
               <Button variant="outline" className="w-full">Annuler</Button>
