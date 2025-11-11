@@ -33,9 +33,10 @@ export const SleepConstraintCard = ({
   const hasConstraints = wakeUpTime !== '07:00' || noStudyAfter !== '22:00' || sleepHoursNeeded !== 8;
   const constraintCount = hasConstraints ? 1 : 0;
 
-  const handleSave = () => {
-    onSave(editData);
+  const handleSave = async () => {
+    await onSave(editData);
     setIsDrawerOpen(false);
+    setIsOpen(true);
     toast.success("Rythme de sommeil enregistré");
   };
 

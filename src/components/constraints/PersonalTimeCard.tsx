@@ -24,9 +24,10 @@ export const PersonalTimeCard = ({
   const hasConstraint = minPersonalTimePerWeek > 0;
   const constraintCount = hasConstraint ? 1 : 0;
 
-  const handleSave = () => {
-    onSave(editValue);
+  const handleSave = async () => {
+    await onSave(editValue);
     setIsDrawerOpen(false);
+    setIsOpen(true);
     toast.success("Temps personnel enregistré");
   };
 

@@ -361,32 +361,45 @@ const Constraints = () => {
   const saveProfile = async () => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return;
-      
-      const profileData = {
-        user_id: userId,
-        wake_up_time: wakeUpTime,
-        no_study_after: noStudyAfter,
-        sleep_hours_needed: sleepHoursNeeded,
-        min_personal_time_per_week: minPersonalTimePerWeek,
-        meals: meals as any,
-      };
-
-      const { error } = await supabase
-        .from('user_constraints_profile')
-        .upsert(profileData);
-      
-      if (error) {
-        console.error('Error saving profile:', error);
-        toast.error("Erreur lors de l'enregistrement du profil");
+      if (!userId) {
+        toast.error("Utilisateur non connecté");
         return;
       }
       
+      console.log('🔵 Sauvegarde profil:', {
+        wakeUpTime,
+        noStudyAfter,
+        sleepHoursNeeded,
+        minPersonalTimePerWeek,
+        meals
+      });
+
+      const { data, error } = await supabase
+        .from('user_constraints_profile')
+        .upsert({
+          user_id: userId,
+          wake_up_time: wakeUpTime,
+          no_study_after: noStudyAfter,
+          sleep_hours_needed: sleepHoursNeeded,
+          min_personal_time_per_week: minPersonalTimePerWeek,
+          meals: meals as any,
+        }, {
+          onConflict: 'user_id'
+        })
+        .select();
+      
+      if (error) {
+        console.error('❌ Error saving profile:', error);
+        toast.error("Erreur lors de l'enregistrement");
+        return;
+      }
+      
+      console.log('✅ Profil sauvegardé:', data);
       await refetchAll();
-      toast.success("Profil enregistré");
+      
     } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error("Erreur lors de l'enregistrement du profil");
+      console.error('❌ Error saving profile:', error);
+      toast.error("Erreur lors de l'enregistrement");
     }
   };
 
@@ -407,32 +420,35 @@ const Constraints = () => {
 
   const handleWakeUpTimeChange = async (time: string) => {
     setWakeUpTime(time);
-    await saveProfile();
   };
 
   const handleNoStudyAfterChange = async (time: string) => {
     setNoStudyAfter(time);
-    await saveProfile();
   };
 
   const handleSleepHoursChange = async (hours: number) => {
     setSleepHoursNeeded(hours);
-    await saveProfile();
   };
 
   const handleMinPersonalTimeChange = async (hours: number) => {
     setMinPersonalTimePerWeek(hours);
-    setTimeout(async () => {
-      await saveProfile();
-    }, 100);
   };
 
   const handleMealsChange = async (newMeals: Meal[]) => {
     setMeals(newMeals);
-    setTimeout(async () => {
-      await saveProfile();
-    }, 100);
   };
+
+  // Effet pour sauvegarder automatiquement quand les valeurs changent
+  useEffect(() => {
+    // Ne pas sauvegarder au premier chargement
+    if (!constraintsProfile) return;
+    
+    const timer = setTimeout(() => {
+      saveProfile();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, meals]);
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
@@ -495,15 +511,9 @@ const Constraints = () => {
               setWakeUpTime(data.wakeUpTime);
               setNoStudyAfter(data.noStudyAfter);
               setSleepHoursNeeded(data.sleepHoursNeeded);
-              setTimeout(async () => {
-                await saveProfile();
-              }, 100);
             }}
             onPersonalTimeSave={async (value) => {
               setMinPersonalTimePerWeek(value);
-              setTimeout(async () => {
-                await saveProfile();
-              }, 100);
             }}
             onMealsSave={handleMealsChange}
           />
