@@ -226,6 +226,7 @@ export type Database = {
       user_constraints_profile: {
         Row: {
           created_at: string
+          id: string
           min_personal_time_per_week: number
           no_study_after: string
           sleep_hours_needed: number
@@ -235,6 +236,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          id?: string
           min_personal_time_per_week?: number
           no_study_after?: string
           sleep_hours_needed?: number
@@ -244,6 +246,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          id?: string
           min_personal_time_per_week?: number
           no_study_after?: string
           sleep_hours_needed?: number
@@ -280,6 +283,36 @@ export type Database = {
           start_time?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_rest: {
+        Row: {
+          created_at: string
+          min_personal_time_per_week: number
+          no_study_after: string
+          sleep_hours_needed: number
+          updated_at: string
+          user_id: string
+          wake_up_time: string
+        }
+        Insert: {
+          created_at?: string
+          min_personal_time_per_week?: number
+          no_study_after?: string
+          sleep_hours_needed?: number
+          updated_at?: string
+          user_id: string
+          wake_up_time?: string
+        }
+        Update: {
+          created_at?: string
+          min_personal_time_per_week?: number
+          no_study_after?: string
+          sleep_hours_needed?: number
+          updated_at?: string
+          user_id?: string
+          wake_up_time?: string
         }
         Relationships: []
       }
