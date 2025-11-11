@@ -636,7 +636,7 @@ const Constraints = () => {
 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Tabs */}
-        <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {[
             { key: 'travail', label: 'Travail' },
             { key: 'activite', label: 'Activité' },
@@ -651,7 +651,7 @@ const Constraints = () => {
                 setActiveTab(tabKey);
                 setConstraintsTab(tabKey);
               }}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
+              className={`px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
