@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, Edit, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Meal {
@@ -67,124 +68,119 @@ export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
   };
 
   return (
-    <Card className="p-6">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold">Repas</h3>
-              {constraintCount > 0 && (
-                <span className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                  {constraintCount}
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Définis tes tranches horaires de repas
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Ajouter un repas</DrawerTitle>
-                </DrawerHeader>
-                <div className="p-4 space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Type de repas</label>
-                    <Select
-                      value={newMeal.type}
-                      onValueChange={(value) => setNewMeal({ ...newMeal, type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionne un repas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MEAL_TYPES.map((meal) => (
-                          <SelectItem key={meal.value} value={meal.value}>
-                            {meal.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Début</label>
-                      <Input
-                        type="time"
-                        value={newMeal.start_time}
-                        onChange={(e) => setNewMeal({ ...newMeal, start_time: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Fin</label>
-                      <Input
-                        type="time"
-                        value={newMeal.end_time}
-                        onChange={(e) => setNewMeal({ ...newMeal, end_time: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleAdd} className="flex-1">
-                      Enregistrer
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsDrawerOpen(false)}
-                      className="flex-1"
-                    >
-                      Annuler
-                    </Button>
-                  </div>
+    <>
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="text-left">
+                  <Label className="text-base">Repas ({constraintCount})</Label>
+                  <p className="text-xs text-muted-foreground">Définis tes tranches horaires de repas</p>
                 </div>
-              </DrawerContent>
-            </Drawer>
-
-            {constraintCount > 0 && (
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </CollapsibleTrigger>
-            )}
-          </div>
-        </div>
-
-        {meals.length > 0 && (
-          <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-            {meals.map((meal, index) => (
-              <div key={index} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium">{getMealLabel(meal.type)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {meal.start_time} - {meal.end_time}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(index)}
-                    className="text-destructive hover:text-destructive"
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDrawerOpen(true);
+                    }}
+                    size="icon" 
+                    className="rounded-full h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </Button>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
               </div>
-            ))}
-          </CollapsibleContent>
-        )}
-      </Collapsible>
-    </Card>
+            </CollapsibleTrigger>
+
+            {meals.length > 0 && (
+              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
+                {meals.map((meal, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium">{getMealLabel(meal.type)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {meal.start_time} - {meal.end_time}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        </CardContent>
+      </Card>
+
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Ajouter un repas</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 space-y-4 pb-6">
+            <div>
+              <Label className="text-sm">Type de repas</Label>
+              <Select
+                value={newMeal.type}
+                onValueChange={(value) => setNewMeal({ ...newMeal, type: value })}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Sélectionne un repas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEAL_TYPES.map((meal) => (
+                    <SelectItem key={meal.value} value={meal.value}>
+                      {meal.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Début</Label>
+                <Input
+                  type="time"
+                  value={newMeal.start_time}
+                  onChange={(e) => setNewMeal({ ...newMeal, start_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Fin</Label>
+                <Input
+                  type="time"
+                  value={newMeal.end_time}
+                  onChange={(e) => setNewMeal({ ...newMeal, end_time: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button onClick={handleAdd} className="w-full">
+              Enregistrer
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full">
+                Annuler
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
