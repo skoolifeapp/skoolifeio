@@ -29,7 +29,8 @@ interface RoutineMoment {
 }
 
 interface Meal {
-  type: string;
+  id?: string;
+  meal_type: string;
   start_time: string;
   end_time: string;
 }
@@ -44,7 +45,8 @@ interface RoutineTabProps {
   meals: Meal[];
   onSleepConstraintSave: (data: { wakeUpTime: string; noStudyAfter: string; sleepHoursNeeded: number }) => void;
   onPersonalTimeSave: (value: number) => void;
-  onMealsSave: (meals: Meal[]) => void;
+  onMealsSave: (meal: Meal) => Promise<void>;
+  onMealsDelete: (id: string) => Promise<void>;
 }
 
 export const RoutineTab = ({
@@ -57,7 +59,8 @@ export const RoutineTab = ({
   meals,
   onSleepConstraintSave,
   onPersonalTimeSave,
-  onMealsSave
+  onMealsSave,
+  onMealsDelete
 }: RoutineTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMomentsOpen, setIsMomentsOpen] = useState(false);
@@ -123,7 +126,7 @@ export const RoutineTab = ({
       />
 
       {/* Meals Card */}
-      <MealsCard meals={meals} onSave={onMealsSave} />
+      <MealsCard meals={meals} onSave={onMealsSave} onDelete={onMealsDelete} />
 
       {/* Moments réguliers importants */}
       <Card>

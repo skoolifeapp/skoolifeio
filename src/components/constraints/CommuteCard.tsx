@@ -10,32 +10,35 @@ import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Commute {
-  name: string;
+  id?: string;
+  destination: string;
   duration_minutes: number;
 }
 
 interface CommuteCardProps {
   commutes: Commute[];
-  onSave: (commutes: Commute[]) => void;
+  onSave: (commute: Commute) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
   availableDestinations: string[];
 }
 
 export const CommuteCard = ({
   commutes,
   onSave,
+  onDelete,
   availableDestinations,
 }: CommuteCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [newCommute, setNewCommute] = useState<Commute>({
-    name: '',
+    destination: '',
     duration_minutes: 0,
   });
 
   const constraintCount = commutes.length;
 
-  const handleAdd = () => {
-    if (!newCommute.name || newCommute.name === 'no-destinations') {
+  const handleAdd = async () => {
+    if (!newCommute.destination || newCommute.destination === 'no-destinations') {
       toast.error("Sélectionne une destination");
       return;
     }
@@ -45,23 +48,18 @@ export const CommuteCard = ({
       return;
     }
 
-    const updatedCommutes = [...commutes, newCommute];
-    onSave(updatedCommutes);
-    setNewCommute({ name: '', duration_minutes: 0 });
+    await onSave(newCommute);
+    setNewCommute({ destination: '', duration_minutes: 0 });
     setIsDrawerOpen(false);
     setIsOpen(true);
     toast.success("Trajet ajouté");
   };
 
-  const handleRemove = (index: number) => {
-    onSave(commutes.filter((_, i) => i !== index));
+  const handleRemove = async (id: string) => {
+    await onDelete(id);
     toast.success("Trajet supprimé");
   };
 
-  const openDrawer = () => {
-    setNewCommute({ name: '', duration_minutes: 0 });
-    setIsDrawerOpen(true);
-  };
 
   return (
     <>
@@ -96,7 +94,7 @@ export const CommuteCard = ({
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-medium">{commute.name}</p>
+                        <p className="font-medium">{commute.destination}</p>
                         <p className="text-sm text-muted-foreground">
                           {commute.duration_minutes} min
                         </p>
@@ -104,7 +102,7 @@ export const CommuteCard = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRemove(index)}
+                        onClick={() => commute.id && handleRemove(commute.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -128,8 +126,8 @@ export const CommuteCard = ({
             <div>
               <Label className="text-sm">Destination</Label>
               <Select
-                value={newCommute.name}
-                onValueChange={(value) => setNewCommute({ ...newCommute, name: value })}
+                value={newCommute.destination}
+                onValueChange={(value) => setNewCommute({ ...newCommute, destination: value })}
               >
                 <SelectTrigger className="mt-1.5">
                   <SelectValue placeholder="Sélectionne une destination" />

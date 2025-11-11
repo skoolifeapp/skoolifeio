@@ -10,14 +10,16 @@ import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Meal {
-  type: string;
+  id?: string;
+  meal_type: string;
   start_time: string;
   end_time: string;
 }
 
 interface MealsCardProps {
   meals: Meal[];
-  onSave: (meals: Meal[]) => void;
+  onSave: (meal: Meal) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const MEAL_TYPES = [
@@ -27,19 +29,19 @@ const MEAL_TYPES = [
   { value: 'dinner', label: 'Dîner' },
 ];
 
-export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
+export const MealsCard = ({ meals, onSave, onDelete }: MealsCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [newMeal, setNewMeal] = useState<Meal>({
-    type: '',
+    meal_type: '',
     start_time: '',
     end_time: '',
   });
 
   const constraintCount = meals.length;
 
-  const handleAdd = () => {
-    if (!newMeal.type) {
+  const handleAdd = async () => {
+    if (!newMeal.meal_type) {
       toast.error("Sélectionne un type de repas");
       return;
     }
@@ -49,17 +51,15 @@ export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
       return;
     }
 
-    const updatedMeals = [...meals, newMeal];
-    onSave(updatedMeals);
-    setNewMeal({ type: '', start_time: '', end_time: '' });
+    await onSave(newMeal);
+    setNewMeal({ meal_type: '', start_time: '', end_time: '' });
     setIsDrawerOpen(false);
     setIsOpen(true);
     toast.success("Repas ajouté");
   };
 
-  const handleDelete = (index: number) => {
-    const updatedMeals = meals.filter((_, i) => i !== index);
-    onSave(updatedMeals);
+  const handleDelete = async (id: string) => {
+    await onDelete(id);
     toast.success("Repas supprimé");
   };
 
@@ -100,7 +100,7 @@ export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-medium">{getMealLabel(meal.type)}</p>
+                        <p className="font-medium">{getMealLabel(meal.meal_type)}</p>
                         <p className="text-sm text-muted-foreground">
                           {meal.start_time} - {meal.end_time}
                         </p>
@@ -108,7 +108,7 @@ export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(index)}
+                        onClick={() => meal.id && handleDelete(meal.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -131,8 +131,8 @@ export const MealsCard = ({ meals, onSave }: MealsCardProps) => {
             <div>
               <Label className="text-sm">Type de repas</Label>
               <Select
-                value={newMeal.type}
-                onValueChange={(value) => setNewMeal({ ...newMeal, type: value })}
+                value={newMeal.meal_type}
+                onValueChange={(value) => setNewMeal({ ...newMeal, meal_type: value })}
               >
                 <SelectTrigger className="mt-1.5">
                   <SelectValue placeholder="Sélectionne un repas" />

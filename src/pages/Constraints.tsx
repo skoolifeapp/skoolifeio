@@ -47,6 +47,8 @@ const Constraints = () => {
   const { 
     constraintsProfile, 
     calendarEvents,
+    userMeals,
+    userCommutes,
     refetchAll
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
@@ -69,20 +71,6 @@ const Constraints = () => {
   const [noStudyAfter, setNoStudyAfter] = useState('22:00');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(5);
-  
-  interface Meal {
-    type: string;
-    start_time: string;
-    end_time: string;
-  }
-  const [meals, setMeals] = useState<Meal[]>([]);
-  
-  // Commute data
-  interface Commute {
-    name: string;
-    duration_minutes: number;
-  }
-  const [commutes, setCommutes] = useState<Commute[]>([]);
 
   // Filtrer et grouper les calendar_events par type
   // Note: maintenant les événements sont des occurrences individuelles, 
@@ -163,15 +151,11 @@ const Constraints = () => {
       const loadedNoStudyAfter = constraintsProfile.no_study_after || '22:00';
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
       const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 5;
-      const loadedMeals = (constraintsProfile.meals as Meal[]) || [];
-      const loadedCommutes = (constraintsProfile.commutes as Commute[]) || [];
       
       setWakeUpTime(loadedWakeUpTime);
       setNoStudyAfter(loadedNoStudyAfter);
       setSleepHoursNeeded(loadedSleepHours);
       setMinPersonalTimePerWeek(loadedPersonalTime);
-      setMeals(loadedMeals);
-      setCommutes(loadedCommutes);
     }
   }, [constraintsProfile]);
 
@@ -380,9 +364,7 @@ const Constraints = () => {
         wakeUpTime,
         noStudyAfter,
         sleepHoursNeeded,
-        minPersonalTimePerWeek,
-        meals,
-        commutes
+        minPersonalTimePerWeek
       });
 
       const { data, error } = await supabase
@@ -393,8 +375,6 @@ const Constraints = () => {
           no_study_after: noStudyAfter,
           sleep_hours_needed: sleepHoursNeeded,
           min_personal_time_per_week: minPersonalTimePerWeek,
-          meals: meals as any,
-          commutes: commutes as any,
         }, {
           onConflict: 'user_id'
         })
@@ -446,12 +426,96 @@ const Constraints = () => {
     setMinPersonalTimePerWeek(hours);
   };
 
-  const handleMealsChange = async (newMeals: Meal[]) => {
-    setMeals(newMeals);
+  // Meals handlers
+  const handleMealAdd = async (meal: any) => {
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+
+      const { error } = await supabase
+        .from('user_meals')
+        .insert({
+          user_id: userId,
+          ...meal
+        });
+
+      if (error) {
+        console.error('Error adding meal:', error);
+        toast.error("Erreur lors de l'ajout du repas");
+        return;
+      }
+
+      await refetchAll();
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      toast.error("Erreur lors de l'ajout du repas");
+    }
   };
 
-  const handleCommutesChange = async (newCommutes: Commute[]) => {
-    setCommutes(newCommutes);
+  const handleMealDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_meals')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting meal:', error);
+        toast.error("Erreur lors de la suppression du repas");
+        return;
+      }
+
+      await refetchAll();
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+      toast.error("Erreur lors de la suppression du repas");
+    }
+  };
+
+  // Commutes handlers
+  const handleCommuteAdd = async (commute: any) => {
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return;
+
+      const { error } = await supabase
+        .from('user_commutes')
+        .insert({
+          user_id: userId,
+          ...commute
+        });
+
+      if (error) {
+        console.error('Error adding commute:', error);
+        toast.error("Erreur lors de l'ajout du trajet");
+        return;
+      }
+
+      await refetchAll();
+    } catch (error) {
+      console.error('Error adding commute:', error);
+      toast.error("Erreur lors de l'ajout du trajet");
+    }
+  };
+
+  const handleCommuteDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_commutes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting commute:', error);
+        toast.error("Erreur lors de la suppression du trajet");
+        return;
+      }
+
+      await refetchAll();
+    } catch (error) {
+      console.error('Error deleting commute:', error);
+      toast.error("Erreur lors de la suppression du trajet");
+    }
   };
 
   // Effet pour sauvegarder automatiquement quand les valeurs changent
@@ -464,7 +528,7 @@ const Constraints = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek, meals, commutes]);
+  }, [wakeUpTime, noStudyAfter, sleepHoursNeeded, minPersonalTimePerWeek]);
 
   return (
     <div className="min-h-screen bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] pt-safe px-safe">
@@ -523,7 +587,7 @@ const Constraints = () => {
             noStudyAfter={noStudyAfter}
             sleepHoursNeeded={sleepHoursNeeded}
             minPersonalTimePerWeek={minPersonalTimePerWeek}
-            meals={meals}
+            meals={userMeals}
             onSleepConstraintSave={async (data) => {
               setWakeUpTime(data.wakeUpTime);
               setNoStudyAfter(data.noStudyAfter);
@@ -532,14 +596,16 @@ const Constraints = () => {
             onPersonalTimeSave={async (value) => {
               setMinPersonalTimePerWeek(value);
             }}
-            onMealsSave={handleMealsChange}
+            onMealsSave={handleMealAdd}
+            onMealsDelete={handleMealDelete}
           />
         )}
 
         {activeTab === 'trajet' && (
           <CommuteCard 
-            commutes={commutes} 
-            onSave={handleCommutesChange}
+            commutes={userCommutes} 
+            onSave={handleCommuteAdd}
+            onDelete={handleCommuteDelete}
             availableDestinations={[
               ...workSchedules.map(w => w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')),
               ...activities.map(a => a.title)

@@ -196,11 +196,36 @@ export type Database = {
           },
         ]
       }
+      user_commutes: {
+        Row: {
+          created_at: string
+          destination: string
+          duration_minutes: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          duration_minutes: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          duration_minutes?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_constraints_profile: {
         Row: {
-          commutes: Json | null
           created_at: string
-          meals: Json | null
           min_personal_time_per_week: number
           no_study_after: string
           sleep_hours_needed: number
@@ -209,9 +234,7 @@ export type Database = {
           wake_up_time: string
         }
         Insert: {
-          commutes?: Json | null
           created_at?: string
-          meals?: Json | null
           min_personal_time_per_week?: number
           no_study_after?: string
           sleep_hours_needed?: number
@@ -220,15 +243,43 @@ export type Database = {
           wake_up_time?: string
         }
         Update: {
-          commutes?: Json | null
           created_at?: string
-          meals?: Json | null
           min_personal_time_per_week?: number
           no_study_after?: string
           sleep_hours_needed?: number
           updated_at?: string
           user_id?: string
           wake_up_time?: string
+        }
+        Relationships: []
+      }
+      user_meals: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          meal_type: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          meal_type: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          meal_type?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

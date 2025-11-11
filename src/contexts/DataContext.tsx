@@ -8,6 +8,8 @@ interface DataContextType {
   calendarEvents: any[];
   revisionSessions: any[];
   constraintsProfile: any;
+  userMeals: any[];
+  userCommutes: any[];
   isLoading: boolean;
   refetchAll: () => void;
 }
@@ -73,8 +75,39 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         .from("user_constraints_profile")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       return data;
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Précharger les repas
+  const { data: userMeals = [] } = useQuery({
+    queryKey: ["user_meals", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("user_meals")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("start_time", { ascending: true });
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Précharger les trajets
+  const { data: userCommutes = [] } = useQuery({
+    queryKey: ["user_commutes", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("user_commutes")
+        .select("*")
+        .eq("user_id", user.id);
+      return data || [];
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
@@ -85,6 +118,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
     queryClient.invalidateQueries({ queryKey: ["revision_sessions"] });
     queryClient.invalidateQueries({ queryKey: ["constraints_profile"] });
+    queryClient.invalidateQueries({ queryKey: ["user_meals"] });
+    queryClient.invalidateQueries({ queryKey: ["user_commutes"] });
   };
 
   const isLoading = !user;
@@ -96,6 +131,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         calendarEvents,
         revisionSessions,
         constraintsProfile,
+        userMeals,
+        userCommutes,
         isLoading,
         refetchAll,
       }}
