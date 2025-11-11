@@ -9,9 +9,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 
 interface RevisionTabProps {
-  maxSessionsPerDay: number;
-  maxSessionDurationMinutes: number;
-  weeklyHoursGoal: number;
+  maxSessionsPerDay: number | null;
+  maxSessionDurationMinutes: number | null;
+  weeklyHoursGoal: number | null;
   onSave: (data: { maxSessionsPerDay?: number; maxSessionDurationMinutes?: number; weeklyHoursGoal?: number }) => void;
 }
 
@@ -24,21 +24,21 @@ export const RevisionTab = ({
   // Sessions per day
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   const [isSessionsDrawerOpen, setIsSessionsDrawerOpen] = useState(false);
-  const [tempMaxSessions, setTempMaxSessions] = useState(maxSessionsPerDay);
+  const [tempMaxSessions, setTempMaxSessions] = useState(maxSessionsPerDay ?? 2);
 
   // Duration per session
   const [isDurationOpen, setIsDurationOpen] = useState(false);
   const [isDurationDrawerOpen, setIsDurationDrawerOpen] = useState(false);
-  const [tempMaxDuration, setTempMaxDuration] = useState(maxSessionDurationMinutes);
+  const [tempMaxDuration, setTempMaxDuration] = useState(maxSessionDurationMinutes ?? 90);
 
   // Weekly goal
   const [isWeeklyGoalOpen, setIsWeeklyGoalOpen] = useState(false);
   const [isWeeklyGoalDrawerOpen, setIsWeeklyGoalDrawerOpen] = useState(false);
-  const [tempWeeklyGoal, setTempWeeklyGoal] = useState(weeklyHoursGoal);
+  const [tempWeeklyGoal, setTempWeeklyGoal] = useState(weeklyHoursGoal ?? 10);
 
-  const hasSessionsConstraint = maxSessionsPerDay !== 2;
-  const hasDurationConstraint = maxSessionDurationMinutes !== 90;
-  const hasWeeklyGoalConstraint = weeklyHoursGoal !== 10;
+  const hasSessionsConstraint = maxSessionsPerDay !== null;
+  const hasDurationConstraint = maxSessionDurationMinutes !== null;
+  const hasWeeklyGoalConstraint = weeklyHoursGoal !== null;
 
   const handleSessionsSave = async () => {
     onSave({ maxSessionsPerDay: tempMaxSessions });
@@ -62,17 +62,17 @@ export const RevisionTab = ({
   };
 
   const openSessionsDrawer = () => {
-    setTempMaxSessions(maxSessionsPerDay);
+    setTempMaxSessions(maxSessionsPerDay ?? 2);
     setIsSessionsDrawerOpen(true);
   };
 
   const openDurationDrawer = () => {
-    setTempMaxDuration(maxSessionDurationMinutes);
+    setTempMaxDuration(maxSessionDurationMinutes ?? 90);
     setIsDurationDrawerOpen(true);
   };
 
   const openWeeklyGoalDrawer = () => {
-    setTempWeeklyGoal(weeklyHoursGoal);
+    setTempWeeklyGoal(weeklyHoursGoal ?? 10);
     setIsWeeklyGoalDrawerOpen(true);
   };
 
@@ -105,14 +105,16 @@ export const RevisionTab = ({
                 </div>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Maximum de sessions</span>
-                    <span className="font-medium">{maxSessionsPerDay} {maxSessionsPerDay > 1 ? 'sessions' : 'session'}</span>
+              {hasSessionsConstraint && (
+                <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Maximum de sessions</span>
+                      <span className="font-medium">{maxSessionsPerDay} {maxSessionsPerDay! > 1 ? 'sessions' : 'session'}</span>
+                    </div>
                   </div>
-                </div>
-              </CollapsibleContent>
+                </CollapsibleContent>
+              )}
             </Collapsible>
           </CardContent>
         </Card>
@@ -143,14 +145,16 @@ export const RevisionTab = ({
                 </div>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Durée maximale</span>
-                    <span className="font-medium">{maxSessionDurationMinutes} minutes</span>
+              {hasDurationConstraint && (
+                <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Durée maximale</span>
+                      <span className="font-medium">{maxSessionDurationMinutes} minutes</span>
+                    </div>
                   </div>
-                </div>
-              </CollapsibleContent>
+                </CollapsibleContent>
+              )}
             </Collapsible>
           </CardContent>
         </Card>
@@ -181,14 +185,16 @@ export const RevisionTab = ({
                 </div>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Objectif par semaine</span>
-                    <span className="font-medium">{weeklyHoursGoal}h</span>
+              {hasWeeklyGoalConstraint && (
+                <CollapsibleContent className="space-y-3 pt-4 animate-accordion-down">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Objectif par semaine</span>
+                      <span className="font-medium">{weeklyHoursGoal}h</span>
+                    </div>
                   </div>
-                </div>
-              </CollapsibleContent>
+                </CollapsibleContent>
+              )}
             </Collapsible>
           </CardContent>
         </Card>

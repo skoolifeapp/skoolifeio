@@ -72,9 +72,9 @@ const Constraints = () => {
   const [noStudyAfter, setNoStudyAfter] = useState('');
   const [sleepHoursNeeded, setSleepHoursNeeded] = useState(8);
   const [minPersonalTimePerWeek, setMinPersonalTimePerWeek] = useState(0);
-  const [maxSessionsPerDay, setMaxSessionsPerDay] = useState(2);
-  const [maxSessionDurationMinutes, setMaxSessionDurationMinutes] = useState(90);
-  const [weeklyHoursGoal, setWeeklyHoursGoal] = useState(10);
+  const [maxSessionsPerDay, setMaxSessionsPerDay] = useState<number | null>(null);
+  const [maxSessionDurationMinutes, setMaxSessionDurationMinutes] = useState<number | null>(null);
+  const [weeklyHoursGoal, setWeeklyHoursGoal] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Filtrer et grouper les calendar_events par type
@@ -158,9 +158,9 @@ const Constraints = () => {
       const loadedNoStudyAfter = constraintsProfile.no_study_after || '';
       const loadedSleepHours = constraintsProfile.sleep_hours_needed || 8;
       const loadedPersonalTime = constraintsProfile.min_personal_time_per_week || 0;
-      const loadedMaxSessions = constraintsProfile.max_sessions_per_day || 2;
-      const loadedMaxDuration = constraintsProfile.max_session_duration_minutes || 90;
-      const loadedWeeklyGoal = constraintsProfile.weekly_hours_goal || 10;
+      const loadedMaxSessions = constraintsProfile.max_sessions_per_day ?? null;
+      const loadedMaxDuration = constraintsProfile.max_session_duration_minutes ?? null;
+      const loadedWeeklyGoal = constraintsProfile.weekly_hours_goal ?? null;
       
       setWakeUpTime(loadedWakeUpTime);
       setNoStudyAfter(loadedNoStudyAfter);
