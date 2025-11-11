@@ -86,7 +86,7 @@ export const RevisionTab = ({
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between w-full">
                   <div className="text-left">
-                    <Label className="text-base">Sessions par jour (0)</Label>
+                    <Label className="text-base">Sessions par jour</Label>
                     <p className="text-xs text-muted-foreground">Nombre maximum de sessions de révision par jour</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export const RevisionTab = ({
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between w-full">
                   <div className="text-left">
-                    <Label className="text-base">Durée par session (0)</Label>
+                    <Label className="text-base">Durée par session</Label>
                     <p className="text-xs text-muted-foreground">Durée maximum d'une session de révision</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export const RevisionTab = ({
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between w-full">
                   <div className="text-left">
-                    <Label className="text-base">Objectif hebdomadaire (0)</Label>
+                    <Label className="text-base">Objectif hebdomadaire</Label>
                     <p className="text-xs text-muted-foreground">Nombre d'heures de révision par semaine</p>
                   </div>
                   <div className="flex items-center gap-2">
