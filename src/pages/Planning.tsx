@@ -367,9 +367,16 @@ const Planning = () => {
   };
 
   // Get events for selected day
-  const dayEvents = importedEvents.filter(event => 
+  const daySchoolEvents = importedEvents.filter(event => 
     isSameDay(new Date(event.startDate), selectedDate)
   );
+
+  // Get manual events for selected day by source
+  const dayManualEvents = (calendarEvents || [])
+    .filter(e => 
+      !['work', 'sport', 'other'].includes(e.source) &&
+      format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr
+    );
 
   // Get revision sessions for selected day
   const dayRevisionSessions = revisionSessions.filter(session => 
@@ -762,7 +769,7 @@ const Planning = () => {
 
               {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
+                {daySchoolEvents.length === 0 && dayManualEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -779,8 +786,8 @@ const Planning = () => {
                         index: number;
                       }> = [];
 
-                      // Add calendar events
-                      dayEvents.forEach((event, index) => {
+                      // Add school calendar events
+                      daySchoolEvents.forEach((event, index) => {
                         const start = new Date(event.startDate);
                         const end = new Date(event.endDate);
                         const startHour = start.getHours();
@@ -794,6 +801,36 @@ const Planning = () => {
                         allEvents.push({
                           type: 'calendar',
                           data: event,
+                          startMinutes: (adjustedStartHour * 60) + startMinute,
+                          endMinutes: (adjustedEndHour * 60) + endMinute,
+                          index
+                        });
+                      });
+
+                      // Add manual events (work/sport/other added manually)
+                      dayManualEvents.forEach((event, index) => {
+                        const start = new Date(event.start_date);
+                        const end = new Date(event.end_date);
+                        const startHour = start.getHours();
+                        const startMinute = start.getMinutes();
+                        const endHour = end.getHours();
+                        const endMinute = end.getMinutes();
+                        
+                        const adjustedStartHour = startHour >= START_HOUR ? startHour - START_HOUR : startHour + 24 - START_HOUR;
+                        const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
+                        
+                        // Map source to type for consistent rendering
+                        let eventType: 'work' | 'activity' | 'routine' | 'calendar' = 'calendar';
+                        if (event.source === 'work') eventType = 'work';
+                        else if (event.source === 'sport') eventType = 'activity';
+                        else if (event.source === 'other') eventType = 'routine';
+                        
+                        allEvents.push({
+                          type: eventType,
+                          data: {
+                            ...event,
+                            title: event.title || event.summary,
+                          },
                           startMinutes: (adjustedStartHour * 60) + startMinute,
                           endMinutes: (adjustedEndHour * 60) + endMinute,
                           index
