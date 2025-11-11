@@ -51,6 +51,7 @@ export const WorkTab = ({
   const [isOtherOpen, setIsOtherOpen] = useState(false);
 
   const [newAlternance, setNewAlternance] = useState<Partial<WorkSchedule>>({
+    title: '',
     days: [],
     start_time: '09:00',
     end_time: '17:00',
@@ -62,6 +63,7 @@ export const WorkTab = ({
   });
 
   const [newJob, setNewJob] = useState<Partial<WorkSchedule>>({
+    title: '',
     days: [],
     start_time: '09:00',
     end_time: '17:00',
@@ -80,8 +82,12 @@ export const WorkTab = ({
   const otherSchedules = workSchedules.filter(s => s.type === 'other');
 
   const addAlternance = async () => {
+    if (!newAlternance.title?.trim()) {
+      return; // Ne pas ajouter si pas de titre
+    }
     const schedule: WorkSchedule = {
       type: 'alternance',
+      title: newAlternance.title,
       days: newAlternance.days || [],
       start_time: newAlternance.start_time || '09:00',
       end_time: newAlternance.end_time || '17:00',
@@ -93,12 +99,16 @@ export const WorkTab = ({
     };
     onWorkSchedulesChange([...workSchedules, schedule]);
     setIsAlternanceDialogOpen(false);
-    setNewAlternance({ days: [], start_time: '09:00', end_time: '17:00', location: '', frequency: 'weekly', alternance_rhythm: '1sem_1sem', start_date: '', company_name: '' });
+    setNewAlternance({ title: '', days: [], start_time: '09:00', end_time: '17:00', location: '', frequency: 'weekly', alternance_rhythm: '1sem_1sem', start_date: '', company_name: '' });
   };
 
   const addJob = async () => {
+    if (!newJob.title?.trim()) {
+      return; // Ne pas ajouter si pas de titre
+    }
     const schedule: WorkSchedule = {
       type: 'job',
+      title: newJob.title,
       days: newJob.days || [],
       start_time: newJob.start_time || '09:00',
       end_time: newJob.end_time || '17:00',
@@ -107,7 +117,7 @@ export const WorkTab = ({
     };
     onWorkSchedulesChange([...workSchedules, schedule]);
     setIsJobDialogOpen(false);
-    setNewJob({ days: [], start_time: '09:00', end_time: '17:00', location: '', hours_per_week: 0 });
+    setNewJob({ title: '', days: [], start_time: '09:00', end_time: '17:00', location: '', hours_per_week: 0 });
   };
 
   const addOther = async () => {
@@ -195,6 +205,16 @@ export const WorkTab = ({
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
                     <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+                    <div>
+                      <Label className="text-sm">Nom de l'alternance</Label>
+                      <Input
+                        value={schedule.title || ''}
+                        onChange={(e) => updateSchedule(globalIdx, { title: e.target.value })}
+                        placeholder="Nom de l'alternance"
+                        className="mt-1.5"
+                      />
+                    </div>
+
                     {schedule.company_name && (
                       <div>
                         <Label className="text-sm">Entreprise</Label>
@@ -353,6 +373,16 @@ export const WorkTab = ({
                   const globalIdx = workSchedules.indexOf(schedule);
                   return (
                     <div key={globalIdx} className="space-y-3 p-4 border rounded-lg">
+                    <div>
+                      <Label className="text-sm">Nom du job</Label>
+                      <Input
+                        value={schedule.title || ''}
+                        onChange={(e) => updateSchedule(globalIdx, { title: e.target.value })}
+                        placeholder="Nom du job"
+                        className="mt-1.5"
+                      />
+                    </div>
+
                     <div>
                       <Label className="text-sm">Jours</Label>
                       <div className="flex gap-1 mt-2">
@@ -541,6 +571,17 @@ export const WorkTab = ({
           </DrawerHeader>
           <div className="space-y-4 px-4 pb-8 overflow-y-auto">
             <div>
+              <Label className="text-sm">Nom de l'alternance *</Label>
+              <Input
+                value={newAlternance.title || ''}
+                onChange={(e) => setNewAlternance({ ...newAlternance, title: e.target.value })}
+                placeholder="Ex: Alternance développeur chez Acme"
+                className="mt-1.5"
+                required
+              />
+            </div>
+
+            <div>
               <Label className="text-sm">Jours travaillés</Label>
               <div className="flex gap-1 mt-2">
                 {DAYS.map((day) => (
@@ -645,7 +686,11 @@ export const WorkTab = ({
               </Select>
             </div>
 
-            <Button onClick={addAlternance} className="w-full">
+            <Button 
+              onClick={addAlternance} 
+              className="w-full"
+              disabled={!newAlternance.title?.trim()}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter l'alternance
             </Button>
@@ -660,6 +705,17 @@ export const WorkTab = ({
             <DrawerTitle>Ajouter un job étudiant</DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 px-4 pb-8 overflow-y-auto">
+            <div>
+              <Label className="text-sm">Nom du job *</Label>
+              <Input
+                value={newJob.title || ''}
+                onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
+                placeholder="Ex: Serveur chez McDo"
+                className="mt-1.5"
+                required
+              />
+            </div>
+
             <div>
               <Label className="text-sm">Jours</Label>
               <div className="flex gap-1 mt-2">
@@ -721,7 +777,11 @@ export const WorkTab = ({
               />
             </div>
 
-            <Button onClick={addJob} className="w-full">
+            <Button 
+              onClick={addJob} 
+              className="w-full"
+              disabled={!newJob.title?.trim()}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter le job
             </Button>
