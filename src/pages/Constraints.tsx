@@ -8,7 +8,7 @@ import { generateOccurrences } from "@/lib/occurrence-generator";
 import { WorkTab } from "@/components/constraints/WorkTab";
 import { ActivityTab } from "@/components/constraints/ActivityTab";
 import { RoutineTab } from "@/components/constraints/RoutineTab";
-import { CommuteTab } from "@/components/constraints/CommuteTab";
+import { OthersTab } from "@/components/constraints/OthersTab";
 
 interface WorkSchedule {
   id?: string;
@@ -51,7 +51,7 @@ const Constraints = () => {
   } = useData();
   const { state, setConstraintsTab } = useNavigationState();
   
-  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'trajet'>(state.constraints.activeTab);
+  const [activeTab, setActiveTab] = useState<'travail' | 'activite' | 'routine' | 'autres'>(state.constraints.activeTab || 'travail');
   
   // Work data
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
@@ -447,12 +447,12 @@ const Constraints = () => {
             { key: 'travail', label: 'Travail' },
             { key: 'activite', label: 'Activité' },
             { key: 'routine', label: 'Routine' },
-            { key: 'trajet', label: 'Trajet' },
+            { key: 'autres', label: 'Autres' },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => {
-                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'trajet';
+                const tabKey = tab.key as 'travail' | 'activite' | 'routine' | 'autres';
                 setActiveTab(tabKey);
                 setConstraintsTab(tabKey);
               }}
@@ -481,30 +481,36 @@ const Constraints = () => {
 
         {activeTab === 'routine' && (
           <RoutineTab
-            wakeUpTime={wakeUpTime}
-            noStudyAfter={noStudyAfter}
-            sleepHoursNeeded={sleepHoursNeeded}
-            minPersonalTimePerWeek={minPersonalTimePerWeek}
             routineMoments={routineMoments}
-            onWakeUpTimeChange={handleWakeUpTimeChange}
-            onNoStudyAfterChange={handleNoStudyAfterChange}
-            onSleepHoursNeededChange={handleSleepHoursChange}
-            onMinPersonalTimePerWeekChange={handleMinPersonalTimeChange}
             onRoutineMomentsChange={handleRoutineMomentsChange}
           />
         )}
 
-        {activeTab === 'trajet' && (
-          <CommuteTab
+        {activeTab === 'autres' && (
+          <OthersTab
+            wakeUpTime={wakeUpTime}
+            noStudyAfter={noStudyAfter}
+            sleepHoursNeeded={sleepHoursNeeded}
+            minPersonalTimePerWeek={minPersonalTimePerWeek}
             commuteHomeSchool={commuteHomeSchool}
             commuteHomeJob={commuteHomeJob}
             commuteHomeActivity={commuteHomeActivity}
-            hasAlternance={workSchedules.some(s => s.type === 'alternance')}
-            hasJob={workSchedules.some(s => s.type === 'job')}
-            hasActivities={activities.length > 0}
-            onCommuteHomeSchoolChange={handleCommuteHomeSchoolChange}
-            onCommuteHomeJobChange={handleCommuteHomeJobChange}
-            onCommuteHomeActivityChange={handleCommuteHomeActivityChange}
+            onSleepConstraintSave={async (data) => {
+              setWakeUpTime(data.wakeUpTime);
+              setNoStudyAfter(data.noStudyAfter);
+              setSleepHoursNeeded(data.sleepHoursNeeded);
+              await saveProfile();
+            }}
+            onPersonalTimeSave={async (value) => {
+              setMinPersonalTimePerWeek(value);
+              await saveProfile();
+            }}
+            onCommuteSave={async (data) => {
+              setCommuteHomeSchool(data.commuteHomeSchool);
+              setCommuteHomeJob(data.commuteHomeJob);
+              setCommuteHomeActivity(data.commuteHomeActivity);
+              await saveProfile();
+            }}
           />
         )}
       </div>

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -27,28 +26,12 @@ interface RoutineMoment {
 }
 
 interface RoutineTabProps {
-  wakeUpTime: string;
-  noStudyAfter: string;
-  sleepHoursNeeded: number;
-  minPersonalTimePerWeek: number;
   routineMoments: RoutineMoment[];
-  onWakeUpTimeChange: (value: string) => void;
-  onNoStudyAfterChange: (value: string) => void;
-  onSleepHoursNeededChange: (value: number) => void;
-  onMinPersonalTimePerWeekChange: (value: number) => void;
   onRoutineMomentsChange: (moments: RoutineMoment[]) => void;
 }
 
 export const RoutineTab = ({
-  wakeUpTime,
-  noStudyAfter,
-  sleepHoursNeeded,
-  minPersonalTimePerWeek,
   routineMoments,
-  onWakeUpTimeChange,
-  onNoStudyAfterChange,
-  onSleepHoursNeededChange,
-  onMinPersonalTimePerWeekChange,
   onRoutineMomentsChange,
 }: RoutineTabProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -100,47 +83,6 @@ export const RoutineTab = ({
   return (
     <>
     <div className="space-y-6">
-      {/* Rythme de base */}
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <h3 className="font-semibold">Ton rythme de base</h3>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm">Heure de lever habituelle</Label>
-              <Input
-                type="time"
-                value={wakeUpTime}
-                onChange={(e) => onWakeUpTimeChange(e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-
-            <div>
-              <Label className="text-sm">Ne plus réviser après</Label>
-              <Input
-                type="time"
-                value={noStudyAfter}
-                onChange={(e) => onNoStudyAfterChange(e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-sm">Heures de sommeil souhaitées : {sleepHoursNeeded}h</Label>
-            <Slider
-              value={[sleepHoursNeeded]}
-              onValueChange={([value]) => onSleepHoursNeededChange(value)}
-              min={5}
-              max={12}
-              step={0.5}
-              className="mt-3"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Moments réguliers importants */}
       <Card>
         <CardContent className="p-6 space-y-4">
@@ -235,26 +177,6 @@ export const RoutineTab = ({
               </CollapsibleContent>
             )}
           </Collapsible>
-        </CardContent>
-      </Card>
-
-      {/* Temps perso minimum */}
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <div>
-            <Label className="text-base">Temps perso minimum sans révisions par semaine : {minPersonalTimePerWeek}h</Label>
-            <Slider
-              value={[minPersonalTimePerWeek]}
-              onValueChange={([value]) => onMinPersonalTimePerWeekChange(value)}
-              min={0}
-              max={20}
-              step={1}
-              className="mt-3"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Pour souffler, voir des potes, sortir...
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
