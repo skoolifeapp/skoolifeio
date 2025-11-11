@@ -978,7 +978,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`event-${event.index}-${idx}`}
-                              className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={async () => {
                                 const { data } = await supabase
@@ -1016,7 +1016,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`work-${schedule.id}-${idx}`}
-                              className="absolute bg-blue-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-blue-700 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1045,7 +1045,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`activity-${activity.id}-${idx}`}
-                              className="absolute bg-green-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-green-700 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1074,7 +1074,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`routine-${routine.id}-${idx}`}
-                              className="absolute bg-orange-600 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-orange-700 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1102,7 +1102,7 @@ const Planning = () => {
                           return (
                             <div
                               key={`session-${session.id}-${idx}`}
-                              className="absolute bg-indigo-500/90 text-white rounded-lg p-2 overflow-hidden shadow-md border-2 border-indigo-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600 cursor-pointer hover:opacity-90 transition-opacity"
                               style={style}
                               onClick={() => {
                                 setEditingEvent({
@@ -1148,12 +1148,8 @@ const Planning = () => {
                           return (
                             <div
                               key={`planned-${plannedEvent.id}-${idx}`}
-                              className="absolute text-white rounded-lg p-2 overflow-hidden shadow-md border-2 cursor-pointer hover:opacity-90 transition-opacity"
-                              style={{
-                                ...style,
-                                backgroundColor: plannedEvent.color || '#3b82f6',
-                                borderColor: plannedEvent.color || '#3b82f6',
-                              }}
+                              className="absolute bg-yellow-500 text-black rounded-lg p-2 overflow-hidden shadow-md border-2 border-yellow-600 cursor-pointer hover:opacity-90 transition-opacity"
+                              style={style}
                               onClick={() => {
                                 setEditingEvent({
                                   type: 'planned',
