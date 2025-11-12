@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
 
     // Expand recurring events
     const expandRecurringEvents = (events: any[]) => {
-      const expanded: Array<{ start: Date; end: Date; summary: string; location?: string }> = [];
+      const expanded: Array<{ start: Date; end: Date; summary: string; location?: string; title?: string }> = [];
       const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
       for (const event of events) {
@@ -142,6 +142,7 @@ Deno.serve(async (req) => {
                 start: slotStart,
                 end: slotEnd,
                 summary: event.summary || event.title || '',
+                title: event.title || event.summary || '',
                 location: event.location
               });
             }
@@ -151,6 +152,7 @@ Deno.serve(async (req) => {
             start: new Date(event.start_date),
             end: new Date(event.end_date),
             summary: event.summary || event.title || '',
+            title: event.title || event.summary || '',
             location: event.location
           });
         }
@@ -162,28 +164,36 @@ Deno.serve(async (req) => {
     const calendarEvents = expandRecurringEvents(calendarRes.data || []);
     const allBusySlots: Array<{ start: Date; end: Date; type: string }> = [];
 
-    // Add calendar events
-    for (const evt of calendarEvents) {
-      allBusySlots.push({
-        start: evt.start,
-        end: evt.end,
-        type: 'calendar'
-      });
+    // Create a map of commutes by destination name (lowercased for matching)
+    const commuteMap = new Map<string, number>();
+    for (const commute of commutes) {
+      const destination = commute.destination.toLowerCase().trim();
+      commuteMap.set(destination, commute.duration_minutes);
+    }
 
-      // Add commute buffers for events with location
-      if (evt.location || evt.summary.includes('ICS')) {
-        const avgCommute = commutes.length > 0 
-          ? commutes.reduce((sum, c) => sum + c.duration_minutes, 0) / commutes.length 
-          : 15;
-        
+    // Add calendar events with specific commute times based on event name
+    for (const evt of calendarEvents) {
+      const eventName = (evt.title || evt.summary || '').toLowerCase().trim();
+      
+      // Find matching commute by event name
+      const commuteMinutes = commuteMap.get(eventName);
+      
+      if (commuteMinutes) {
+        // Add commute time before the event
         const commuteBefore = new Date(evt.start);
-        commuteBefore.setMinutes(commuteBefore.getMinutes() - avgCommute);
+        commuteBefore.setMinutes(commuteBefore.getMinutes() - commuteMinutes);
         allBusySlots.push({ start: commuteBefore, end: evt.start, type: 'commute' });
 
-        const commuteAfter = new Date(evt.end);
-        const commuteAfterEnd = new Date(commuteAfter);
-        commuteAfterEnd.setMinutes(commuteAfterEnd.getMinutes() + avgCommute);
-        allBusySlots.push({ start: commuteAfter, end: commuteAfterEnd, type: 'commute' });
+        // Add the event itself
+        allBusySlots.push({ start: evt.start, end: evt.end, type: 'calendar' });
+
+        // Add commute time after the event
+        const commuteAfterEnd = new Date(evt.end);
+        commuteAfterEnd.setMinutes(commuteAfterEnd.getMinutes() + commuteMinutes);
+        allBusySlots.push({ start: evt.end, end: commuteAfterEnd, type: 'commute' });
+      } else {
+        // No specific commute found, just add the event
+        allBusySlots.push({ start: evt.start, end: evt.end, type: 'calendar' });
       }
     }
 
