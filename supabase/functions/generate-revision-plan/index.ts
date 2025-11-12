@@ -5,34 +5,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface IntensityConfig {
-  sessionDuration: { min: number; max: number };
-  sessionsPerDay: { min: number; max: number };
-  totalHoursTarget: number;
-}
+// Helper: Parse time string to minutes since midnight
+const timeToMinutes = (timeStr: string): number => {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+};
 
-const INTENSITY_CONFIGS: Record<string, IntensityConfig> = {
-  leger: {
-    sessionDuration: { min: 45, max: 90 },
-    sessionsPerDay: { min: 1, max: 1 },  // STRICTEMENT 1 session par jour max
-    totalHoursTarget: 20,
-  },
-  standard: {
-    sessionDuration: { min: 60, max: 120 },
-    sessionsPerDay: { min: 1, max: 2 },  // STRICTEMENT 2 sessions par jour max
-    totalHoursTarget: 40,
-  },
-  intensif: {
-    sessionDuration: { min: 90, max: 150 },
-    sessionsPerDay: { min: 1, max: 3 },  // STRICTEMENT 3 sessions par jour max
-    totalHoursTarget: 60,
-  },
+// Helper: Check overlap between two time intervals
+const hasOverlap = (start1: Date, end1: Date, start2: Date, end2: Date): boolean => {
+  return start1 < end2 && start2 < end1;
+};
+
+// Helper: Format date to YYYY-MM-DD in Europe/Paris timezone
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
 };
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startTime = Date.now();
+  const planId = crypto.randomUUID();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -43,7 +38,7 @@ Deno.serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Extraire le JWT du header Authorization
+    // Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -52,226 +47,291 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Créer le client Supabase avec le token utilisateur
     const token = authHeader.replace('Bearer ', '');
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
-    // Vérifier l'authentification
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) {
-      console.error('Auth error:', userError);
       return new Response(
         JSON.stringify({ error: 'Non authentifié' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { intensity = 'standard' } = await req.json();
-    const intensityConfig = INTENSITY_CONFIGS[intensity] || INTENSITY_CONFIGS.standard;
+    // Parse payload
+    const body = await req.json();
+    const {
+      start_date: startDateInput,
+      end_date: endDateInput,
+      commit = false,
+      regenerate_strategy = 'append',
+      temperature = 0.2
+    } = body;
 
-    console.log(`[${user.id}] Génération planning avec intensité: ${intensity}`);
-
-    // Récupération de TOUTES les données
-    const [examsRes, calendarRes, constraintsRes, workRes, activitiesRes, routineRes, exceptionsRes, plannedRes, profileRes] = await Promise.all([
+    // Fetch all data
+    const [examsRes, calendarRes, constraintsRes, commuteRes, mealsRes, profileRes] = await Promise.all([
       supabase.from('exams').select('*').eq('user_id', user.id).order('date'),
-      supabase.from('calendar_events').select('*').eq('user_id', user.id),
-      supabase.from('user_constraints_profile').select('*').eq('user_id', user.id).single(),
-      supabase.from('work_schedules').select('*').eq('user_id', user.id),
-      supabase.from('activities').select('*').eq('user_id', user.id),
-      supabase.from('routine_moments').select('*').eq('user_id', user.id),
-      supabase.from('event_exceptions').select('*').eq('user_id', user.id),
-      supabase.from('planned_events').select('*').eq('user_id', user.id),
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('calendar_events').select('*').eq('user_id', user.id).eq('is_active', true),
+      supabase.from('user_rest_and_revisions').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('user_commutes').select('*').eq('user_id', user.id),
+      supabase.from('user_meals').select('*').eq('user_id', user.id),
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
     ]);
 
     if (examsRes.error) throw examsRes.error;
     const exams = examsRes.data || [];
 
-    if (exams.length === 0) {
+    // Determine date range
+    const now = new Date();
+    const parisNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+    const startDate = startDateInput ? new Date(startDateInput + 'T00:00:00+01:00') : parisNow;
+    const lastExam = exams.length > 0 ? new Date(exams[exams.length - 1].date + 'T00:00:00+01:00') : parisNow;
+    const endDate = endDateInput ? new Date(endDateInput + 'T23:59:59+01:00') : lastExam;
+
+    // Filter exams in range
+    const examsInRange = exams.filter(e => {
+      const examDate = new Date(e.date + 'T00:00:00+01:00');
+      return examDate >= startDate && examDate <= endDate;
+    });
+
+    if (examsInRange.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Aucun examen trouvé. Ajoute des examens pour générer un planning.' }),
+        JSON.stringify({ error: 'Aucun examen dans la période spécifiée' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const now = new Date();
-    const lastExamDate = new Date(exams[exams.length - 1].date);
     const constraints = constraintsRes.data || {};
+    const commutes = commuteRes.data || [];
+    const meals = mealsRes.data || [];
     const profile = profileRes.data || {};
 
-    // Construction du contexte complet
-    const context = {
-      planning_window: {
-        start: now.toISOString(),
-        end: lastExamDate.toISOString(),
-        days_available: Math.ceil((lastExamDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-      },
-      exams: exams.map(e => ({
-        id: e.id,
-        subject: e.subject,
-        date: e.date,
-        priority: e.priority || 3,
-        difficulty: e.difficulty || 3,
-        coefficient: e.coefficient || 1,
-        type: e.type || 'Partiel',
-        location: e.location,
-        notes: e.notes,
-      })),
-      constraints: {
-        sleep: {
-          wake_up_time: constraints.wake_up_time || '07:00:00',
-          sleep_hours_needed: constraints.sleep_hours_needed || 8,
-        },
-        study_limits: {
-          no_study_before: constraints.no_study_before || '08:00:00',
-          no_study_after: constraints.no_study_after || '22:00:00',
-          no_study_days: constraints.no_study_days || [],
-          max_daily_hours: constraints.max_daily_revision_hours || 8,
-          max_weekly_hours: constraints.max_weekly_revision_hours || 40,
-        },
-        meals: {
-          respect_meal_times: constraints.respect_meal_times !== false,
-          lunch: {
-            start: constraints.lunch_break_start || '12:00:00',
-            end: constraints.lunch_break_end || '14:00:00',
-          },
-          dinner: {
-            start: constraints.dinner_break_start || '19:00:00',
-            end: constraints.dinner_break_end || '20:30:00',
-          },
-        },
-        productivity: {
-          preferred_time: constraints.preferred_productivity || 'mixed',
-        },
-        personal: {
-          min_free_evenings_per_week: constraints.min_free_evenings_per_week || 1,
-          min_personal_time_per_week: constraints.min_personal_time_per_week || 5,
-        },
-        work: {
-          is_alternant: constraints.is_alternant || false,
-          has_student_job: constraints.has_student_job || false,
-        },
-      },
-      busy_slots: {
-        calendar_events: (calendarRes.data || []).map(e => ({
-          summary: e.summary,
-          start: e.start_date,
-          end: e.end_date,
-          location: e.location,
-        })),
-        work_schedules: (workRes.data || []).map(w => ({
-          id: w.id,
-          title: w.title,
-          type: w.type,
-          days: w.days,
-          start_time: w.start_time,
-          end_time: w.end_time,
-          location: w.location,
-        })),
-        activities: (activitiesRes.data || []).map(a => ({
-          id: a.id,
-          title: a.title,
-          type: a.type,
-          days: a.days,
-          start_time: a.start_time,
-          end_time: a.end_time,
-          location: a.location,
-        })),
-        routine_moments: (routineRes.data || []).map(r => ({
-          id: r.id,
-          title: r.title,
-          days: r.days,
-          start_time: r.start_time,
-          end_time: r.end_time,
-        })),
-        planned_events: (plannedRes.data || []).map(p => ({
-          title: p.title,
-          start: p.start_time,
-          end: p.end_time,
-          description: p.description,
-        })),
-        exceptions: (exceptionsRes.data || []).map(ex => ({
-          source_type: ex.source_type,
-          source_id: ex.source_id,
-          date: ex.exception_date,
-          type: ex.exception_type,
-          modified_data: ex.modified_data,
-        })),
-      },
-      intensity: {
-        level: intensity,
-        config: intensityConfig,
-      },
-      user_profile: {
-        name: profile.full_name,
-        university: profile.university,
-        study_year: profile.study_year,
-      },
+    // Validate constraints
+    const wakeUpMin = timeToMinutes(constraints.wake_up_time || '07:00:00');
+    const noStudyAfterMin = timeToMinutes(constraints.no_study_after || '22:00:00');
+    
+    if (noStudyAfterMin <= wakeUpMin) {
+      return new Response(
+        JSON.stringify({ error: 'Contraintes incohérentes: no_study_after doit être après wake_up_time' }),
+        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Expand recurring events
+    const expandRecurringEvents = (events: any[]) => {
+      const expanded: Array<{ start: Date; end: Date; summary: string; location?: string }> = [];
+      const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+      for (const event of events) {
+        if (event.is_recurring && event.days_of_week && event.start_time && event.end_time) {
+          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dayName = dayNames[d.getDay()];
+            if (event.days_of_week.includes(dayName)) {
+              const dateStr = formatDate(d);
+              const [sh, sm] = event.start_time.split(':').map(Number);
+              const [eh, em] = event.end_time.split(':').map(Number);
+              
+              const slotStart = new Date(d);
+              slotStart.setHours(sh, sm, 0, 0);
+              const slotEnd = new Date(d);
+              slotEnd.setHours(eh, em, 0, 0);
+              
+              expanded.push({
+                start: slotStart,
+                end: slotEnd,
+                summary: event.summary || event.title || '',
+                location: event.location
+              });
+            }
+          }
+        } else if (event.start_date && event.end_date) {
+          expanded.push({
+            start: new Date(event.start_date),
+            end: new Date(event.end_date),
+            summary: event.summary || event.title || '',
+            location: event.location
+          });
+        }
+      }
+      return expanded;
     };
 
-    console.log(`[${user.id}] Contexte préparé - ${exams.length} examens, ${context.busy_slots.calendar_events.length} événements calendrier`);
+    // Build all busy slots
+    const calendarEvents = expandRecurringEvents(calendarRes.data || []);
+    const allBusySlots: Array<{ start: Date; end: Date; type: string }> = [];
 
-    // Appel Lovable AI avec extraction structurée
-    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants. Ta mission est de créer un planning de révision optimal et personnalisé.
+    // Add calendar events
+    for (const evt of calendarEvents) {
+      allBusySlots.push({
+        start: evt.start,
+        end: evt.end,
+        type: 'calendar'
+      });
 
-OBJECTIF PRINCIPAL :
-- Générer des sessions de révision jusqu'au JOUR MÊME de chaque examen (inclus)
-- Placer les sessions UNIQUEMENT dans les créneaux totalement libres
-- Optimiser l'apprentissage dans les limites strictes de l'intensité choisie
+      // Add commute buffers for events with location
+      if (evt.location || evt.summary.includes('ICS')) {
+        const avgCommute = commutes.length > 0 
+          ? commutes.reduce((sum, c) => sum + c.duration_minutes, 0) / commutes.length 
+          : 15;
+        
+        const commuteBefore = new Date(evt.start);
+        commuteBefore.setMinutes(commuteBefore.getMinutes() - avgCommute);
+        allBusySlots.push({ start: commuteBefore, end: evt.start, type: 'commute' });
 
-RÈGLES ABSOLUES - RESPECT STRICT :
-1. ZÉRO chevauchement entre sessions et créneaux occupés (travail, activités, routine, événements, repas)
-2. STRICTEMENT ${intensityConfig.sessionsPerDay.max} session(s) MAXIMUM par jour - JAMAIS plus
-3. Durée des sessions : STRICTEMENT entre ${intensityConfig.sessionDuration.min} et ${intensityConfig.sessionDuration.max} minutes
-4. TOUJOURS respecter les limites de temps d'étude (heures/jour, heures/semaine)
-5. TOUJOURS respecter les pauses repas si activées
-6. TOUJOURS respecter les jours sans révision
-7. Les sessions doivent être dans la fenêtre de planning (maintenant → jour de l'examen INCLUS)
-8. Placer les sessions UNIQUEMENT sur des créneaux TOTALEMENT libres
+        const commuteAfter = new Date(evt.end);
+        const commuteAfterEnd = new Date(commuteAfter);
+        commuteAfterEnd.setMinutes(commuteAfterEnd.getMinutes() + avgCommute);
+        allBusySlots.push({ start: commuteAfter, end: commuteAfterEnd, type: 'commute' });
+      }
+    }
 
-STRATÉGIE DE RÉVISION :
-- Prioriser les examens selon : (priorité × difficulté × coefficient) / jours_restants
-- Espacer les révisions (répétition espacée) : première révision → révisions intermédiaires → révisions finales
-- Plus un examen est proche, plus il faut de sessions fréquentes
-- Alterner les matières pour éviter la fatigue cognitive
-- Placer les matières difficiles aux moments de productivité optimale
-- Générer des sessions jusqu'au matin de l'examen pour révision de dernière minute
+    // Add meals
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      for (const meal of meals) {
+        const [sh, sm] = meal.start_time.split(':').map(Number);
+        const [eh, em] = meal.end_time.split(':').map(Number);
+        
+        const mealStart = new Date(d);
+        mealStart.setHours(sh, sm, 0, 0);
+        const mealEnd = new Date(d);
+        mealEnd.setHours(eh, em, 0, 0);
+        
+        allBusySlots.push({ start: mealStart, end: mealEnd, type: 'meal' });
+      }
+    }
 
-GESTION DES CRÉNEAUX RÉCURRENTS :
-- Les work_schedules, activities, routine_moments se répètent selon leurs "days"
-- Vérifier les exceptions : type "deleted" = créneau annulé, type "modified" = créneau modifié (utiliser modified_data)
-- Ne JAMAIS placer de session sur un créneau occupé (même récurrent)
+    // Add sleep periods
+    const sleepHours = constraints.sleep_hours_needed || 8;
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const wakeUp = new Date(d);
+      const [wh, wm] = (constraints.wake_up_time || '07:00:00').split(':').map(Number);
+      wakeUp.setHours(wh, wm, 0, 0);
+      
+      const sleepStart = new Date(wakeUp);
+      sleepStart.setHours(sleepStart.getHours() - sleepHours);
+      
+      allBusySlots.push({ start: sleepStart, end: wakeUp, type: 'sleep' });
+    }
 
-OPTIMISATION DANS LES LIMITES :
-- Identifier les créneaux libres disponibles chaque jour
-- Respecter STRICTEMENT le MAX de ${intensityConfig.sessionsPerDay.max} session(s) par jour
-- Ne JAMAIS dépasser cette limite même s'il y a des créneaux libres
-- Qualité > Quantité : mieux vaut ${intensityConfig.sessionsPerDay.max} session(s) bien placée(s) que plus de sessions qui violent les règles
+    console.log(`[${planId}] User: ${user.id}, Exams: ${examsInRange.length}, Busy slots: ${allBusySlots.length}`);
 
-FORMAT DE SORTIE :
-- Chaque session doit avoir : subject, start_time (ISO), end_time (ISO), exam_id, difficulty (low/medium/high), weight (0-1), type (first_pass/review/final_review), reasoning
-- weight = importance de la session (0-1) basée sur priorité/difficulté/proximité examen
-- reasoning = explication courte du choix de ce créneau (max 100 chars)`;
+    // Calculate exam weights using urgency formula
+    const examWeights = examsInRange.map(exam => {
+      const examDate = new Date(exam.date + 'T00:00:00+01:00');
+      const daysUntil = Math.max(1, Math.ceil((examDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const urgency = Math.exp(-daysUntil / 14);
+      const coef = exam.coefficient || ((exam.priority || 3) + (exam.difficulty || 3)) / 2;
+      const weight = coef * urgency;
+      
+      return { exam, weight, urgency, coef };
+    });
 
-    const userPrompt = `Génère un planning de révision personnalisé pour cet étudiant.
+    const totalWeight = examWeights.reduce((sum, e) => sum + e.weight, 0);
+    const weeklyGoal = constraints.weekly_hours_goal || 20;
+    
+    examWeights.forEach(e => {
+      e.weight = e.weight / totalWeight;
+    });
 
-⚠️ CRITÈRE ABSOLU : MAXIMUM ${intensityConfig.sessionsPerDay.max} SESSION(S) PAR JOUR - JAMAIS PLUS ⚠️
-⚠️ ZÉRO CHEVAUCHEMENT AVEC LES CRÉNEAUX OCCUPÉS ⚠️
+    // Build context for AI
+    const context = {
+      plan_id: planId,
+      planning_window: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate),
+        timezone: 'Europe/Paris'
+      },
+      exams: examWeights.map(({ exam, weight, urgency, coef }) => ({
+        id: exam.id,
+        subject: exam.subject,
+        date: exam.date,
+        priority: exam.priority || 3,
+        difficulty: exam.difficulty || 3,
+        coefficient: coef,
+        weight: weight,
+        urgency: urgency,
+        type: exam.type || 'Partiel'
+      })),
+      constraints: {
+        wake_up_time: constraints.wake_up_time || '07:00:00',
+        no_study_after: constraints.no_study_after || '22:00:00',
+        sleep_hours_needed: sleepHours,
+        max_sessions_per_day: constraints.max_sessions_per_day || 3,
+        max_session_duration_minutes: constraints.max_session_duration_minutes || 90,
+        weekly_hours_goal: weeklyGoal,
+        min_personal_time_per_week: constraints.min_personal_time_per_week || 5
+      },
+      busy_slots: allBusySlots.map(slot => ({
+        start: slot.start.toISOString(),
+        end: slot.end.toISOString(),
+        type: slot.type
+      })),
+      meals: meals.map(m => ({ type: m.meal_type, start: m.start_time, end: m.end_time })),
+      user_profile: { name: profile.full_name }
+    };
 
-CONTEXTE COMPLET :
+    // AI Prompt
+    const systemPrompt = `Tu es un expert en planification de révisions pour étudiants français.
+
+CONTEXTE:
+Nous développons Skoolife (mobile-first). Objectif : générer des sessions de révision réalistes et optimisées par IA, en respectant le rythme de vie, les contraintes et les examens. Fuseau horaire : Europe/Paris.
+
+RÈGLES BUSINESS (HARD CONSTRAINTS) - ZÉRO TOLÉRANCE:
+1. Jamais avant wake_up_time, jamais après no_study_after
+2. Respecter max_sessions_per_day (${context.constraints.max_sessions_per_day}) et max_session_duration_minutes (${context.constraints.max_session_duration_minutes})
+3. ZÉRO chevauchement avec événements existants (calendar_events), repas (meals), sommeil, trajets
+4. Réserver min_personal_time_per_week (${context.constraints.min_personal_time_per_week}h) en blocs de 30-120min AVANT les révisions
+5. Jour J d'un examen: max 1 session ≤30min, se terminant ≥90min avant l'examen
+6. J-1: sessions "light" ≤60min chacune, total ≤2h
+
+RÈGLES D'OPTIMISATION (SOFT CONSTRAINTS):
+- Viser weekly_hours_goal (${weeklyGoal}h) ±10% par semaine
+- Longues sessions >90min: découper en 25-55min avec pauses 5-10min
+- Répartition équitable sur la semaine
+- Panacher les matières (éviter 3 sessions consécutives même matière)
+- Ajouter buffer trajet avant/après events "location" non nul
+
+PONDÉRATION EXAMENS:
+- weight = coefficient × urgency (exp(-days/14))
+- Plus proche = plus urgent = plus de sessions
+- Répartir weekly_hours_goal selon weights normalisés
+
+CONSTRUCTION DISPONIBILITÉS:
+- Par jour: [wake_up_time, no_study_after] - busy_slots - meals - sleep
+- Placer d'abord personal_time, puis révisions
+
+STRATÉGIE PLACEMENT:
+1. Réserver personal_time en début de semaine (lun-jeu)
+2. Itérer semaines: répartir weekly_hours_goal selon exam weights
+3. Placer sessions dans free slots (plus tôt jour → plus tôt semaine)
+4. Découper sessions ≤max_session_duration
+5. Respecter max_sessions_per_day
+6. Alterner subjects
+7. J-1 et J: règles spéciales
+
+VALIDATION:
+- Aucun overlap
+- Limites quotidiennes respectées
+- Weekly goal ±10% (warning si impossible)
+
+SORTIE:
+sessions: [{ subject, exam_id, exam_date, start_time (ISO), end_time (ISO), duration_minutes, type: "revision|light|warm-up", intensity: "normal|light", importance_score }]
+personal_time_blocks: [{ start_time (ISO), end_time (ISO) }]
+warnings: []`;
+
+    const userPrompt = `Génère un planning de révision optimal pour:
 ${JSON.stringify(context, null, 2)}
 
-Crée des sessions de révision optimales en respectant STRICTEMENT :
-- Maximum ${intensityConfig.sessionsPerDay.max} session(s) par jour
-- Durée entre ${intensityConfig.sessionDuration.min}-${intensityConfig.sessionDuration.max} min
-- Aucun chevauchement avec événements/travail/activités/routine/repas
-- Placement uniquement sur créneaux totalement libres`;
+CONTRAINTES ABSOLUES:
+- Max ${context.constraints.max_sessions_per_day} sessions/jour
+- Sessions: 25-${context.constraints.max_session_duration_minutes}min
+- Objectif: ${weeklyGoal}h/semaine
+- Personal time: ${context.constraints.min_personal_time_per_week}h/semaine
+- ZÉRO overlap avec busy_slots
+
+Retourne sessions + personal_time_blocks + warnings`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -283,13 +343,13 @@ Crée des sessions de révision optimales en respectant STRICTEMENT :
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
+          { role: 'user', content: userPrompt }
         ],
         tools: [{
           type: 'function',
           function: {
-            name: 'create_revision_plan',
-            description: 'Crée un planning de révision structuré',
+            name: 'generate_revision_plan',
+            description: 'Génère un planning de révision structuré',
             parameters: {
               type: 'object',
               properties: {
@@ -299,39 +359,44 @@ Crée des sessions de révision optimales en respectant STRICTEMENT :
                     type: 'object',
                     properties: {
                       subject: { type: 'string' },
-                      start_time: { type: 'string', description: 'ISO 8601 datetime' },
-                      end_time: { type: 'string', description: 'ISO 8601 datetime' },
                       exam_id: { type: 'string' },
-                      difficulty: { type: 'string', enum: ['low', 'medium', 'high'] },
-                      weight: { type: 'number', minimum: 0, maximum: 1 },
-                      type: { type: 'string', enum: ['first_pass', 'review', 'final_review'] },
-                      reasoning: { type: 'string', maxLength: 100 },
+                      exam_date: { type: 'string' },
+                      start_time: { type: 'string' },
+                      end_time: { type: 'string' },
+                      duration_minutes: { type: 'number' },
+                      type: { type: 'string', enum: ['revision', 'light', 'warm-up'] },
+                      intensity: { type: 'string', enum: ['normal', 'light'] },
+                      importance_score: { type: 'number', minimum: 0, maximum: 1 }
                     },
-                    required: ['subject', 'start_time', 'end_time', 'exam_id', 'difficulty', 'weight', 'type', 'reasoning'],
-                  },
+                    required: ['subject', 'exam_id', 'exam_date', 'start_time', 'end_time', 'duration_minutes', 'type', 'intensity', 'importance_score']
+                  }
                 },
-                metadata: {
-                  type: 'object',
-                  properties: {
-                    total_sessions: { type: 'number' },
-                    total_hours: { type: 'number' },
-                    subjects_covered: { type: 'object' },
-                    warnings: { type: 'array', items: { type: 'string' } },
-                  },
+                personal_time_blocks: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      start_time: { type: 'string' },
+                      end_time: { type: 'string' }
+                    },
+                    required: ['start_time', 'end_time']
+                  }
                 },
+                warnings: { type: 'array', items: { type: 'string' } }
               },
-              required: ['sessions', 'metadata'],
-            },
-          },
+              required: ['sessions', 'personal_time_blocks', 'warnings']
+            }
+          }
         }],
-        tool_choice: { type: 'function', function: { name: 'create_revision_plan' } },
+        tool_choice: { type: 'function', function: { name: 'generate_revision_plan' } },
         max_completion_tokens: 16000,
+        temperature: temperature
       }),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('[Lovable AI Error]', aiResponse.status, errorText);
+      console.error('[AI Error]', aiResponse.status, errorText);
       
       if (aiResponse.status === 429) {
         return new Response(
@@ -342,206 +407,229 @@ Crée des sessions de révision optimales en respectant STRICTEMENT :
 
       if (aiResponse.status === 402) {
         return new Response(
-          JSON.stringify({ error: 'Crédits AI insuffisants. Ajoute des crédits dans les paramètres Lovable.' }),
+          JSON.stringify({ error: 'Crédits AI insuffisants.' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      throw new Error(`Lovable AI error: ${aiResponse.status} - ${errorText}`);
+      throw new Error(`AI error: ${aiResponse.status} - ${errorText}`);
     }
 
     const aiResult = await aiResponse.json();
-    console.log(`[${user.id}] Réponse Lovable AI reçue`);
-
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+    
     if (!toolCall) {
-      throw new Error('Pas de tool call dans la réponse OpenAI');
+      throw new Error('No tool call in AI response');
     }
 
     const planData = JSON.parse(toolCall.function.arguments);
-    const sessions = planData.sessions || [];
+    let sessions = planData.sessions || [];
+    const personalTimeBlocks = planData.personal_time_blocks || [];
+    const warnings = planData.warnings || [];
 
-    console.log(`[${user.id}] ${sessions.length} sessions générées par l'IA`);
+    console.log(`[${planId}] AI generated ${sessions.length} sessions, ${personalTimeBlocks.length} personal blocks`);
 
-    // Fonction pour vérifier le chevauchement entre 2 créneaux
-    const hasOverlap = (start1: Date, end1: Date, start2: Date, end2: Date): boolean => {
-      return start1 < end2 && start2 < end1;
-    };
+    // Validate and filter sessions
+    const validSessions = sessions.filter((session: any) => {
+      if (!session.start_time || !session.end_time || !session.subject || !session.exam_id) {
+        warnings.push(`Session invalide ignorée: ${JSON.stringify(session)}`);
+        return false;
+      }
 
-    // Fonction pour expanser les créneaux récurrents en occurrences concrètes
-    const expandRecurringSlots = (recurring: any[], type: string) => {
-      const slots: Array<{start: Date, end: Date}> = [];
-      const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-      
-      for (const item of recurring) {
-        for (let d = new Date(now); d <= lastExamDate; d.setDate(d.getDate() + 1)) {
-          const dayName = dayNames[d.getDay()];
-          if (!item.days.includes(dayName)) continue;
-          
-          const dateStr = d.toISOString().split('T')[0];
-          
-          // Vérifier les exceptions
-          const hasDeleteException = (exceptionsRes.data || []).some(
-            (exc: any) => exc.source_type === type && exc.source_id === item.id && 
-            exc.exception_date === dateStr && exc.exception_type === 'deleted'
-          );
-          if (hasDeleteException) continue;
-          
-          // Vérifier si modifié
-          const modException = (exceptionsRes.data || []).find(
-            (exc: any) => exc.source_type === type && exc.source_id === item.id && 
-            exc.exception_date === dateStr && exc.exception_type === 'modified'
-          );
-          
-          const startTime = modException?.modified_data?.start_time || item.start_time;
-          const endTime = modException?.modified_data?.end_time || item.end_time;
-          
-          const [startH, startM] = startTime.split(':').map(Number);
-          const [endH, endM] = endTime.split(':').map(Number);
-          
-          const slotStart = new Date(d);
-          slotStart.setHours(startH, startM, 0, 0);
-          const slotEnd = new Date(d);
-          slotEnd.setHours(endH, endM, 0, 0);
-          
-          slots.push({ start: slotStart, end: slotEnd });
+      const sessionStart = new Date(session.start_time);
+      const sessionEnd = new Date(session.end_time);
+
+      // Check overlaps with busy slots
+      for (const busy of allBusySlots) {
+        if (hasOverlap(sessionStart, sessionEnd, busy.start, busy.end)) {
+          warnings.push(`Session ${session.subject} ${session.start_time} overlap avec ${busy.type}`);
+          return false;
         }
       }
-      return slots;
+
+      // Check daily limit
+      const sessionDate = formatDate(sessionStart);
+      const sessionsOnDay = sessions.filter((s: any) => 
+        s.start_time && formatDate(new Date(s.start_time)) === sessionDate
+      ).length;
+
+      if (sessionsOnDay > context.constraints.max_sessions_per_day) {
+        warnings.push(`Trop de sessions le ${sessionDate}: ${sessionsOnDay} > ${context.constraints.max_sessions_per_day}`);
+        return false;
+      }
+
+      return true;
+    });
+
+    console.log(`[${planId}] ${validSessions.length} valid sessions after filtering`);
+
+    // Calculate weekly summary
+    const weeklySummary: any[] = [];
+    const weekStarts = new Map<string, { target: number; scheduled: number }>();
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+      const weekStart = formatDate(d);
+      weekStarts.set(weekStart, { target: weeklyGoal * 60, scheduled: 0 });
+    }
+
+    for (const session of validSessions) {
+      const sessionDate = new Date(session.start_time);
+      const weekStart = formatDate(new Date(sessionDate.setDate(sessionDate.getDate() - sessionDate.getDay() + 1)));
+      
+      const week = weekStarts.get(weekStart);
+      if (week) {
+        week.scheduled += session.duration_minutes;
+      }
+    }
+
+    weekStarts.forEach((data, weekStart) => {
+      const coverage = data.target > 0 ? data.scheduled / data.target : 0;
+      weeklySummary.push({
+        week_start: weekStart,
+        target_minutes: data.target,
+        scheduled_minutes: data.scheduled,
+        coverage_ratio: Math.round(coverage * 100) / 100,
+        warning: (coverage < 0.9 || coverage > 1.1) ? 'Objectif non atteint' : null
+      });
+    });
+
+    // Calculate diagnostics
+    const totalBusyMinutes = allBusySlots.reduce((sum, slot) => {
+      return sum + (slot.end.getTime() - slot.start.getTime()) / (1000 * 60);
+    }, 0);
+
+    const totalMinutesInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+    const freeMinutes = totalMinutesInRange - totalBusyMinutes;
+
+    const diagnostics = {
+      free_minutes_total: Math.round(freeMinutes),
+      blocked_by_events_minutes: Math.round(totalBusyMinutes),
+      meals_minutes: allBusySlots.filter(s => s.type === 'meal').reduce((sum, s) => 
+        sum + (s.end.getTime() - s.start.getTime()) / (1000 * 60), 0
+      ),
+      sleep_minutes: allBusySlots.filter(s => s.type === 'sleep').reduce((sum, s) => 
+        sum + (s.end.getTime() - s.start.getTime()) / (1000 * 60), 0
+      ),
+      commute_minutes: allBusySlots.filter(s => s.type === 'commute').reduce((sum, s) => 
+        sum + (s.end.getTime() - s.start.getTime()) / (1000 * 60), 0
+      )
     };
 
-    // Collecter TOUS les créneaux occupés
-    const allBusySlots: Array<{start: Date, end: Date}> = [
-      // Événements calendrier
-      ...(calendarRes.data || []).map(e => ({
-        start: new Date(e.start_date),
-        end: new Date(e.end_date)
-      })),
-      // Événements planifiés
-      ...(plannedRes.data || []).map(e => ({
-        start: new Date(e.start_time),
-        end: new Date(e.end_time)
-      })),
-      // Work schedules récurrents
-      ...expandRecurringSlots(workRes.data || [], 'work_schedule'),
-      // Activities récurrentes
-      ...expandRecurringSlots(activitiesRes.data || [], 'activity'),
-      // Routine moments récurrents
-      ...expandRecurringSlots(routineRes.data || [], 'routine_moment'),
-    ];
+    // Commit to database if requested
+    if (commit) {
+      console.log(`[${planId}] Committing to database with strategy: ${regenerate_strategy}`);
 
-    console.log(`[${user.id}] ${allBusySlots.length} créneaux occupés identifiés`);
+      // Handle regenerate strategies
+      if (regenerate_strategy === 'replace_all') {
+        const { error: deleteError } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('source', 'ai_revision')
+          .gte('start_date', startDate.toISOString())
+          .lte('start_date', endDate.toISOString());
 
-    // Validation stricte des sessions avec vérification des chevauchements
-    const validSessions = sessions.filter((s: any) => {
-      const start = new Date(s.start_time);
-      const end = new Date(s.end_time);
-      const durationMin = (end.getTime() - start.getTime()) / 60000;
+        if (deleteError) console.error('Error deleting old sessions:', deleteError);
+      } else if (regenerate_strategy === 'replace_week') {
+        // Delete sessions for each week touched
+        for (const weekStart of weekStarts.keys()) {
+          const weekStartDate = new Date(weekStart + 'T00:00:00+01:00');
+          const weekEndDate = new Date(weekStartDate);
+          weekEndDate.setDate(weekEndDate.getDate() + 7);
 
-      // Vérifications de base
-      const basicValid = 
-        start >= now &&
-        end <= lastExamDate &&
-        start < end &&
-        durationMin >= intensityConfig.sessionDuration.min &&
-        durationMin <= intensityConfig.sessionDuration.max * 1.2 &&
-        s.subject &&
-        s.exam_id &&
-        exams.some(e => e.id === s.exam_id);
+          const { error: deleteError } = await supabase
+            .from('calendar_events')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('source', 'ai_revision')
+            .gte('start_date', weekStartDate.toISOString())
+            .lt('start_date', weekEndDate.toISOString());
 
-      if (!basicValid) {
-        console.warn(`Session invalide (contraintes de base):`, s.subject, s.start_time);
-        return false;
+          if (deleteError) console.error('Error deleting week:', deleteError);
+        }
       }
 
-      // Vérifier les chevauchements avec les créneaux occupés
-      const hasConflict = allBusySlots.some(busy => hasOverlap(start, end, busy.start, busy.end));
-      
-      if (hasConflict) {
-        console.warn(`Session rejetée (chevauchement):`, s.subject, s.start_time);
-        return false;
-      }
-
-      return true;
-    });
-
-    // Vérifier le respect de l'intensité (nombre max de sessions par jour)
-    const sessionsByDay = new Map<string, number>();
-    const finalValidSessions = validSessions.filter((s: any) => {
-      const start = new Date(s.start_time);
-      const dateKey = start.toISOString().split('T')[0];
-      
-      const currentCount = sessionsByDay.get(dateKey) || 0;
-      
-      if (currentCount >= intensityConfig.sessionsPerDay.max) {
-        console.warn(`Session rejetée (max sessions/jour atteint):`, s.subject, dateKey, `(${currentCount}/${intensityConfig.sessionsPerDay.max})`);
-        return false;
-      }
-      
-      sessionsByDay.set(dateKey, currentCount + 1);
-      return true;
-    });
-
-    console.log(`[${user.id}] ${finalValidSessions.length} sessions valides après validation complète (intensité: ${intensity})`);
-
-    if (finalValidSessions.length === 0) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Aucune session valide générée. Vérifie tes contraintes et réessaye.',
-          warnings: planData.metadata?.warnings || [],
+      // Insert new sessions
+      const eventsToInsert = validSessions.map((session: any) => ({
+        user_id: user.id,
+        source: 'ai_revision',
+        title: `Révision — ${session.subject}`,
+        summary: 'Session de révision IA',
+        description: JSON.stringify({
+          linked_exam_id: session.exam_id,
+          importance_score: session.importance_score,
+          strategy: session.type,
+          intensity: session.intensity,
+          generated_at: new Date().toISOString(),
+          plan_id: planId
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        start_date: session.start_time,
+        end_date: session.end_time,
+        start_time: new Date(session.start_time).toISOString().split('T')[1].substring(0, 8),
+        end_time: new Date(session.end_time).toISOString().split('T')[1].substring(0, 8),
+        is_recurring: false,
+        is_active: true,
+        metadata: { plan_id: planId, created_by: 'generate_revision_sessions' }
+      }));
+
+      if (eventsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('calendar_events')
+          .insert(eventsToInsert);
+
+        if (insertError) {
+          console.error('Error inserting sessions:', insertError);
+          throw insertError;
+        }
+      }
+
+      console.log(`[${planId}] Committed ${eventsToInsert.length} sessions to database`);
     }
 
-    // Suppression de l'ancien planning
-    const { error: deleteError } = await supabase
-      .from('revision_sessions')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (deleteError) {
-      console.error('Erreur suppression ancien planning:', deleteError);
-    }
-
-    // Insertion des nouvelles sessions
-    const sessionsToInsert = finalValidSessions.map((s: any) => ({
+    const response = {
       user_id: user.id,
-      exam_id: s.exam_id,
-      subject: s.subject,
-      start_time: s.start_time,
-      end_time: s.end_time,
-      difficulty: s.difficulty,
-      weight: s.weight,
-    }));
+      plan_id: planId,
+      committed: commit,
+      range: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      },
+      weekly_summary: weeklySummary,
+      sessions: validSessions.map((s: any) => ({
+        subject: s.subject,
+        linked_exam_id: s.exam_id,
+        exam_date: s.exam_date,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        duration_minutes: s.duration_minutes,
+        type: s.type,
+        intensity: s.intensity,
+        importance_score: s.importance_score
+      })),
+      personal_time_blocks: personalTimeBlocks,
+      conflicts: [],
+      notes: warnings,
+      diagnostics: diagnostics,
+      performance: {
+        time_to_generate_ms: Date.now() - startTime,
+        sessions_generated: validSessions.length,
+        sessions_filtered: sessions.length - validSessions.length
+      }
+    };
 
-    const { data: insertedSessions, error: insertError } = await supabase
-      .from('revision_sessions')
-      .insert(sessionsToInsert)
-      .select();
-
-    if (insertError) {
-      console.error('Erreur insertion sessions:', insertError);
-      throw insertError;
-    }
-
-    console.log(`[${user.id}] ✅ ${insertedSessions.length} sessions insérées avec succès`);
+    console.log(`[${planId}] Complete in ${response.performance.time_to_generate_ms}ms`);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        count: insertedSessions.length,
-        metadata: planData.metadata,
-        sessions: insertedSessions,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(response),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Erreur génération planning:', error);
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Erreur inconnue',
+        plan_id: planId 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
