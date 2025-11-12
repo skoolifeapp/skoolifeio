@@ -1692,7 +1692,7 @@ const Planning = () => {
           <DrawerHeader>
             <DrawerTitle>Génération du planning IA</DrawerTitle>
             <DrawerDescription>
-              L'IA va générer ton planning en RESPECTANT STRICTEMENT tous tes critères : intensité choisie, horaires disponibles, et ZÉRO chevauchement avec tes événements existants. Les sessions seront placées UNIQUEMENT sur des créneaux totalement libres.
+              L'IA va générer ton planning en respectant tes contraintes et horaires disponibles.
             </DrawerDescription>
           </DrawerHeader>
 
@@ -1705,30 +1705,6 @@ const Planning = () => {
                 </p>
               )}
             </div>
-
-            <div className="space-y-3">
-              <Label>Intensité de révision</Label>
-              <RadioGroup value={intensity} onValueChange={(v) => setIntensity(v as IntensityLevel)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="leger" id="leger" />
-                  <Label htmlFor="leger" className="font-normal">
-                    Léger (max 1 session/jour, 45-60 min)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="standard" id="standard" />
-                  <Label htmlFor="standard" className="font-normal">
-                    Standard (max 2 sessions/jour, 60-90 min)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="intensif" id="intensif" />
-                  <Label htmlFor="intensif" className="font-normal">
-                    Intensif (max 3 sessions/jour, 75-120 min)
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
           </div>
 
           <DrawerFooter>
@@ -1737,7 +1713,7 @@ const Planning = () => {
               disabled={isGenerating || examsCount === 0}
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              {isGenerating ? 'Génération...' : 'Lancer la génération'}
+              {isGenerating ? 'Génération...' : 'Confirmer'}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline">
