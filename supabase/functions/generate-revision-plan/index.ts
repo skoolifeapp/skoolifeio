@@ -110,13 +110,12 @@ Deno.serve(async (req) => {
 
     // Validate constraints
     const wakeUpMin = timeToMinutes(constraints.wake_up_time || '07:00:00');
-    const noStudyAfterMin = timeToMinutes(constraints.no_study_after || '22:00:00');
+    let noStudyAfterMin = timeToMinutes(constraints.no_study_after || '22:00:00');
     
-    if (noStudyAfterMin <= wakeUpMin) {
-      return new Response(
-        JSON.stringify({ error: 'Contraintes incohérentes: no_study_after doit être après wake_up_time' }),
-        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Handle cases where no_study_after is after midnight (e.g., 00:00:00, 01:00:00)
+    // If no_study_after < wake_up_time, assume it's the next day
+    if (noStudyAfterMin < wakeUpMin) {
+      noStudyAfterMin += 24 * 60; // Add 24 hours in minutes
     }
 
     // Expand recurring events
