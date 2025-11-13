@@ -391,6 +391,10 @@ const Planning = () => {
   const dayRoutineMoments = allCalendarEvents
     .filter(e => e.source === 'other' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
 
+  // Événements de révision générés par l'IA (dans calendar_events avec source='ai_revision')
+  const dayAIRevisionEvents = allCalendarEvents
+    .filter(e => e.source === 'ai_revision' && format(new Date(e.start_date), 'yyyy-MM-dd') === selectedDateStr);
+
   // Generate hours (7-23, then 0 for midnight)
   const hours = [...Array.from({ length: 17 }, (_, i) => i + 7), 0];
   const DISPLAY_HOURS = 18; // Total hours displayed
@@ -769,7 +773,7 @@ const Planning = () => {
 
               {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 ? (
+                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 && dayAIRevisionEvents.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -870,10 +874,10 @@ const Planning = () => {
                         });
                       });
 
-                      // Add revision sessions
-                      dayRevisionSessions.forEach((session) => {
-                        const start = new Date(session.start_time);
-                        const end = new Date(session.end_time);
+                      // Add AI revision events (from calendar_events with source='ai_revision')
+                      dayAIRevisionEvents.forEach((event, index) => {
+                        const start = new Date(event.start_date);
+                        const end = new Date(event.end_date);
                         const startHour = start.getHours();
                         const startMinute = start.getMinutes();
                         const endHour = end.getHours();
@@ -883,11 +887,16 @@ const Planning = () => {
                         const adjustedEndHour = endHour >= START_HOUR ? endHour - START_HOUR : endHour + 24 - START_HOUR;
                         
                         allEvents.push({
-                          type: 'revision',
-                          data: session,
+                          type: 'calendar',
+                          data: {
+                            ...event,
+                            summary: event.title || event.summary,
+                            startDate: event.start_date,
+                            endDate: event.end_date
+                          },
                           startMinutes: (adjustedStartHour * 60) + startMinute,
                           endMinutes: (adjustedEndHour * 60) + endMinute,
-                          index: 0
+                          index
                         });
                       });
 
