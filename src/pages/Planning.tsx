@@ -50,7 +50,6 @@ const Planning = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(state.planning.selectedDate);
   const [importedEvents, setImportedEvents] = useState<ImportedEvent[]>([]);
   const [allCalendarEvents, setAllCalendarEvents] = useState<any[]>([]);
-  const [revisionSessions, setRevisionSessions] = useState<RevisionSession[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intensity, setIntensity] = useState<IntensityLevel>('standard');
@@ -152,32 +151,10 @@ const Planning = () => {
 
   useEffect(() => {
     if (user) {
-      loadRevisionSessions();
       loadExamsCount();
     }
   }, [user]);
 
-  const loadRevisionSessions = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('revision_sessions')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading revision sessions:', error);
-      return;
-    }
-
-    const sessions = data || [];
-    setRevisionSessions(sessions);
-    
-    // Schedule notifications for all upcoming sessions
-    if (isNative && notificationsEnabled) {
-      await notificationService.scheduleSessionReminders(sessions);
-    }
-  };
 
   const checkNotificationStatus = async () => {
     if (!isNative) return;
@@ -193,17 +170,14 @@ const Planning = () => {
     }
 
     if (notificationsEnabled) {
-      // Disable notifications
       await notificationService.cancelAllNotifications();
       setNotificationsEnabled(false);
       toast.error("Notifications désactivées");
     } else {
-      // Enable notifications
       const success = await notificationService.initialize();
       if (success) {
-        await notificationService.scheduleSessionReminders(revisionSessions);
         setNotificationsEnabled(true);
-        toast.error("Notifications activées - Tu seras rappelé 15 min avant chaque session");
+        toast.error("Notifications activées");
       } else {
         toast.error("Impossible d'activer les notifications");
       }
@@ -244,7 +218,6 @@ const Planning = () => {
     setIsGenerating(false);
 
     if (result.success) {
-      await loadRevisionSessions();
       await loadCalendarEvents();
       
       toast.success(`${result.count} sessions générées !`, {
@@ -259,20 +232,6 @@ const Planning = () => {
     }
   };
 
-  const deleteRevisionSession = async (sessionId: string) => {
-    const { error } = await supabase
-      .from('revision_sessions')
-      .delete()
-      .eq('id', sessionId);
-
-    if (error) {
-      toast.error("Erreur lors de la suppression");
-      return;
-    }
-
-    await loadRevisionSessions();
-    await loadCalendarEvents();
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -367,10 +326,6 @@ const Planning = () => {
     isSameDay(new Date(event.startDate), selectedDate)
   );
 
-  // Get revision sessions for selected day
-  const dayRevisionSessions = revisionSessions.filter(session => 
-    isSameDay(new Date(session.start_time), selectedDate)
-  );
 
   // Get planned events for selected day
   const dayPlannedEvents = plannedEvents.filter(event => 
@@ -442,18 +397,6 @@ const Planning = () => {
 
         if (error) throw error;
         await loadCalendarEvents();
-      } else if (editingEvent.type === 'revision') {
-        const { error } = await supabase
-          .from('revision_sessions')
-          .update({
-            subject: editingEvent.data.subject,
-            start_time: editingEvent.data.start_time,
-            end_time: editingEvent.data.end_time,
-          })
-          .eq('id', editingEvent.data.id);
-
-        if (error) throw error;
-        await loadRevisionSessions();
       } else if (editingEvent.type === 'work' || editingEvent.type === 'activity' || editingEvent.type === 'routine') {
         if (updateAll && editingEvent.isRecurring && editingEvent.data.parent_recurring_id) {
           // Modifier toutes les occurrences
@@ -537,13 +480,6 @@ const Planning = () => {
           if (deleteErr) throw deleteErr;
         }
         await loadCalendarEvents();
-      } else if (editingEvent.type === 'revision') {
-        const { error } = await supabase
-          .from('revision_sessions')
-          .delete()
-          .eq('id', editingEvent.data.id);
-
-        if (error) throw error;
       } else if (editingEvent.type === 'exam') {
         const { error } = await supabase
           .from('exams')
@@ -648,7 +584,7 @@ const Planning = () => {
             >
               <Plus className="h-4 w-4" />
             </Button>
-            {revisionSessions.length > 0 && (
+            {dayAIRevisionEvents.length > 0 && (
               <Button
                 variant="destructive"
                 size="icon"
@@ -656,20 +592,20 @@ const Planning = () => {
                   if (!user) return;
                   
                   const { error } = await supabase
-                    .from('revision_sessions')
+                    .from('calendar_events')
                     .delete()
-                    .eq('user_id', user.id);
+                    .eq('user_id', user.id)
+                    .eq('source', 'ai_revision' as any);
                   
                   if (error) {
                     toast.error("Erreur lors de la suppression");
                     return;
                   }
                   
-                  await loadRevisionSessions();
                   await loadCalendarEvents();
-                  toast.success("Toutes les sessions supprimées");
+                  toast.success("Toutes les sessions IA supprimées");
                 }}
-                title="Supprimer toutes les sessions de révisions"
+                title="Supprimer toutes les sessions de révisions IA"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -773,7 +709,7 @@ const Planning = () => {
 
               {/* Events, Work Schedules, Activities, Routines & Revision Sessions */}
               <div className="absolute inset-0 px-2">
-                {dayEvents.length === 0 && dayRevisionSessions.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 && dayAIRevisionEvents.length === 0 ? (
+                {dayEvents.length === 0 && dayWorkSchedules.length === 0 && dayActivities.length === 0 && dayRoutineMoments.length === 0 && dayPlannedEvents.length === 0 && dayAIRevisionEvents.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-muted-foreground text-sm italic">Aucun événement</p>
                   </div>
@@ -1138,51 +1074,6 @@ const Planning = () => {
                           );
                         }
 
-                        if (event.type === 'revision') {
-                          const session = event.data;
-                          const start = new Date(session.start_time);
-                          const end = new Date(session.end_time);
-                          const duration = Math.round(((event.endMinutes - event.startMinutes)));
-
-                          return (
-                            <div
-                              key={`session-${session.id}-${idx}`}
-                              className="absolute bg-primary text-primary-foreground rounded-lg p-2 overflow-hidden shadow-md border-2 border-primary/80 cursor-pointer hover:opacity-90 transition-opacity"
-                              style={style}
-                              onClick={() => {
-                                setEditingEvent({
-                                  type: 'revision',
-                                  data: { ...session }
-                                });
-                              }}
-                            >
-                              <div className="flex items-start justify-between gap-1">
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-xs font-semibold truncate">{session.subject}</div>
-                                  <div className="text-xs opacity-90">
-                                    {format(start, 'HH:mm')} - {format(end, 'HH:mm')} ({duration} min)
-                                  </div>
-                                  {session.difficulty && (
-                                    <div className="text-xs opacity-80 mt-1">
-                                      Niveau: {session.difficulty}
-                                    </div>
-                                  )}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteRevisionSession(session.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        }
 
                         if (event.type === 'planned') {
                           const plannedEvent = event.data;

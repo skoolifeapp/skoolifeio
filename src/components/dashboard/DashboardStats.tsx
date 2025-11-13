@@ -14,7 +14,7 @@ interface Stat {
 
 export const DashboardStats = () => {
   const { user } = useAuth();
-  const { exams, revisionSessions } = useData();
+  const { exams, calendarEvents } = useData();
   const [upcomingExams, setUpcomingExams] = useState(0);
   const [plannedHours, setPlannedHours] = useState("0h");
   const [weekSessions, setWeekSessions] = useState(0);
@@ -31,11 +31,12 @@ export const DashboardStats = () => {
       const upcomingCount = (exams || []).filter(exam => exam.date >= today).length;
       setUpcomingExams(upcomingCount);
 
-      // Get total planned hours from revision sessions depuis DataContext
-      if (revisionSessions) {
-        const totalMinutes = revisionSessions.reduce((acc, session) => {
-          const start = new Date(session.start_time);
-          const end = new Date(session.end_time);
+      // Get total planned hours from AI revision events in calendar_events
+      const aiRevisionEvents = (calendarEvents || []).filter(e => e.source === 'ai_revision');
+      if (aiRevisionEvents.length > 0) {
+        const totalMinutes = aiRevisionEvents.reduce((acc, event) => {
+          const start = new Date(event.start_date);
+          const end = new Date(event.end_date);
           const minutes = (end.getTime() - start.getTime()) / (1000 * 60);
           return acc + minutes;
         }, 0);
@@ -43,7 +44,7 @@ export const DashboardStats = () => {
         setPlannedHours(`${hours}h`);
       }
 
-      // Get sessions this week from revision_sessions
+      // Get AI revision sessions this week from calendar_events
       const startOfWeek = new Date();
       startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Dimanche
       startOfWeek.setHours(0, 0, 0, 0);
@@ -52,23 +53,19 @@ export const DashboardStats = () => {
       endOfWeek.setDate(endOfWeek.getDate() + 7);
       endOfWeek.setHours(23, 59, 59, 999);
 
-      const sessionsThisWeek = (revisionSessions || []).filter(session => {
-        const sessionDate = new Date(session.start_time);
-        return sessionDate >= startOfWeek && sessionDate < endOfWeek;
+      const aiSessions = (calendarEvents || []).filter(event => {
+        const eventDate = new Date(event.start_date);
+        return event.source === 'ai_revision' && eventDate >= startOfWeek && eventDate < endOfWeek;
       });
       
-      setWeekSessions(sessionsThisWeek.length);
+      setWeekSessions(aiSessions.length);
 
-      // Calculate completion rate from revision sessions
-      // Pour l'instant, on affiche 0% car il n'y a pas de champ "completed" dans revision_sessions
-      // On pourrait comparer les sessions passées vs futures
+      // Calculate completion rate from AI revision sessions
       const now = new Date();
-      const pastSessions = (revisionSessions || []).filter(s => new Date(s.end_time) < now);
-      const futureSessions = (revisionSessions || []).filter(s => new Date(s.start_time) >= now);
+      const pastSessions = aiSessions.filter(s => new Date(s.end_date) < now);
       
-      if (revisionSessions && revisionSessions.length > 0) {
-        // Taux basé sur les sessions déjà passées
-        const rate = Math.round((pastSessions.length / revisionSessions.length) * 100);
+      if (aiSessions.length > 0) {
+        const rate = Math.round((pastSessions.length / aiSessions.length) * 100);
         setCompletionRate(`${rate}%`);
       } else {
         setCompletionRate("0%");
@@ -76,7 +73,7 @@ export const DashboardStats = () => {
     };
 
     loadStats();
-  }, [user, exams, revisionSessions]);
+  }, [user, exams, calendarEvents]);
 
   const stats: Stat[] = [
     {

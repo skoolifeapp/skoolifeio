@@ -6,7 +6,6 @@ import { useAuth } from "./AuthContext";
 interface DataContextType {
   exams: any[];
   calendarEvents: any[];
-  revisionSessions: any[];
   constraintsProfile: any;
   userMeals: any[];
   userCommutes: any[];
@@ -51,20 +50,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Précharger les sessions de révision
-  const { data: revisionSessions = [] } = useQuery({
-    queryKey: ["revision_sessions", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from("revision_sessions")
-        .select("*")
-        .eq("user_id", user.id);
-      return data || [];
-    },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5,
-  });
 
   // Précharger le profil de contraintes
   const { data: constraintsProfile } = useQuery({
@@ -116,7 +101,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const refetchAll = () => {
     queryClient.invalidateQueries({ queryKey: ["exams"] });
     queryClient.invalidateQueries({ queryKey: ["calendar_events"] });
-    queryClient.invalidateQueries({ queryKey: ["revision_sessions"] });
     queryClient.invalidateQueries({ queryKey: ["constraints_profile"] });
     queryClient.invalidateQueries({ queryKey: ["user_meals"] });
     queryClient.invalidateQueries({ queryKey: ["user_commutes"] });
@@ -129,7 +113,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       value={{
         exams,
         calendarEvents,
-        revisionSessions,
         constraintsProfile,
         userMeals,
         userCommutes,
