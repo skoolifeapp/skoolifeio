@@ -23,7 +23,10 @@ export const generateRevisionPlanning = async (
 ): Promise<GeneratePlanningResult> => {
   try {
     const { data, error } = await supabase.functions.invoke('generate-revision-plan', {
-      body: { intensity: params.intensity || 'standard' },
+      body: { 
+        intensity: params.intensity || 'standard',
+        commit: true // CRITICAL: Must be true to actually insert sessions in DB
+      },
     });
 
     if (error) {
