@@ -22,6 +22,7 @@ import { useNavigationState } from "@/contexts/NavigationStateContext";
 import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionPlanner";
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
+import { MonthView } from "@/components/planning/MonthView";
 
 interface ImportedEvent {
   summary: string;
@@ -56,6 +57,7 @@ const Planning = () => {
   const [examsCount, setExamsCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
+  const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
   const [editingEvent, setEditingEvent] = useState<{
     type: 'calendar' | 'revision' | 'work' | 'exam' | 'activity' | 'routine' | 'planned';
     data: any;
@@ -622,12 +624,31 @@ const Planning = () => {
           </div>
         </div>
 
-        {/* Date Navigation */}
+        {/* View Mode Toggle & Date Navigation */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex gap-1 p-1 bg-muted rounded-lg">
+            <Button
+              variant={viewMode === 'day' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('day')}
+            >
+              Jour
+            </Button>
+            <Button
+              variant={viewMode === 'month' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('month')}
+            >
+              Mois
+            </Button>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between gap-2">
           <Button
             variant="outline"
             size="icon"
-            onClick={goToPreviousDay}
+            onClick={viewMode === 'day' ? goToPreviousDay : () => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -636,7 +657,10 @@ const Planning = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex-1 justify-start text-left font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+                {viewMode === 'day' 
+                  ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })
+                  : format(selectedDate, 'MMMM yyyy', { locale: fr })
+                }
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="center">
@@ -657,17 +681,29 @@ const Planning = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={goToNextDay}
+            onClick={viewMode === 'day' ? goToNextDay : () => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Scrollable Day View with Time Grid - with top padding for fixed header */}
-      <div className="flex-1 overflow-auto pt-[140px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
-        <div className="relative">
-          {/* Exams Section - Above the time grid */}
+      {/* Conditional View: Day or Month */}
+      {viewMode === 'month' ? (
+        <div className="flex-1 overflow-auto pt-[165px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
+          <MonthView
+            selectedDate={selectedDate}
+            allCalendarEvents={allCalendarEvents}
+            onDayClick={(date) => {
+              setSelectedDate(date);
+              setPlanningDate(date);
+              setViewMode('day');
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto pt-[165px] pb-[calc(5rem+env(safe-area-inset-bottom))] px-safe">
+        <div className="relative">{/* Exams Section - Above the time grid */}
           {dayExams.length > 0 && (
             <div className="mb-4 space-y-2 px-2 py-3">
               {dayExams.map((exam: { id: string; subject: string; type: string; location: string; date: string }) => (
@@ -1116,6 +1152,7 @@ const Planning = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Drawer pour ajouter un événement manuel */}
       <Drawer open={isAddingEvent} onOpenChange={setIsAddingEvent}>
