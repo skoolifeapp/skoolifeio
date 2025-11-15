@@ -249,10 +249,26 @@ const Planning = () => {
 
         const events = vevents.map((vevent: any) => {
           const event = new ICAL.Event(vevent);
+          
+          // Convertir en date locale sans décalage horaire
+          const startDate = event.startDate.toJSDate();
+          const endDate = event.endDate.toJSDate();
+          
+          // Formater en ISO local (sans 'Z' pour éviter conversion UTC)
+          const formatLocalISO = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+          };
+          
           return {
             summary: event.summary,
-            startDate: event.startDate.toJSDate().toISOString(),
-            endDate: event.endDate.toJSDate().toISOString(),
+            startDate: formatLocalISO(startDate),
+            endDate: formatLocalISO(endDate),
             location: event.location || '',
             description: event.description || '',
           };
