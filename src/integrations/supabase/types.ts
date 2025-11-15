@@ -26,6 +26,7 @@ export type Database = {
           is_recurring: boolean | null
           location: string | null
           metadata: Json | null
+          parent_recurring_id: string | null
           source: Database["public"]["Enums"]["event_source"]
           start_date: string
           start_time: string | null
@@ -45,6 +46,7 @@ export type Database = {
           is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
+          parent_recurring_id?: string | null
           source: Database["public"]["Enums"]["event_source"]
           start_date: string
           start_time?: string | null
@@ -64,6 +66,7 @@ export type Database = {
           is_recurring?: boolean | null
           location?: string | null
           metadata?: Json | null
+          parent_recurring_id?: string | null
           source?: Database["public"]["Enums"]["event_source"]
           start_date?: string
           start_time?: string | null
@@ -72,7 +75,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_parent_recurring_id_fkey"
+            columns: ["parent_recurring_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exams: {
         Row: {
@@ -139,98 +150,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      recurring_event_exceptions: {
-        Row: {
-          created_at: string
-          exception_date: string
-          id: string
-          new_event_id: string | null
-          parent_event_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          exception_date: string
-          id?: string
-          new_event_id?: string | null
-          parent_event_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          exception_date?: string
-          id?: string
-          new_event_id?: string | null
-          parent_event_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recurring_event_exceptions_new_event_id_fkey"
-            columns: ["new_event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_event_exceptions_parent_event_id_fkey"
-            columns: ["parent_event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      revision_sessions: {
-        Row: {
-          created_at: string
-          difficulty: string | null
-          end_time: string
-          exam_id: string | null
-          id: string
-          start_time: string
-          subject: string
-          updated_at: string
-          user_id: string
-          weight: number | null
-        }
-        Insert: {
-          created_at?: string
-          difficulty?: string | null
-          end_time: string
-          exam_id?: string | null
-          id?: string
-          start_time: string
-          subject: string
-          updated_at?: string
-          user_id: string
-          weight?: number | null
-        }
-        Update: {
-          created_at?: string
-          difficulty?: string | null
-          end_time?: string
-          exam_id?: string | null
-          id?: string
-          start_time?: string
-          subject?: string
-          updated_at?: string
-          user_id?: string
-          weight?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "revision_sessions_exam_id_fkey"
-            columns: ["exam_id"]
-            isOneToOne: false
-            referencedRelation: "exams"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_commutes: {
         Row: {
@@ -425,6 +344,7 @@ export type Database = {
         | "activity"
         | "routine"
         | "other"
+        | "ai_revision"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -563,6 +483,7 @@ export const Constants = {
         "activity",
         "routine",
         "other",
+        "ai_revision",
       ],
     },
   },

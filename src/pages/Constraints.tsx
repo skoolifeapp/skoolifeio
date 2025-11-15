@@ -699,6 +699,7 @@ const Constraints = () => {
             onSave={handleCommuteAdd}
             onDelete={handleCommuteDelete}
             availableDestinations={[
+              'École',
               ...workSchedules.map(w => w.title || (w.type === 'alternance' ? 'Alternance' : w.type === 'job' ? 'Job' : 'Travail')),
               ...activities.map(a => a.title)
             ]}

@@ -170,9 +170,29 @@ Deno.serve(async (req) => {
       commuteMap.set(destination, commute.duration_minutes);
     }
 
-    // Add calendar events with specific commute times based on event name
+    // Get school commute time for special handling
+    const schoolCommuteMinutes = commuteMap.get('école') || 0;
+
+    // Group calendar events by day to find first and last events
+    const eventsByDay = new Map<string, Array<{ start: Date; end: Date; title?: string; summary?: string }>>();
+    for (const evt of calendarEvents) {
+      const dateKey = formatDate(evt.start);
+      if (!eventsByDay.has(dateKey)) {
+        eventsByDay.set(dateKey, []);
+      }
+      eventsByDay.get(dateKey)!.push(evt);
+    }
+
+    // Add calendar events with specific commute times
     for (const evt of calendarEvents) {
       const eventName = (evt.title || evt.summary || '').toLowerCase().trim();
+      const dateKey = formatDate(evt.start);
+      const dayEvents = eventsByDay.get(dateKey) || [];
+      
+      // Sort events by start time to find first and last
+      const sortedEvents = dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
+      const isFirstEventOfDay = sortedEvents[0] === evt;
+      const isLastEventOfDay = sortedEvents[sortedEvents.length - 1] === evt;
       
       // Find matching commute by event name
       const commuteMinutes = commuteMap.get(eventName);
@@ -191,8 +211,23 @@ Deno.serve(async (req) => {
         commuteAfterEnd.setMinutes(commuteAfterEnd.getMinutes() + commuteMinutes);
         allBusySlots.push({ start: evt.end, end: commuteAfterEnd, type: 'commute' });
       } else {
-        // No specific commute found, just add the event
+        // Check if this is first/last ICS event and apply school commute
+        if (schoolCommuteMinutes > 0 && isFirstEventOfDay) {
+          // Subtract school commute from first event of the day
+          const commuteBefore = new Date(evt.start);
+          commuteBefore.setMinutes(commuteBefore.getMinutes() - schoolCommuteMinutes);
+          allBusySlots.push({ start: commuteBefore, end: evt.start, type: 'commute' });
+        }
+
+        // Add the event itself
         allBusySlots.push({ start: evt.start, end: evt.end, type: 'calendar' });
+
+        if (schoolCommuteMinutes > 0 && isLastEventOfDay) {
+          // Add school commute after last event of the day
+          const commuteAfterEnd = new Date(evt.end);
+          commuteAfterEnd.setMinutes(commuteAfterEnd.getMinutes() + schoolCommuteMinutes);
+          allBusySlots.push({ start: evt.end, end: commuteAfterEnd, type: 'commute' });
+        }
       }
     }
 
