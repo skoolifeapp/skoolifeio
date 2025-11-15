@@ -607,10 +607,10 @@ Retourne sessions + personal_time_blocks + warnings`;
           generated_at: new Date().toISOString(),
           plan_id: planId
         }),
-        start_date: session.start_time,
-        end_date: session.end_time,
-        start_time: new Date(session.start_time).toISOString().split('T')[1].substring(0, 8),
-        end_time: new Date(session.end_time).toISOString().split('T')[1].substring(0, 8),
+        start_date: session.start_time.replace('Z', ''),
+        end_date: session.end_time.replace('Z', ''),
+        start_time: session.start_time.split('T')[1].substring(0, 8),
+        end_time: session.end_time.split('T')[1].substring(0, 8),
         is_recurring: false,
         is_active: true,
         metadata: { plan_id: planId, created_by: 'generate_revision_sessions' }

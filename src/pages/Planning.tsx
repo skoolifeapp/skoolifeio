@@ -23,6 +23,7 @@ import { generateRevisionPlanning, IntensityLevel } from "@/services/aiRevisionP
 import { notificationService } from "@/services/notificationService";
 import { Capacitor } from "@capacitor/core";
 import { MonthView } from "@/components/planning/MonthView";
+import { GeneratingOverlay } from "@/components/planning/GeneratingOverlay";
 
 interface ImportedEvent {
   summary: string;
@@ -55,6 +56,8 @@ const Planning = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intensity, setIntensity] = useState<IntensityLevel>('standard');
   const [examsCount, setExamsCount] = useState(0);
+  const [generationComplete, setGenerationComplete] = useState(false);
+  const [generatedSessionsCount, setGeneratedSessionsCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
@@ -208,19 +211,24 @@ const Planning = () => {
     }
 
     setIsGenerating(true);
+    setGenerationComplete(false);
     setSheetOpen(false);
-
-    toast.loading("Skoolife prépare ton planning de révision personnalisé…", {
-      id: 'generating-plan',
-    });
 
     const result = await generateRevisionPlanning({ intensity });
 
-    toast.dismiss('generating-plan');
-    setIsGenerating(false);
-
     if (result.success) {
+      setGeneratedSessionsCount(result.count || 0);
+      setGenerationComplete(true);
+      
+      // Attendre 2 secondes pour montrer le résultat
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Recharger les données
       await loadCalendarEvents();
+      await refetchAll();
+      
+      setIsGenerating(false);
+      setGenerationComplete(false);
       
       toast.success(`${result.count} sessions générées !`, {
         description: result.metadata?.warnings?.length 
@@ -228,6 +236,8 @@ const Planning = () => {
           : `${result.metadata?.total_hours.toFixed(1)}h de révision planifiées`,
       });
     } else {
+      setIsGenerating(false);
+      setGenerationComplete(false);
       toast.error("Erreur", {
         description: result.error || "Impossible de générer le planning.",
       });
@@ -1676,6 +1686,13 @@ const Planning = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      {/* Overlay d'animation de génération */}
+      <GeneratingOverlay 
+        isVisible={isGenerating} 
+        sessionCount={generatedSessionsCount}
+        isComplete={generationComplete}
+      />
     </div>
   );
 };
